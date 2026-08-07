@@ -1,0 +1,5 @@
+# the library's default entry module: the aggregate surface a consumer resolves the
+# dependency through. it re-exports rather than defines, so `use sh: shader.math;`
+# and this file never disagree about what the library is.
+
+fwd shader.math;
