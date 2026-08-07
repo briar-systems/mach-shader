@@ -1,0 +1,33 @@
+[project]
+id = "shader"
+version = "0.1.0"
+src = "src"
+out = "out/{target.name}/{profile.name}"
+
+# the targets this library is meant for. `spirv` is the only one it can be BUILT
+# for meaningfully - see the README's shader-only note - and the CPU tuples are
+# here so `mach check` runs over the module on an ordinary host.
+[target.spirv]
+isa = "spirv"
+os  = "freestanding"
+abi = "spirv"
+
+[target.linux-x86_64]
+isa = "x86_64"
+os  = "linux"
+abi = "sysv64"
+
+[target.linux-arm64]
+isa = "aarch64"
+os  = "linux"
+abi = "aapcs64"
+
+[profile.debug]
+opt = 0
+debug = false
+simd = "scalarize"
+
+[profile.release]
+opt = 2
+debug = false
+simd = "scalarize"
