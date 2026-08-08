@@ -1,0 +1,35 @@
+# A shader that calls one entry from every family at every width.
+#
+# The library itself cannot be built into anything: it is 134 bodyless
+# declarations, so `mach build` on it emits nothing and proves nothing. This
+# project is the actual check. A decorator naming an instruction that does not
+# exist, or a signature SPIR-V will not accept at that width, fails here and
+# nowhere else.
+
+[project]
+id      = "conform"
+version = "0.1.0"
+src     = "src"
+out     = "out"
+
+[target.spirv]
+isa = "spirv"
+os  = "freestanding"
+abi = "spirv"
+of  = "spv"
+
+[profile.release]
+opt   = 2
+debug = false
+simd  = "scalarize"
+
+[artifact.conform_frag]
+kind    = "bin"
+entry   = "conform_frag.mach"
+out     = "conform_frag.spv"
+targets = ["spirv"]
+link    = []
+need    = []
+
+[dep.mach-shader]
+path = ".."
