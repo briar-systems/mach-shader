@@ -1,476 +1,1114 @@
-# shader-side maths: the functions that ARE SPIR-V instructions
+# Shader-side maths: the functions that ARE SPIR-V instructions.
 #
 # Every declaration here is one SPIR-V instruction, named by a `#[spirv_op(set,
-# name)]` decorator the compiler reads at the call site. A call to `normalize` in a
-# shader does not become a call at all: it becomes the instruction, inline, in the
-# calling function's body.
+# name)]` decorator the compiler reads at the call site. A call to `normalize3`
+# in a shader does not become a call at all: it becomes the instruction, inline,
+# in the calling function's body.
 #
 # WHY THIS IS NOT `std.math`. `std.math.sqrt_f32` promises a documented IEEE
-# result - a Newton refinement evaluated in double precision, accurate to under one
-# f32 ulp - and it delivers that on every target. `GLSL.std.450 Sqrt` promises what
-# the driver does. Those are different functions with the same name, and quietly
-# substituting one for the other across a target boundary produces an answer that
-# is NEARLY right, with nothing to report. Keeping the shader set in its own module
-# makes the difference visible at the call site: `sh.sqrt(x)` and
+# result, a Newton refinement evaluated in double precision and accurate to under
+# one f32 ulp, and it delivers that on every target. `GLSL.std.450 Sqrt` promises
+# what the driver does. Those are different functions with the same name, and
+# quietly substituting one for the other across a target boundary produces an
+# answer that is nearly right, with nothing to report. Keeping the shader set in
+# its own module makes the difference visible at the call site: `sh.sqrt(x)` and
 # `math.sqrt_f32(x)` do not look alike.
 #
 # THE PRECISION CONTRACT. Nothing here is IEEE-exact and nothing here is portable
 # between drivers. The SPIR-V specification leaves the precision of most of
 # GLSL.std.450 implementation-defined, and Vulkan's own precision table gives
-# bounds in ULP for some entries and none at all for others (`Pow`, `Exp`, `Log`
-# and the trigonometric family are the loose ones). Two GPUs may return different
+# bounds in ULP for some entries and none at all for others; `Pow`, `Exp`, `Log`
+# and the trigonometric family are the loose ones. Two GPUs may return different
 # bits for the same input, and the same GPU may return different bits under a
-# different driver version. Code that needs a reproducible answer - a hash, a
-# checksum, anything compared for equality across machines - must not use this
-# module. Code that is shading a pixel should.
+# different driver version. Code that needs a reproducible answer, meaning a
+# hash, a checksum, or anything compared for equality across machines, must not
+# use this module. Code that is shading a pixel should.
 #
-# THIS IS A SHADER-ONLY MODULE, DELIBERATELY. Nothing here has a body. On a SPIR-V
-# target that is invisible, because no call to any of these is ever emitted as a
-# call. On any other target a program that calls one FAILS TO LINK, naming the
-# symbol:
+# THIS IS A SHADER-ONLY MODULE, DELIBERATELY. Nothing here has a body. On a
+# SPIR-V target that is invisible, because no call to any of these is ever
+# emitted as a call. On any other target a program that calls one fails to link,
+# naming the symbol:
 #
 #   error: undefined symbol: _M6shader4mathN4sqrt
 #
 # That is the intended behaviour and it was chosen over the alternative. A native
-# fallback would mean writing a second float-maths library - pow, exp, log, atan2,
-# smoothstep, refract - beside the one `mach-std` already owns, and the only
-# sensible implementation of each would be to call `std.math`. That is exactly the
-# substitution the paragraph above rejects: it would make `sh.sqrt` and
-# `math.sqrt_f32` the same function on a CPU and different functions on a GPU,
-# which is the worst of the three options because it is the one that never errors.
-# A link failure at build time is loud, early, and impossible to ship past.
+# fallback would mean writing a second float-maths library beside the one
+# `mach-std` already owns, and the only sensible implementation of each entry
+# would be to call `std.math`. That is exactly the substitution the paragraph
+# above rejects: it would make `sh.sqrt` and `math.sqrt_f32` the same function on
+# a CPU and different functions on a GPU, which is the worst of the three options
+# because it is the one that never errors. A link failure at build time is loud,
+# early, and impossible to ship past.
 #
-# TYPES. `f32` and `f32x4`. GLSL.std.450 defines every entry here over 16-, 32- and
-# 64-bit floats and over vectors of 2, 3 and 4 of them; this module carries the two
-# a mach shader can currently spell. `f32x3` is the gap that matters and is tracked
-# in briar-systems/mach#2687 - until it lands, a 3-component normal has to be
-# carried in an `f32x4` whose fourth lane is 0, and `normalize` will divide by the
-# length of all four lanes, so keep that lane zero.
+# THE NAMING RULE. A scalar entry takes the plain name; a vector entry always
+# carries its lane count after an underscore. `sqrt` is the scalar, `sqrt_2`,
+# `sqrt_3` and `sqrt_4` are the vectors. The geometric entries follow the same
+# rule even though they have no scalar form, so they are spelled `dot_3` and
+# `normalize_3` rather than `dot` and `normalize`, and `cross_3` carries its
+# width even though a cross product exists at no other one.
 #
-# The vector entries are suffixed `4` where a scalar entry of the same name exists,
-# matching mach's own `f32x4` spelling. The geometric entries take no suffix
-# because they have no scalar form at all: `dot` and `length` consume a vector and
-# produce a scalar, and `reflect` is meaningless on one number.
+# The rule is uniform on purpose. The axes this module grows along are the
+# instruction, the lane count, and eventually the component type, and a name that
+# encodes its width is a drop-in at each of them. An unsuffixed `dot` meaning the
+# 4-wide form would have to be broken the first time a shader wants the 3-wide
+# one, which is the common case in lighting.
+#
+# THE SEPARATOR IS NOT DECORATION. `exp2` and `log2` are the base-2 entries and
+# the digit is part of the instruction, not a width, so a bare digit suffix would
+# make the 2-lane `exp` collide with the scalar `exp2`. The underscore keeps
+# `exp2` and `exp_2` apart, and because they differ in operand type as well as in
+# name, confusing one for the other is a type error rather than a wrong result.
+#
+# TYPES. `f32`, `f32x2`, `f32x3` and `f32x4`. GLSL.std.450 defines every entry
+# here over 16-, 32- and 64-bit floats; this module carries the 32-bit family,
+# which is what a mach shader spells today. A future f16 or f64 family is an
+# additional set of names under the same rule, not a change to these.
+#
+# This file is generated. See tools/genmath.py.
 
-# ---------- common-value maths, scalar ----------
 
-# absolute value
+# ---------- scalar ----------
+
+# Absolute value.
 # ---
-# x:   the value
+# x:   The value.
 # ret: |x|
 #[spirv_op("GLSL.std.450", "FAbs")]
 pub fun abs(x: f32) f32;
 
-# sign as -1, 0 or +1
+# Sign as -1, 0 or +1.
 # ---
-# x:   the value
-# ret: -1.0 for x < 0, 0.0 for x == 0, 1.0 for x > 0
+# x:   The value.
+# ret: -1.0 below zero, 0.0 at zero, 1.0 above
 #[spirv_op("GLSL.std.450", "FSign")]
 pub fun sign(x: f32) f32;
 
-# largest integer not greater than x
+# Largest integer not greater than x.
 # ---
-# x:   the value
+# x:   The value.
 # ret: floor(x)
 #[spirv_op("GLSL.std.450", "Floor")]
 pub fun floor(x: f32) f32;
 
-# smallest integer not less than x
+# Smallest integer not less than x.
 # ---
-# x:   the value
+# x:   The value.
 # ret: ceil(x)
 #[spirv_op("GLSL.std.450", "Ceil")]
 pub fun ceil(x: f32) f32;
 
-# fractional part
+# Fractional part.
 # ---
-# x:   the value
+# x:   The value.
 # ret: x - floor(x), always in [0, 1)
 #[spirv_op("GLSL.std.450", "Fract")]
 pub fun fract(x: f32) f32;
 
-# degrees to radians
+# Degrees to radians.
 # ---
-# d:   an angle in degrees
+# x:   An angle in degrees.
 # ret: the same angle in radians
 #[spirv_op("GLSL.std.450", "Radians")]
-pub fun radians(d: f32) f32;
+pub fun radians(x: f32) f32;
 
-# radians to degrees
+# Radians to degrees.
 # ---
-# r:   an angle in radians
+# x:   An angle in radians.
 # ret: the same angle in degrees
 #[spirv_op("GLSL.std.450", "Degrees")]
-pub fun degrees(r: f32) f32;
+pub fun degrees(x: f32) f32;
 
-# ---------- trigonometry, scalar ----------
-
-# sine of an angle in radians
+# Sine of an angle in radians.
 # ---
-# x:   the angle in radians
+# x:   The angle in radians.
 # ret: sin(x)
 #[spirv_op("GLSL.std.450", "Sin")]
 pub fun sin(x: f32) f32;
 
-# cosine of an angle in radians
+# Cosine of an angle in radians.
 # ---
-# x:   the angle in radians
+# x:   The angle in radians.
 # ret: cos(x)
 #[spirv_op("GLSL.std.450", "Cos")]
 pub fun cos(x: f32) f32;
 
-# tangent of an angle in radians
+# Tangent of an angle in radians.
 # ---
-# x:   the angle in radians
+# x:   The angle in radians.
 # ret: tan(x)
 #[spirv_op("GLSL.std.450", "Tan")]
 pub fun tan(x: f32) f32;
 
-# arcsine
+# Arcsine.
 # ---
-# x:   a value in [-1, 1]
+# x:   A value in [-1, 1].
 # ret: asin(x) in [-pi/2, pi/2]
 #[spirv_op("GLSL.std.450", "Asin")]
 pub fun asin(x: f32) f32;
 
-# arccosine
+# Arccosine.
 # ---
-# x:   a value in [-1, 1]
+# x:   A value in [-1, 1].
 # ret: acos(x) in [0, pi]
 #[spirv_op("GLSL.std.450", "Acos")]
 pub fun acos(x: f32) f32;
 
-# arctangent of a single ratio
+# Arctangent of a single ratio.
 # ---
-# x:   the ratio
+# x:   The ratio.
 # ret: atan(x) in [-pi/2, pi/2]
 #[spirv_op("GLSL.std.450", "Atan")]
 pub fun atan(x: f32) f32;
 
-# arctangent of y/x, quadrant-correct
+# e raised to x.
 # ---
-# y:   the numerator
-# x:   the denominator
-# ret: atan2(y, x) in [-pi, pi]
-#[spirv_op("GLSL.std.450", "Atan2")]
-pub fun atan2(y: f32, x: f32) f32;
-
-# ---------- exponentials, scalar ----------
-
-# x raised to y
-# ---
-# x:   the base, which must not be negative
-# y:   the exponent
-# ret: x ** y
-#[spirv_op("GLSL.std.450", "Pow")]
-pub fun pow(x: f32, y: f32) f32;
-
-# e raised to x
-# ---
-# x:   the exponent
+# x:   The value.
 # ret: e ** x
 #[spirv_op("GLSL.std.450", "Exp")]
 pub fun exp(x: f32) f32;
 
-# natural logarithm
+# Natural logarithm.
 # ---
-# x:   a positive value
+# x:   A positive value.
 # ret: ln(x)
 #[spirv_op("GLSL.std.450", "Log")]
 pub fun log(x: f32) f32;
 
-# 2 raised to x
+# 2 raised to x.
 # ---
-# x:   the exponent
+# x:   The value.
 # ret: 2 ** x
 #[spirv_op("GLSL.std.450", "Exp2")]
 pub fun exp2(x: f32) f32;
 
-# base-2 logarithm
+# Base-2 logarithm.
 # ---
-# x:   a positive value
+# x:   A positive value.
 # ret: log2(x)
 #[spirv_op("GLSL.std.450", "Log2")]
 pub fun log2(x: f32) f32;
 
-# square root
+# Square root.
 # ---
-# x:   a non-negative value
+# x:   A non-negative value.
 # ret: sqrt(x)
 #[spirv_op("GLSL.std.450", "Sqrt")]
 pub fun sqrt(x: f32) f32;
 
-# reciprocal square root, the one a normalization actually wants
+# Reciprocal square root, which is what a normalization actually wants.
 # ---
-# x:   a positive value
+# x:   A positive value.
 # ret: 1 / sqrt(x)
 #[spirv_op("GLSL.std.450", "InverseSqrt")]
 pub fun inverse_sqrt(x: f32) f32;
 
-# ---------- range and interpolation, scalar ----------
-
-# smaller of two values
+# Arctangent of y/x, quadrant-correct.
 # ---
-# a:   the first value
-# b:   the second value
-# ret: a if a < b, else b
+# y:   The numerator.
+# x:   The denominator.
+# ret: atan2(y, x) in [-pi, pi]
+#[spirv_op("GLSL.std.450", "Atan2")]
+pub fun atan2(y: f32, x: f32) f32;
+
+# x raised to e.
+# ---
+# x:   The base, which must not be negative.
+# e:   The exponent.
+# ret: x ** e
+#[spirv_op("GLSL.std.450", "Pow")]
+pub fun pow(x: f32, e: f32) f32;
+
+# Smaller of two values.
+# ---
+# a:   The first value.
+# b:   The second value.
+# ret: a where a < b, else b
 #[spirv_op("GLSL.std.450", "FMin")]
 pub fun min(a: f32, b: f32) f32;
 
-# larger of two values
+# Larger of two values.
 # ---
-# a:   the first value
-# b:   the second value
-# ret: a if a > b, else b
+# a:   The first value.
+# b:   The second value.
+# ret: a where a > b, else b
 #[spirv_op("GLSL.std.450", "FMax")]
 pub fun max(a: f32, b: f32) f32;
 
-# constrain a value to a range
+# A step from 0 to 1 at an edge.
 # ---
-# x:   the value
-# lo:  the lower bound
-# hi:  the upper bound
+# edge:Where the step happens.
+# x:   The value.
+# ret: 0.0 below edge, else 1.0
+#[spirv_op("GLSL.std.450", "Step")]
+pub fun step(edge: f32, x: f32) f32;
+
+# Constrain a value to a range.
+# ---
+# x:   The value.
+# lo:  The lower bound.
+# hi:  The upper bound.
 # ret: min(max(x, lo), hi)
 #[spirv_op("GLSL.std.450", "FClamp")]
 pub fun clamp(x: f32, lo: f32, hi: f32) f32;
 
-# linear interpolation
+# Linear interpolation.
 # ---
-# a:   the value at t == 0
-# b:   the value at t == 1
-# t:   the interpolant
+# a:   The value at t == 0.
+# b:   The value at t == 1.
+# t:   The interpolant.
 # ret: a * (1 - t) + b * t
 #[spirv_op("GLSL.std.450", "FMix")]
 pub fun mix(a: f32, b: f32, t: f32) f32;
 
-# a step from 0 to 1 at an edge
+# A smooth Hermite step between two edges.
 # ---
-# edge: where the step happens
-# x:    the value
-# ret:  0.0 for x < edge, else 1.0
-#[spirv_op("GLSL.std.450", "Step")]
-pub fun step(edge: f32, x: f32) f32;
-
-# a smooth Hermite step between two edges
-# ---
-# lo:  the lower edge
-# hi:  the upper edge
-# x:   the value
+# lo:  The lower edge.
+# hi:  The upper edge.
+# x:   The value.
 # ret: 0.0 at or below lo, 1.0 at or above hi, a smooth ramp between
 #[spirv_op("GLSL.std.450", "SmoothStep")]
 pub fun smooth_step(lo: f32, hi: f32, x: f32) f32;
 
-# fused multiply-add
+# Fused multiply-add.
 # ---
-# a:   the first factor
-# b:   the second factor
-# c:   the addend
+# a:   The first factor.
+# b:   The second factor.
+# c:   The addend.
 # ret: a * b + c
 #[spirv_op("GLSL.std.450", "Fma")]
 pub fun fma(a: f32, b: f32, c: f32) f32;
 
-# ---------- the same operations per lane of an f32x4 ----------
-#
-# A colour, a normal and a position are all vectors, and the per-lane forms are
-# what a shader spends its instructions on. Named with a `4` suffix where the
-# scalar entry above already holds the plain name.
 
-# per-lane absolute value
+# ---------- per lane of an f32x2 ----------
+
+# Absolute value, per lane.
 # ---
-# v:   the vector
-# ret: |v| per lane
+# x:   The values, one per lane.
+# ret: |x| per lane
 #[spirv_op("GLSL.std.450", "FAbs")]
-pub fun abs4(v: f32x4) f32x4;
+pub fun abs_2(x: f32x2) f32x2;
 
-# per-lane sign
+# Sign as -1, 0 or +1, per lane.
 # ---
-# v:   the vector
-# ret: -1.0 / 0.0 / 1.0 per lane
+# x:   The values, one per lane.
+# ret: -1.0 below zero, 0.0 at zero, 1.0 above per lane
 #[spirv_op("GLSL.std.450", "FSign")]
-pub fun sign4(v: f32x4) f32x4;
+pub fun sign_2(x: f32x2) f32x2;
 
-# per-lane floor
+# Largest integer not greater than x, per lane.
 # ---
-# v:   the vector
-# ret: floor per lane
+# x:   The values, one per lane.
+# ret: floor(x) per lane
 #[spirv_op("GLSL.std.450", "Floor")]
-pub fun floor4(v: f32x4) f32x4;
+pub fun floor_2(x: f32x2) f32x2;
 
-# per-lane ceiling
+# Smallest integer not less than x, per lane.
 # ---
-# v:   the vector
-# ret: ceil per lane
+# x:   The values, one per lane.
+# ret: ceil(x) per lane
 #[spirv_op("GLSL.std.450", "Ceil")]
-pub fun ceil4(v: f32x4) f32x4;
+pub fun ceil_2(x: f32x2) f32x2;
 
-# per-lane fractional part
+# Fractional part, per lane.
 # ---
-# v:   the vector
-# ret: v - floor(v) per lane
+# x:   The values, one per lane.
+# ret: x - floor(x), always in [0, 1) per lane
 #[spirv_op("GLSL.std.450", "Fract")]
-pub fun fract4(v: f32x4) f32x4;
+pub fun fract_2(x: f32x2) f32x2;
 
-# per-lane square root
+# Degrees to radians, per lane.
 # ---
-# v:   the vector, non-negative per lane
-# ret: sqrt per lane
-#[spirv_op("GLSL.std.450", "Sqrt")]
-pub fun sqrt4(v: f32x4) f32x4;
+# x:   An angle in degrees.
+# ret: the same angle in radians per lane
+#[spirv_op("GLSL.std.450", "Radians")]
+pub fun radians_2(x: f32x2) f32x2;
 
-# per-lane reciprocal square root
+# Radians to degrees, per lane.
 # ---
-# v:   the vector, positive per lane
-# ret: 1 / sqrt per lane
-#[spirv_op("GLSL.std.450", "InverseSqrt")]
-pub fun inverse_sqrt4(v: f32x4) f32x4;
+# x:   An angle in radians.
+# ret: the same angle in degrees per lane
+#[spirv_op("GLSL.std.450", "Degrees")]
+pub fun degrees_2(x: f32x2) f32x2;
 
-# per-lane power, which is what a gamma correction is
+# Sine of an angle in radians, per lane.
 # ---
-# v:   the base vector, non-negative per lane
-# e:   the exponent vector
-# ret: v ** e per lane
-#[spirv_op("GLSL.std.450", "Pow")]
-pub fun pow4(v: f32x4, e: f32x4) f32x4;
+# x:   The angle in radians.
+# ret: sin(x) per lane
+#[spirv_op("GLSL.std.450", "Sin")]
+pub fun sin_2(x: f32x2) f32x2;
 
-# per-lane exponential
+# Cosine of an angle in radians, per lane.
 # ---
-# v:   the vector
-# ret: e ** v per lane
+# x:   The angle in radians.
+# ret: cos(x) per lane
+#[spirv_op("GLSL.std.450", "Cos")]
+pub fun cos_2(x: f32x2) f32x2;
+
+# Tangent of an angle in radians, per lane.
+# ---
+# x:   The angle in radians.
+# ret: tan(x) per lane
+#[spirv_op("GLSL.std.450", "Tan")]
+pub fun tan_2(x: f32x2) f32x2;
+
+# Arcsine, per lane.
+# ---
+# x:   A value in [-1, 1].
+# ret: asin(x) in [-pi/2, pi/2] per lane
+#[spirv_op("GLSL.std.450", "Asin")]
+pub fun asin_2(x: f32x2) f32x2;
+
+# Arccosine, per lane.
+# ---
+# x:   A value in [-1, 1].
+# ret: acos(x) in [0, pi] per lane
+#[spirv_op("GLSL.std.450", "Acos")]
+pub fun acos_2(x: f32x2) f32x2;
+
+# Arctangent of a single ratio, per lane.
+# ---
+# x:   The ratios, one per lane.
+# ret: atan(x) in [-pi/2, pi/2] per lane
+#[spirv_op("GLSL.std.450", "Atan")]
+pub fun atan_2(x: f32x2) f32x2;
+
+# e raised to x, per lane.
+# ---
+# x:   The values, one per lane.
+# ret: e ** x per lane
 #[spirv_op("GLSL.std.450", "Exp")]
-pub fun exp4(v: f32x4) f32x4;
+pub fun exp_2(x: f32x2) f32x2;
 
-# per-lane natural logarithm
+# Natural logarithm, per lane.
 # ---
-# v:   the vector, positive per lane
-# ret: ln per lane
+# x:   A positive value.
+# ret: ln(x) per lane
 #[spirv_op("GLSL.std.450", "Log")]
-pub fun log4(v: f32x4) f32x4;
+pub fun log_2(x: f32x2) f32x2;
 
-# per-lane minimum
+# 2 raised to x, per lane.
 # ---
-# a:   the first vector
-# b:   the second vector
-# ret: the smaller per lane
+# x:   The values, one per lane.
+# ret: 2 ** x per lane
+#[spirv_op("GLSL.std.450", "Exp2")]
+pub fun exp2_2(x: f32x2) f32x2;
+
+# Base-2 logarithm, per lane.
+# ---
+# x:   A positive value.
+# ret: log2(x) per lane
+#[spirv_op("GLSL.std.450", "Log2")]
+pub fun log2_2(x: f32x2) f32x2;
+
+# Square root, per lane.
+# ---
+# x:   A non-negative value.
+# ret: sqrt(x) per lane
+#[spirv_op("GLSL.std.450", "Sqrt")]
+pub fun sqrt_2(x: f32x2) f32x2;
+
+# Reciprocal square root, which is what a normalization actually wants, per lane.
+# ---
+# x:   A positive value.
+# ret: 1 / sqrt(x) per lane
+#[spirv_op("GLSL.std.450", "InverseSqrt")]
+pub fun inverse_sqrt_2(x: f32x2) f32x2;
+
+# Arctangent of y/x, quadrant-correct, per lane.
+# ---
+# y:   The numerators, one per lane.
+# x:   The denominators, one per lane.
+# ret: atan2(y, x) in [-pi, pi] per lane
+#[spirv_op("GLSL.std.450", "Atan2")]
+pub fun atan2_2(y: f32x2, x: f32x2) f32x2;
+
+# x raised to e, per lane.
+# ---
+# x:   The base, which must not be negatives, one per lane.
+# e:   The exponents, one per lane.
+# ret: x ** e per lane
+#[spirv_op("GLSL.std.450", "Pow")]
+pub fun pow_2(x: f32x2, e: f32x2) f32x2;
+
+# Smaller of two values, per lane.
+# ---
+# a:   The first values, one per lane.
+# b:   The second values, one per lane.
+# ret: a where a < b, else b per lane
 #[spirv_op("GLSL.std.450", "FMin")]
-pub fun min4(a: f32x4, b: f32x4) f32x4;
+pub fun min_2(a: f32x2, b: f32x2) f32x2;
 
-# per-lane maximum
+# Larger of two values, per lane.
 # ---
-# a:   the first vector
-# b:   the second vector
-# ret: the larger per lane
+# a:   The first values, one per lane.
+# b:   The second values, one per lane.
+# ret: a where a > b, else b per lane
 #[spirv_op("GLSL.std.450", "FMax")]
-pub fun max4(a: f32x4, b: f32x4) f32x4;
+pub fun max_2(a: f32x2, b: f32x2) f32x2;
 
-# per-lane clamp
+# A step from 0 to 1 at an edge, per lane.
 # ---
-# v:   the vector
-# lo:  the lower bounds
-# hi:  the upper bounds
-# ret: v clamped per lane
+# edge:Where the step happens.
+# x:   The values, one per lane.
+# ret: 0.0 below edge, else 1.0 per lane
+#[spirv_op("GLSL.std.450", "Step")]
+pub fun step_2(edge: f32x2, x: f32x2) f32x2;
+
+# Constrain a value to a range, per lane.
+# ---
+# x:   The values, one per lane.
+# lo:  The lower bounds, one per lane.
+# hi:  The upper bounds, one per lane.
+# ret: min(max(x, lo), hi) per lane
 #[spirv_op("GLSL.std.450", "FClamp")]
-pub fun clamp4(v: f32x4, lo: f32x4, hi: f32x4) f32x4;
+pub fun clamp_2(x: f32x2, lo: f32x2, hi: f32x2) f32x2;
 
-# per-lane linear interpolation
+# Linear interpolation, per lane.
 # ---
-# a:   the vector at t == 0
-# b:   the vector at t == 1
-# t:   the interpolants, one per lane
+# a:   The value at t == 0s, one per lane.
+# b:   The value at t == 1s, one per lane.
+# t:   The interpolants, one per lane.
 # ret: a * (1 - t) + b * t per lane
 #[spirv_op("GLSL.std.450", "FMix")]
-pub fun mix4(a: f32x4, b: f32x4, t: f32x4) f32x4;
+pub fun mix_2(a: f32x2, b: f32x2, t: f32x2) f32x2;
 
-# per-lane step
+# A smooth Hermite step between two edges, per lane.
 # ---
-# edge: the edges, one per lane
-# v:    the vector
-# ret:  0.0 or 1.0 per lane
-#[spirv_op("GLSL.std.450", "Step")]
-pub fun step4(edge: f32x4, v: f32x4) f32x4;
-
-# per-lane smooth Hermite step
-# ---
-# lo:  the lower edges
-# hi:  the upper edges
-# v:   the vector
-# ret: the smooth ramp per lane
+# lo:  The lower edges, one per lane.
+# hi:  The upper edges, one per lane.
+# x:   The values, one per lane.
+# ret: 0.0 at or below lo, 1.0 at or above hi, a smooth ramp between per lane
 #[spirv_op("GLSL.std.450", "SmoothStep")]
-pub fun smooth_step4(lo: f32x4, hi: f32x4, v: f32x4) f32x4;
+pub fun smooth_step_2(lo: f32x2, hi: f32x2, x: f32x2) f32x2;
 
-# per-lane fused multiply-add
+# Fused multiply-add, per lane.
 # ---
-# a:   the first factors
-# b:   the second factors
-# c:   the addends
+# a:   The first factors, one per lane.
+# b:   The second factors, one per lane.
+# c:   The addends, one per lane.
 # ret: a * b + c per lane
 #[spirv_op("GLSL.std.450", "Fma")]
-pub fun fma4(a: f32x4, b: f32x4, c: f32x4) f32x4;
+pub fun fma_2(a: f32x2, b: f32x2, c: f32x2) f32x2;
+
+
+# ---------- per lane of an f32x3 ----------
+
+# Absolute value, per lane.
+# ---
+# x:   The values, one per lane.
+# ret: |x| per lane
+#[spirv_op("GLSL.std.450", "FAbs")]
+pub fun abs_3(x: f32x3) f32x3;
+
+# Sign as -1, 0 or +1, per lane.
+# ---
+# x:   The values, one per lane.
+# ret: -1.0 below zero, 0.0 at zero, 1.0 above per lane
+#[spirv_op("GLSL.std.450", "FSign")]
+pub fun sign_3(x: f32x3) f32x3;
+
+# Largest integer not greater than x, per lane.
+# ---
+# x:   The values, one per lane.
+# ret: floor(x) per lane
+#[spirv_op("GLSL.std.450", "Floor")]
+pub fun floor_3(x: f32x3) f32x3;
+
+# Smallest integer not less than x, per lane.
+# ---
+# x:   The values, one per lane.
+# ret: ceil(x) per lane
+#[spirv_op("GLSL.std.450", "Ceil")]
+pub fun ceil_3(x: f32x3) f32x3;
+
+# Fractional part, per lane.
+# ---
+# x:   The values, one per lane.
+# ret: x - floor(x), always in [0, 1) per lane
+#[spirv_op("GLSL.std.450", "Fract")]
+pub fun fract_3(x: f32x3) f32x3;
+
+# Degrees to radians, per lane.
+# ---
+# x:   An angle in degrees.
+# ret: the same angle in radians per lane
+#[spirv_op("GLSL.std.450", "Radians")]
+pub fun radians_3(x: f32x3) f32x3;
+
+# Radians to degrees, per lane.
+# ---
+# x:   An angle in radians.
+# ret: the same angle in degrees per lane
+#[spirv_op("GLSL.std.450", "Degrees")]
+pub fun degrees_3(x: f32x3) f32x3;
+
+# Sine of an angle in radians, per lane.
+# ---
+# x:   The angle in radians.
+# ret: sin(x) per lane
+#[spirv_op("GLSL.std.450", "Sin")]
+pub fun sin_3(x: f32x3) f32x3;
+
+# Cosine of an angle in radians, per lane.
+# ---
+# x:   The angle in radians.
+# ret: cos(x) per lane
+#[spirv_op("GLSL.std.450", "Cos")]
+pub fun cos_3(x: f32x3) f32x3;
+
+# Tangent of an angle in radians, per lane.
+# ---
+# x:   The angle in radians.
+# ret: tan(x) per lane
+#[spirv_op("GLSL.std.450", "Tan")]
+pub fun tan_3(x: f32x3) f32x3;
+
+# Arcsine, per lane.
+# ---
+# x:   A value in [-1, 1].
+# ret: asin(x) in [-pi/2, pi/2] per lane
+#[spirv_op("GLSL.std.450", "Asin")]
+pub fun asin_3(x: f32x3) f32x3;
+
+# Arccosine, per lane.
+# ---
+# x:   A value in [-1, 1].
+# ret: acos(x) in [0, pi] per lane
+#[spirv_op("GLSL.std.450", "Acos")]
+pub fun acos_3(x: f32x3) f32x3;
+
+# Arctangent of a single ratio, per lane.
+# ---
+# x:   The ratios, one per lane.
+# ret: atan(x) in [-pi/2, pi/2] per lane
+#[spirv_op("GLSL.std.450", "Atan")]
+pub fun atan_3(x: f32x3) f32x3;
+
+# e raised to x, per lane.
+# ---
+# x:   The values, one per lane.
+# ret: e ** x per lane
+#[spirv_op("GLSL.std.450", "Exp")]
+pub fun exp_3(x: f32x3) f32x3;
+
+# Natural logarithm, per lane.
+# ---
+# x:   A positive value.
+# ret: ln(x) per lane
+#[spirv_op("GLSL.std.450", "Log")]
+pub fun log_3(x: f32x3) f32x3;
+
+# 2 raised to x, per lane.
+# ---
+# x:   The values, one per lane.
+# ret: 2 ** x per lane
+#[spirv_op("GLSL.std.450", "Exp2")]
+pub fun exp2_3(x: f32x3) f32x3;
+
+# Base-2 logarithm, per lane.
+# ---
+# x:   A positive value.
+# ret: log2(x) per lane
+#[spirv_op("GLSL.std.450", "Log2")]
+pub fun log2_3(x: f32x3) f32x3;
+
+# Square root, per lane.
+# ---
+# x:   A non-negative value.
+# ret: sqrt(x) per lane
+#[spirv_op("GLSL.std.450", "Sqrt")]
+pub fun sqrt_3(x: f32x3) f32x3;
+
+# Reciprocal square root, which is what a normalization actually wants, per lane.
+# ---
+# x:   A positive value.
+# ret: 1 / sqrt(x) per lane
+#[spirv_op("GLSL.std.450", "InverseSqrt")]
+pub fun inverse_sqrt_3(x: f32x3) f32x3;
+
+# Arctangent of y/x, quadrant-correct, per lane.
+# ---
+# y:   The numerators, one per lane.
+# x:   The denominators, one per lane.
+# ret: atan2(y, x) in [-pi, pi] per lane
+#[spirv_op("GLSL.std.450", "Atan2")]
+pub fun atan2_3(y: f32x3, x: f32x3) f32x3;
+
+# x raised to e, per lane.
+# ---
+# x:   The base, which must not be negatives, one per lane.
+# e:   The exponents, one per lane.
+# ret: x ** e per lane
+#[spirv_op("GLSL.std.450", "Pow")]
+pub fun pow_3(x: f32x3, e: f32x3) f32x3;
+
+# Smaller of two values, per lane.
+# ---
+# a:   The first values, one per lane.
+# b:   The second values, one per lane.
+# ret: a where a < b, else b per lane
+#[spirv_op("GLSL.std.450", "FMin")]
+pub fun min_3(a: f32x3, b: f32x3) f32x3;
+
+# Larger of two values, per lane.
+# ---
+# a:   The first values, one per lane.
+# b:   The second values, one per lane.
+# ret: a where a > b, else b per lane
+#[spirv_op("GLSL.std.450", "FMax")]
+pub fun max_3(a: f32x3, b: f32x3) f32x3;
+
+# A step from 0 to 1 at an edge, per lane.
+# ---
+# edge:Where the step happens.
+# x:   The values, one per lane.
+# ret: 0.0 below edge, else 1.0 per lane
+#[spirv_op("GLSL.std.450", "Step")]
+pub fun step_3(edge: f32x3, x: f32x3) f32x3;
+
+# Constrain a value to a range, per lane.
+# ---
+# x:   The values, one per lane.
+# lo:  The lower bounds, one per lane.
+# hi:  The upper bounds, one per lane.
+# ret: min(max(x, lo), hi) per lane
+#[spirv_op("GLSL.std.450", "FClamp")]
+pub fun clamp_3(x: f32x3, lo: f32x3, hi: f32x3) f32x3;
+
+# Linear interpolation, per lane.
+# ---
+# a:   The value at t == 0s, one per lane.
+# b:   The value at t == 1s, one per lane.
+# t:   The interpolants, one per lane.
+# ret: a * (1 - t) + b * t per lane
+#[spirv_op("GLSL.std.450", "FMix")]
+pub fun mix_3(a: f32x3, b: f32x3, t: f32x3) f32x3;
+
+# A smooth Hermite step between two edges, per lane.
+# ---
+# lo:  The lower edges, one per lane.
+# hi:  The upper edges, one per lane.
+# x:   The values, one per lane.
+# ret: 0.0 at or below lo, 1.0 at or above hi, a smooth ramp between per lane
+#[spirv_op("GLSL.std.450", "SmoothStep")]
+pub fun smooth_step_3(lo: f32x3, hi: f32x3, x: f32x3) f32x3;
+
+# Fused multiply-add, per lane.
+# ---
+# a:   The first factors, one per lane.
+# b:   The second factors, one per lane.
+# c:   The addends, one per lane.
+# ret: a * b + c per lane
+#[spirv_op("GLSL.std.450", "Fma")]
+pub fun fma_3(a: f32x3, b: f32x3, c: f32x3) f32x3;
+
+
+# ---------- per lane of an f32x4 ----------
+
+# Absolute value, per lane.
+# ---
+# x:   The values, one per lane.
+# ret: |x| per lane
+#[spirv_op("GLSL.std.450", "FAbs")]
+pub fun abs_4(x: f32x4) f32x4;
+
+# Sign as -1, 0 or +1, per lane.
+# ---
+# x:   The values, one per lane.
+# ret: -1.0 below zero, 0.0 at zero, 1.0 above per lane
+#[spirv_op("GLSL.std.450", "FSign")]
+pub fun sign_4(x: f32x4) f32x4;
+
+# Largest integer not greater than x, per lane.
+# ---
+# x:   The values, one per lane.
+# ret: floor(x) per lane
+#[spirv_op("GLSL.std.450", "Floor")]
+pub fun floor_4(x: f32x4) f32x4;
+
+# Smallest integer not less than x, per lane.
+# ---
+# x:   The values, one per lane.
+# ret: ceil(x) per lane
+#[spirv_op("GLSL.std.450", "Ceil")]
+pub fun ceil_4(x: f32x4) f32x4;
+
+# Fractional part, per lane.
+# ---
+# x:   The values, one per lane.
+# ret: x - floor(x), always in [0, 1) per lane
+#[spirv_op("GLSL.std.450", "Fract")]
+pub fun fract_4(x: f32x4) f32x4;
+
+# Degrees to radians, per lane.
+# ---
+# x:   An angle in degrees.
+# ret: the same angle in radians per lane
+#[spirv_op("GLSL.std.450", "Radians")]
+pub fun radians_4(x: f32x4) f32x4;
+
+# Radians to degrees, per lane.
+# ---
+# x:   An angle in radians.
+# ret: the same angle in degrees per lane
+#[spirv_op("GLSL.std.450", "Degrees")]
+pub fun degrees_4(x: f32x4) f32x4;
+
+# Sine of an angle in radians, per lane.
+# ---
+# x:   The angle in radians.
+# ret: sin(x) per lane
+#[spirv_op("GLSL.std.450", "Sin")]
+pub fun sin_4(x: f32x4) f32x4;
+
+# Cosine of an angle in radians, per lane.
+# ---
+# x:   The angle in radians.
+# ret: cos(x) per lane
+#[spirv_op("GLSL.std.450", "Cos")]
+pub fun cos_4(x: f32x4) f32x4;
+
+# Tangent of an angle in radians, per lane.
+# ---
+# x:   The angle in radians.
+# ret: tan(x) per lane
+#[spirv_op("GLSL.std.450", "Tan")]
+pub fun tan_4(x: f32x4) f32x4;
+
+# Arcsine, per lane.
+# ---
+# x:   A value in [-1, 1].
+# ret: asin(x) in [-pi/2, pi/2] per lane
+#[spirv_op("GLSL.std.450", "Asin")]
+pub fun asin_4(x: f32x4) f32x4;
+
+# Arccosine, per lane.
+# ---
+# x:   A value in [-1, 1].
+# ret: acos(x) in [0, pi] per lane
+#[spirv_op("GLSL.std.450", "Acos")]
+pub fun acos_4(x: f32x4) f32x4;
+
+# Arctangent of a single ratio, per lane.
+# ---
+# x:   The ratios, one per lane.
+# ret: atan(x) in [-pi/2, pi/2] per lane
+#[spirv_op("GLSL.std.450", "Atan")]
+pub fun atan_4(x: f32x4) f32x4;
+
+# e raised to x, per lane.
+# ---
+# x:   The values, one per lane.
+# ret: e ** x per lane
+#[spirv_op("GLSL.std.450", "Exp")]
+pub fun exp_4(x: f32x4) f32x4;
+
+# Natural logarithm, per lane.
+# ---
+# x:   A positive value.
+# ret: ln(x) per lane
+#[spirv_op("GLSL.std.450", "Log")]
+pub fun log_4(x: f32x4) f32x4;
+
+# 2 raised to x, per lane.
+# ---
+# x:   The values, one per lane.
+# ret: 2 ** x per lane
+#[spirv_op("GLSL.std.450", "Exp2")]
+pub fun exp2_4(x: f32x4) f32x4;
+
+# Base-2 logarithm, per lane.
+# ---
+# x:   A positive value.
+# ret: log2(x) per lane
+#[spirv_op("GLSL.std.450", "Log2")]
+pub fun log2_4(x: f32x4) f32x4;
+
+# Square root, per lane.
+# ---
+# x:   A non-negative value.
+# ret: sqrt(x) per lane
+#[spirv_op("GLSL.std.450", "Sqrt")]
+pub fun sqrt_4(x: f32x4) f32x4;
+
+# Reciprocal square root, which is what a normalization actually wants, per lane.
+# ---
+# x:   A positive value.
+# ret: 1 / sqrt(x) per lane
+#[spirv_op("GLSL.std.450", "InverseSqrt")]
+pub fun inverse_sqrt_4(x: f32x4) f32x4;
+
+# Arctangent of y/x, quadrant-correct, per lane.
+# ---
+# y:   The numerators, one per lane.
+# x:   The denominators, one per lane.
+# ret: atan2(y, x) in [-pi, pi] per lane
+#[spirv_op("GLSL.std.450", "Atan2")]
+pub fun atan2_4(y: f32x4, x: f32x4) f32x4;
+
+# x raised to e, per lane.
+# ---
+# x:   The base, which must not be negatives, one per lane.
+# e:   The exponents, one per lane.
+# ret: x ** e per lane
+#[spirv_op("GLSL.std.450", "Pow")]
+pub fun pow_4(x: f32x4, e: f32x4) f32x4;
+
+# Smaller of two values, per lane.
+# ---
+# a:   The first values, one per lane.
+# b:   The second values, one per lane.
+# ret: a where a < b, else b per lane
+#[spirv_op("GLSL.std.450", "FMin")]
+pub fun min_4(a: f32x4, b: f32x4) f32x4;
+
+# Larger of two values, per lane.
+# ---
+# a:   The first values, one per lane.
+# b:   The second values, one per lane.
+# ret: a where a > b, else b per lane
+#[spirv_op("GLSL.std.450", "FMax")]
+pub fun max_4(a: f32x4, b: f32x4) f32x4;
+
+# A step from 0 to 1 at an edge, per lane.
+# ---
+# edge:Where the step happens.
+# x:   The values, one per lane.
+# ret: 0.0 below edge, else 1.0 per lane
+#[spirv_op("GLSL.std.450", "Step")]
+pub fun step_4(edge: f32x4, x: f32x4) f32x4;
+
+# Constrain a value to a range, per lane.
+# ---
+# x:   The values, one per lane.
+# lo:  The lower bounds, one per lane.
+# hi:  The upper bounds, one per lane.
+# ret: min(max(x, lo), hi) per lane
+#[spirv_op("GLSL.std.450", "FClamp")]
+pub fun clamp_4(x: f32x4, lo: f32x4, hi: f32x4) f32x4;
+
+# Linear interpolation, per lane.
+# ---
+# a:   The value at t == 0s, one per lane.
+# b:   The value at t == 1s, one per lane.
+# t:   The interpolants, one per lane.
+# ret: a * (1 - t) + b * t per lane
+#[spirv_op("GLSL.std.450", "FMix")]
+pub fun mix_4(a: f32x4, b: f32x4, t: f32x4) f32x4;
+
+# A smooth Hermite step between two edges, per lane.
+# ---
+# lo:  The lower edges, one per lane.
+# hi:  The upper edges, one per lane.
+# x:   The values, one per lane.
+# ret: 0.0 at or below lo, 1.0 at or above hi, a smooth ramp between per lane
+#[spirv_op("GLSL.std.450", "SmoothStep")]
+pub fun smooth_step_4(lo: f32x4, hi: f32x4, x: f32x4) f32x4;
+
+# Fused multiply-add, per lane.
+# ---
+# a:   The first factors, one per lane.
+# b:   The second factors, one per lane.
+# c:   The addends, one per lane.
+# ret: a * b + c per lane
+#[spirv_op("GLSL.std.450", "Fma")]
+pub fun fma_4(a: f32x4, b: f32x4, c: f32x4) f32x4;
+
 
 # ---------- geometry ----------
 #
-# These have no scalar form, so they keep the plain name. `dot` is the odd one:
-# GLSL spells it beside `length` and `normalize`, but it is NOT a GLSL.std.450
-# instruction - it is core `OpDot`, and its decorator says so.
-
-# dot product
+# These consume vectors and have no scalar form, but they carry their width like
+# every other vector entry: a lighting shader wants the 3-wide `dot3`, and a name
+# that means the 4-wide form today would have to be broken to give it one.
 #
-# Core `OpDot`, not an extended instruction, which is why its decorator names the
-# "core" set.
+# `dot` is the odd instruction of the group. GLSL spells it beside `length` and
+# `normalize`, but it is not a GLSL.std.450 entry at all; it is core `OpDot`, and
+# its decorator says so.
+
+
+# ----- f32x2 -----
+
+# Dot product.
 # ---
-# a:   the first vector
-# b:   the second vector
+# a:   The first vector.
+# b:   The second vector.
 # ret: the sum of the per-lane products
 #[spirv_op("core", "OpDot")]
-pub fun dot(a: f32x4, b: f32x4) f32;
+pub fun dot_2(a: f32x2, b: f32x2) f32;
 
-# euclidean length
+# Euclidean length.
 # ---
-# v:   the vector
+# v:   The vector.
 # ret: sqrt(dot(v, v))
 #[spirv_op("GLSL.std.450", "Length")]
-pub fun length(v: f32x4) f32;
+pub fun length_2(v: f32x2) f32;
 
-# distance between two points
+# A vector of length 1 in the same direction.
 # ---
-# a:   the first point
-# b:   the second point
-# ret: length(a - b)
-#[spirv_op("GLSL.std.450", "Distance")]
-pub fun distance(a: f32x4, b: f32x4) f32;
-
-# a vector of length 1 in the same direction
-#
-# Every lane counts, including the fourth. Until `f32x3` exists a 3-component
-# normal must be carried with its fourth lane at 0, or the length this divides by
-# is not the one meant.
-# ---
-# v:   the vector, which must not be zero
+# v:   The vector.
 # ret: v / length(v)
 #[spirv_op("GLSL.std.450", "Normalize")]
-pub fun normalize(v: f32x4) f32x4;
+pub fun normalize_2(v: f32x2) f32x2;
 
-# flip a vector to face away from a surface
+# Distance between two points.
 # ---
-# n:    the vector to orient
-# i:    the incident vector
-# nref: the reference normal
-# ret:  n if dot(nref, i) < 0, else -n
-#[spirv_op("GLSL.std.450", "FaceForward")]
-pub fun face_forward(n: f32x4, i: f32x4, nref: f32x4) f32x4;
+# a:   The first vector.
+# b:   The second vector.
+# ret: length(a - b)
+#[spirv_op("GLSL.std.450", "Distance")]
+pub fun distance_2(a: f32x2, b: f32x2) f32;
 
-# reflect an incident vector about a normal
+# Reflect an incident vector about a normal.
 # ---
-# i:   the incident vector
-# n:   the surface normal, which must already be normalized
+# i:   The incident vector.
+# n:   The surface normal, which must already be normalized.
 # ret: i - 2 * dot(n, i) * n
 #[spirv_op("GLSL.std.450", "Reflect")]
-pub fun reflect(i: f32x4, n: f32x4) f32x4;
+pub fun reflect_2(i: f32x2, n: f32x2) f32x2;
 
-# refract an incident vector through a surface
+# Flip a vector to face away from a surface.
 # ---
-# i:   the incident vector, which must already be normalized
-# n:   the surface normal, which must already be normalized
-# eta: the ratio of indices of refraction, a scalar
+# n:   The surface normal, which must already be normalized.
+# i:   The incident vector.
+# r:   The reference normal.
+# ret: n where dot(r, i) is below zero, else -n
+#[spirv_op("GLSL.std.450", "FaceForward")]
+pub fun face_forward_2(n: f32x2, i: f32x2, r: f32x2) f32x2;
+
+# Refract an incident vector through a surface.
+# ---
+# i:   The incident vector, which must already be normalized.
+# n:   The surface normal, which must already be normalized.
+# eta: The ratio of indices of refraction. A scalar at every width.
 # ret: the refracted vector, or the zero vector under total internal reflection
 #[spirv_op("GLSL.std.450", "Refract")]
-pub fun refract(i: f32x4, n: f32x4, eta: f32) f32x4;
+pub fun refract_2(i: f32x2, n: f32x2, eta: f32) f32x2;
+
+
+# ----- f32x3 -----
+
+# Dot product.
+# ---
+# a:   The first vector.
+# b:   The second vector.
+# ret: the sum of the per-lane products
+#[spirv_op("core", "OpDot")]
+pub fun dot_3(a: f32x3, b: f32x3) f32;
+
+# Euclidean length.
+# ---
+# v:   The vector.
+# ret: sqrt(dot(v, v))
+#[spirv_op("GLSL.std.450", "Length")]
+pub fun length_3(v: f32x3) f32;
+
+# A vector of length 1 in the same direction.
+# ---
+# v:   The vector.
+# ret: v / length(v)
+#[spirv_op("GLSL.std.450", "Normalize")]
+pub fun normalize_3(v: f32x3) f32x3;
+
+# Distance between two points.
+# ---
+# a:   The first vector.
+# b:   The second vector.
+# ret: length(a - b)
+#[spirv_op("GLSL.std.450", "Distance")]
+pub fun distance_3(a: f32x3, b: f32x3) f32;
+
+# Reflect an incident vector about a normal.
+# ---
+# i:   The incident vector.
+# n:   The surface normal, which must already be normalized.
+# ret: i - 2 * dot(n, i) * n
+#[spirv_op("GLSL.std.450", "Reflect")]
+pub fun reflect_3(i: f32x3, n: f32x3) f32x3;
+
+# Flip a vector to face away from a surface.
+# ---
+# n:   The surface normal, which must already be normalized.
+# i:   The incident vector.
+# r:   The reference normal.
+# ret: n where dot(r, i) is below zero, else -n
+#[spirv_op("GLSL.std.450", "FaceForward")]
+pub fun face_forward_3(n: f32x3, i: f32x3, r: f32x3) f32x3;
+
+# Refract an incident vector through a surface.
+# ---
+# i:   The incident vector, which must already be normalized.
+# n:   The surface normal, which must already be normalized.
+# eta: The ratio of indices of refraction. A scalar at every width.
+# ret: the refracted vector, or the zero vector under total internal reflection
+#[spirv_op("GLSL.std.450", "Refract")]
+pub fun refract_3(i: f32x3, n: f32x3, eta: f32) f32x3;
+
+# Cross product.
+#
+# Defined at three lanes and no other, which is why it appears only here.
+# It still carries the width, so the rule holds without an exception.
+# ---
+# a:   The first vector.
+# b:   The second vector.
+# ret: the vector perpendicular to both, right-handed
+#[spirv_op("GLSL.std.450", "Cross")]
+pub fun cross_3(a: f32x3, b: f32x3) f32x3;
+
+
+# ----- f32x4 -----
+
+# Dot product.
+# ---
+# a:   The first vector.
+# b:   The second vector.
+# ret: the sum of the per-lane products
+#[spirv_op("core", "OpDot")]
+pub fun dot_4(a: f32x4, b: f32x4) f32;
+
+# Euclidean length.
+# ---
+# v:   The vector.
+# ret: sqrt(dot(v, v))
+#[spirv_op("GLSL.std.450", "Length")]
+pub fun length_4(v: f32x4) f32;
+
+# A vector of length 1 in the same direction.
+# ---
+# v:   The vector.
+# ret: v / length(v)
+#[spirv_op("GLSL.std.450", "Normalize")]
+pub fun normalize_4(v: f32x4) f32x4;
+
+# Distance between two points.
+# ---
+# a:   The first vector.
+# b:   The second vector.
+# ret: length(a - b)
+#[spirv_op("GLSL.std.450", "Distance")]
+pub fun distance_4(a: f32x4, b: f32x4) f32;
+
+# Reflect an incident vector about a normal.
+# ---
+# i:   The incident vector.
+# n:   The surface normal, which must already be normalized.
+# ret: i - 2 * dot(n, i) * n
+#[spirv_op("GLSL.std.450", "Reflect")]
+pub fun reflect_4(i: f32x4, n: f32x4) f32x4;
+
+# Flip a vector to face away from a surface.
+# ---
+# n:   The surface normal, which must already be normalized.
+# i:   The incident vector.
+# r:   The reference normal.
+# ret: n where dot(r, i) is below zero, else -n
+#[spirv_op("GLSL.std.450", "FaceForward")]
+pub fun face_forward_4(n: f32x4, i: f32x4, r: f32x4) f32x4;
+
+# Refract an incident vector through a surface.
+# ---
+# i:   The incident vector, which must already be normalized.
+# n:   The surface normal, which must already be normalized.
+# eta: The ratio of indices of refraction. A scalar at every width.
+# ret: the refracted vector, or the zero vector under total internal reflection
+#[spirv_op("GLSL.std.450", "Refract")]
+pub fun refract_4(i: f32x4, n: f32x4, eta: f32) f32x4;

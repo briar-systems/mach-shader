@@ -1,0 +1,51 @@
+# Calls one entry from every family at every width.
+#
+# This exists to be compiled, not to shade anything. Each call forces the
+# compiler to resolve a `#[spirv_op]` decorator and emit the instruction at that
+# operand width, so a wrong instruction name or a signature SPIR-V rejects turns
+# into a build failure here. The library on its own compiles to nothing and would
+# catch neither.
+#
+# The result is written to the output so no call can be eliminated as dead.
+
+use sh: shader.math;
+
+#[input(0)] var a2: f32x2;
+#[input(1)] var b2: f32x2;
+#[input(2)] var a3: f32x3;
+#[input(3)] var b3: f32x3;
+#[input(4)] var a4: f32x4;
+#[input(5)] var b4: f32x4;
+#[input(6)] var s:  f32;
+
+#[output(0)] var out_colour: f32x4;
+
+#[stage("fragment")]
+fun frag_main() {
+    # Scalar: one entry from each of the four groups.
+    val u: f32 = sh.sqrt(sh.abs(s)) + sh.atan2(s, s)
+               + sh.smooth_step(0.0, 1.0, s) + sh.fma(s, s, s)
+               + sh.degrees(sh.sin(s)) + sh.log2(sh.exp2(s));
+
+    # Two lanes.
+    val v2: f32x2 = sh.fma_2(sh.abs_2(a2), sh.max_2(a2, b2),
+                            sh.mix_2(a2, b2, sh.fract_2(a2)));
+    val g2: f32 = sh.dot_2(sh.normalize_2(v2), sh.reflect_2(a2, sh.normalize_2(b2)))
+                + sh.length_2(v2) + sh.distance_2(a2, b2);
+
+    # Three lanes, including the cross product that exists at no other width.
+    val n3: f32x3 = sh.normalize_3(sh.cross_3(a3, b3));
+    val v3: f32x3 = sh.refract_3(sh.normalize_3(a3), n3, 1.5);
+    val f3: f32x3 = sh.face_forward_3(n3, a3, b3);
+    val g3: f32 = sh.dot_3(v3, f3) + sh.length_3(sh.clamp_3(a3, b3, a3))
+                + sh.distance_3(sh.sin_3(a3), sh.pow_3(sh.abs_3(b3), a3));
+
+    # Four lanes.
+    val v4: f32x4 = sh.mix_4(sh.floor_4(a4), sh.ceil_4(b4),
+                            sh.step_4(a4, sh.inverse_sqrt_4(sh.abs_4(b4))));
+    val g4: f32 = sh.dot_4(sh.normalize_4(v4), sh.face_forward_4(v4, a4, b4))
+                + sh.length_4(sh.min_4(a4, b4)) + sh.distance_4(a4, b4);
+
+    val total: f32 = u + g2 + g3 + g4;
+    out_colour = f32x4{total, total, total, total};
+}

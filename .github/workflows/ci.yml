@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [dev, main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  conform:
+    name: Conformance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch released mach
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/machdl
+          gh release download -R briar-systems/mach \
+            -p 'mach-*-x86_64-linux.tar.gz' -D /tmp/machdl --clobber
+          tar -xzf /tmp/machdl/mach-*-x86_64-linux.tar.gz -C /tmp/machdl
+          install -m 0755 /tmp/machdl/mach /usr/local/bin/mach
+          mach info
+
+      - name: Install spirv-tools
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y spirv-tools
+
+      # The generated file must match its generator. Without this the table and
+      # the checked-in source drift the first time someone edits one of them.
+      - name: Check src/math.mach is in sync with tools/genmath.py
+        run: |
+          set -euo pipefail
+          python3 tools/genmath.py > /tmp/math.mach
+          diff -u src/math.mach /tmp/math.mach
+
+      # The library is 134 bodyless declarations, so building it emits nothing
+      # and proves nothing. The conformance shader is the real check: it calls
+      # one entry from every family at every width.
+      - name: Build the conformance shader
+        run: |
+          set -euo pipefail
+          cd conform
+          mach dep pull
+          mach build . --target spirv --profile release
+
+      - name: Validate the emitted module
+        run: spirv-val conform/out/obj/conform/conform_frag.spv
+
+      # A decorator can name a plausible instruction that never reaches the
+      # module. Disassembling and counting proves the calls lowered rather than
+      # being dropped, and that OpDot came through as core rather than as an
+      # extended instruction.
+      - name: Check the instructions were actually emitted
+        run: |
+          set -euo pipefail
+          spirv-dis conform/out/obj/conform/conform_frag.spv > /tmp/conform.spvasm
+          for op in Cross Refract Reflect FaceForward Normalize Length Distance \
+                    FAbs Sqrt InverseSqrt Fract Floor Ceil Degrees Sin Pow \
+                    Exp2 Log2 Atan2 FMin FMax FClamp FMix Step SmoothStep Fma; do
+            grep -q "OpExtInst .* $op " /tmp/conform.spvasm \
+              || { echo "missing GLSL.std.450 $op"; exit 1; }
+          done
+          grep -q 'OpDot' /tmp/conform.spvasm || { echo "missing core OpDot"; exit 1; }
+          echo "every checked instruction is present"
