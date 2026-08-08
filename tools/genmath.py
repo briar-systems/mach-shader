@@ -8,7 +8,7 @@ is an edit to the table, not 130 edits to the file.
 
 HEADER = '''# Shader-side maths: the functions that ARE SPIR-V instructions.
 #
-# Every declaration here is one SPIR-V instruction, named by a `#[spirv_op(set,
+# Every declaration here is one SPIR-V instruction, named by an `#[op(target, set,
 # name)]` decorator the compiler reads at the call site. A call to `normalize3`
 # in a shader does not become a call at all: it becomes the instruction, inline,
 # in the calling function's body.
@@ -167,7 +167,7 @@ def decl(name, suffix, glsl, params, ty, summary, ret, per_lane, sset="GLSL.std.
         lines.append(f"# {p}:{' ' * (4 - len(p))}{doc}")
     tail = ret + (" per lane" if per_lane else "")
     lines.append(f"# ret: {tail[0].lower()}{tail[1:]}" if tail[0].isupper() else f"# ret: {tail}")
-    lines.append(f'#[spirv_op("{sset}", "{glsl}")]')
+    lines.append(f'#[op("spirv", "{sset}", "{glsl}")]')
     lines.append(f"pub fun {name}{suffix}({args}) {ty};")
     return "\n".join(lines)
 
@@ -226,7 +226,7 @@ def geom(name, suffix, glsl, params, ty, summary, ret, result, sset="GLSL.std.45
     for p in params:
         lines.append(f"# {p}:{' ' * (4 - len(p))}{GEOM_DOC[p]}")
     lines.append(f"# ret: {ret}")
-    lines.append(f'#[spirv_op("{sset}", "{glsl}")]')
+    lines.append(f'#[op("spirv", "{sset}", "{glsl}")]')
     lines.append(f"pub fun {name}{suffix}({args}) {rty};")
     return "\n".join(lines)
 
@@ -249,7 +249,7 @@ for suffix, ty, label in widths():
              "# n:   The surface normal, which must already be normalized.",
              "# eta: The ratio of indices of refraction. A scalar at every width.",
              "# ret: the refracted vector, or the zero vector under total internal reflection",
-             '#[spirv_op("GLSL.std.450", "Refract")]',
+             '#[op("spirv", "GLSL.std.450", "Refract")]',
              f"pub fun refract{suffix}(i: {ty}, n: {ty}, eta: f32) {ty};"]
     out.append("\n".join(lines))
     out.append("")
@@ -263,7 +263,7 @@ for suffix, ty, label in widths():
                  "# a:   The first vector.",
                  "# b:   The second vector.",
                  "# ret: the vector perpendicular to both, right-handed",
-                 '#[spirv_op("GLSL.std.450", "Cross")]',
+                 '#[op("spirv", "GLSL.std.450", "Cross")]',
                  "pub fun cross_3(a: f32x3, b: f32x3) f32x3;"]
         out.append("\n".join(lines))
         out.append("")
