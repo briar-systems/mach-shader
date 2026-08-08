@@ -1,0 +1,145 @@
+# Shader-side texture handles: the types the compiler no longer knows about.
+#
+# Every handle here is a bodyless `def` carrying `#[handle(target, constructor,
+# operands...)]`. The compiler knows the machinery - a declaration with no body
+# whose definition the owning target supplies - and the SPIR-V target owns what a
+# constructor is and what each operand means. Adding a handle is a declaration in
+# this file, not a compiler release.
+#
+# THE OPERANDS ARE THIS TARGET'S OWN, and they are the `OpTypeImage` operands one
+# for one, minus the Image Format that is fixed at Unknown for a sampled image. They
+# are named here so a declaration reads as a shape rather than as six digits, and so
+# a value outside the set the target emits is refused against a name.
+#
+# COMPOSITION IS BY NAMING. A `Sampler2D` is an `OpTypeSampledImage` over an
+# `OpTypeImage`, and it NAMES the image it wraps rather than restating that image's
+# operands. There is exactly one statement of a `Texture2D`'s shape, so a sampled
+# image and the image it is built from cannot disagree about it.
+#
+# WHAT IS NOT DECLARED, and why each is refused rather than absent. The target
+# refuses a depth-comparison image, a multisampled image, a `Rect` / `Buffer` /
+# `SubpassData` dimensionality, and a storage image, and it refuses each by naming
+# the operand and saying what SPIR-V would need instead. Declaring one here would
+# fail at the declaration with that sentence rather than at the use site with an
+# unknown name, which is why they are left out rather than commented around.
+
+# the scalar an image's texels are sampled as. `TEXEL_I32` and `TEXEL_U32` differ in
+# the mach type a program declares and agree on the descriptor: this target's
+# integers are sign-less, because SPIR-V puts signedness on the operation
+pub val TEXEL_F32: u32 = 0;
+pub val TEXEL_I32: u32 = 1;
+pub val TEXEL_U32: u32 = 2;
+
+# the dimensionality an image is addressed in
+pub val DIM_1D:   u32 = 0;
+pub val DIM_2D:   u32 = 1;
+pub val DIM_3D:   u32 = 2;
+pub val DIM_CUBE: u32 = 3;
+
+# the `Depth` operand. only `NO_DEPTH` is emitted: a depth image is sampled by
+# `OpImageSampleDref*`, which takes a reference value no operation here has
+pub val NO_DEPTH: u32 = 0;
+
+# the `Arrayed` operand: whether the image carries array layers
+pub val NONARRAYED: u32 = 0;
+pub val ARRAYED:    u32 = 1;
+
+# the `MS` operand. only `SINGLE_SAMPLED` is emitted: a multisampled image is
+# fetched per sample rather than sampled
+pub val SINGLE_SAMPLED: u32 = 0;
+
+# the `Sampled` operand. only `SAMPLED` is emitted: a storage image is read and
+# written directly and carries an Image Format operand this set does not spell
+pub val SAMPLED: u32 = 1;
+
+# the images, one per dimensionality and one per texel scalar. each is the
+# separately-bound form: an image with no sampler attached
+#[handle("spirv", "image", TEXEL_F32, DIM_1D, NO_DEPTH, NONARRAYED, SINGLE_SAMPLED, SAMPLED)]
+pub def Texture1D;
+#[handle("spirv", "image", TEXEL_F32, DIM_2D, NO_DEPTH, NONARRAYED, SINGLE_SAMPLED, SAMPLED)]
+pub def Texture2D;
+#[handle("spirv", "image", TEXEL_F32, DIM_3D, NO_DEPTH, NONARRAYED, SINGLE_SAMPLED, SAMPLED)]
+pub def Texture3D;
+#[handle("spirv", "image", TEXEL_F32, DIM_CUBE, NO_DEPTH, NONARRAYED, SINGLE_SAMPLED, SAMPLED)]
+pub def TextureCube;
+#[handle("spirv", "image", TEXEL_F32, DIM_2D, NO_DEPTH, ARRAYED, SINGLE_SAMPLED, SAMPLED)]
+pub def Texture2DArray;
+#[handle("spirv", "image", TEXEL_F32, DIM_CUBE, NO_DEPTH, ARRAYED, SINGLE_SAMPLED, SAMPLED)]
+pub def TextureCubeArray;
+
+#[handle("spirv", "image", TEXEL_I32, DIM_2D, NO_DEPTH, NONARRAYED, SINGLE_SAMPLED, SAMPLED)]
+pub def ITexture2D;
+#[handle("spirv", "image", TEXEL_U32, DIM_2D, NO_DEPTH, NONARRAYED, SINGLE_SAMPLED, SAMPLED)]
+pub def UTexture2D;
+
+# a sampler: filtering and addressing state with no image attached, which is what
+# makes the separately-bound form a different shape rather than a decoration
+#[handle("spirv", "sampler")]
+pub def Sampler;
+
+# the combined descriptors, each NAMING the image it wraps
+#[handle("spirv", "sampled_image", Texture1D)]
+pub def Sampler1D;
+#[handle("spirv", "sampled_image", Texture2D)]
+pub def Sampler2D;
+#[handle("spirv", "sampled_image", Texture3D)]
+pub def Sampler3D;
+#[handle("spirv", "sampled_image", TextureCube)]
+pub def SamplerCube;
+#[handle("spirv", "sampled_image", Texture2DArray)]
+pub def Sampler2DArray;
+#[handle("spirv", "sampled_image", TextureCubeArray)]
+pub def SamplerCubeArray;
+#[handle("spirv", "sampled_image", ITexture2D)]
+pub def ISampler2D;
+#[handle("spirv", "sampled_image", UTexture2D)]
+pub def USampler2D;
+
+# combine a separately-bound image and sampler into the value a lookup takes.
+#
+# SPIR-V requires the result be consumed in the block that produced it, which is the
+# same rule that makes a handle unnameable as a local: hand the result straight to
+# the sample.
+#[op("spirv", "core", "OpSampledImage")]
+pub fun combine_2d(t: Texture2D, s: Sampler) Sampler2D;
+#[op("spirv", "core", "OpSampledImage")]
+pub fun combine_1d(t: Texture1D, s: Sampler) Sampler1D;
+#[op("spirv", "core", "OpSampledImage")]
+pub fun combine_3d(t: Texture3D, s: Sampler) Sampler3D;
+#[op("spirv", "core", "OpSampledImage")]
+pub fun combine_cube(t: TextureCube, s: Sampler) SamplerCube;
+#[op("spirv", "core", "OpSampledImage")]
+pub fun combine_2d_array(t: Texture2DArray, s: Sampler) Sampler2DArray;
+#[op("spirv", "core", "OpSampledImage")]
+pub fun combine_cube_array(t: TextureCubeArray, s: Sampler) SamplerCubeArray;
+#[op("spirv", "core", "OpSampledImage")]
+pub fun combine_2d_i(t: ITexture2D, s: Sampler) ISampler2D;
+#[op("spirv", "core", "OpSampledImage")]
+pub fun combine_2d_u(t: UTexture2D, s: Sampler) USampler2D;
+
+# sample a combined handle at a coordinate, with the level of detail derived from
+# the fragment stage's own derivatives.
+#
+# THE NAME CARRIES THE HANDLE, not the coordinate width, because the coordinate
+# width follows from the handle: a 2D image takes two components and a cube takes
+# three. An arrayed image takes one more component than its non-arrayed twin, the
+# layer, which is why `sample_2d_array` takes an `f32x4` where `sample_2d` takes an
+# `f32x2`.
+#[op("spirv", "core", "OpImageSampleImplicitLod")]
+pub fun sample_1d(s: Sampler1D, u: f32) f32x4;
+#[op("spirv", "core", "OpImageSampleImplicitLod")]
+pub fun sample_2d(s: Sampler2D, uv: f32x2) f32x4;
+#[op("spirv", "core", "OpImageSampleImplicitLod")]
+pub fun sample_3d(s: Sampler3D, uvw: f32x4) f32x4;
+#[op("spirv", "core", "OpImageSampleImplicitLod")]
+pub fun sample_cube(s: SamplerCube, dir: f32x4) f32x4;
+#[op("spirv", "core", "OpImageSampleImplicitLod")]
+pub fun sample_2d_array(s: Sampler2DArray, uvl: f32x4) f32x4;
+#[op("spirv", "core", "OpImageSampleImplicitLod")]
+pub fun sample_cube_array(s: SamplerCubeArray, dirl: f32x4) f32x4;
+
+# the integer paths, whose result type shares the image's component type
+#[op("spirv", "core", "OpImageSampleImplicitLod")]
+pub fun sample_2d_i(s: ISampler2D, uv: f32x2) i32x4;
+#[op("spirv", "core", "OpImageSampleImplicitLod")]
+pub fun sample_2d_u(s: USampler2D, uv: f32x2) u32x4;

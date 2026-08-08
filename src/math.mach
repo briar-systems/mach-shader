@@ -1,6 +1,6 @@
 # Shader-side maths: the functions that ARE SPIR-V instructions.
 #
-# Every declaration here is one SPIR-V instruction, named by a `#[spirv_op(set,
+# Every declaration here is one SPIR-V instruction, named by an `#[op(target, set,
 # name)]` decorator the compiler reads at the call site. A call to `normalize3`
 # in a shader does not become a call at all: it becomes the instruction, inline,
 # in the calling function's body.
@@ -73,133 +73,133 @@
 # ---
 # x:   The value.
 # ret: |x|
-#[spirv_op("GLSL.std.450", "FAbs")]
+#[op("spirv", "GLSL.std.450", "FAbs")]
 pub fun abs(x: f32) f32;
 
 # Sign as -1, 0 or +1.
 # ---
 # x:   The value.
 # ret: -1.0 below zero, 0.0 at zero, 1.0 above
-#[spirv_op("GLSL.std.450", "FSign")]
+#[op("spirv", "GLSL.std.450", "FSign")]
 pub fun sign(x: f32) f32;
 
 # Largest integer not greater than x.
 # ---
 # x:   The value.
 # ret: floor(x)
-#[spirv_op("GLSL.std.450", "Floor")]
+#[op("spirv", "GLSL.std.450", "Floor")]
 pub fun floor(x: f32) f32;
 
 # Smallest integer not less than x.
 # ---
 # x:   The value.
 # ret: ceil(x)
-#[spirv_op("GLSL.std.450", "Ceil")]
+#[op("spirv", "GLSL.std.450", "Ceil")]
 pub fun ceil(x: f32) f32;
 
 # Fractional part.
 # ---
 # x:   The value.
 # ret: x - floor(x), always in [0, 1)
-#[spirv_op("GLSL.std.450", "Fract")]
+#[op("spirv", "GLSL.std.450", "Fract")]
 pub fun fract(x: f32) f32;
 
 # Degrees to radians.
 # ---
 # x:   An angle in degrees.
 # ret: the same angle in radians
-#[spirv_op("GLSL.std.450", "Radians")]
+#[op("spirv", "GLSL.std.450", "Radians")]
 pub fun radians(x: f32) f32;
 
 # Radians to degrees.
 # ---
 # x:   An angle in radians.
 # ret: the same angle in degrees
-#[spirv_op("GLSL.std.450", "Degrees")]
+#[op("spirv", "GLSL.std.450", "Degrees")]
 pub fun degrees(x: f32) f32;
 
 # Sine of an angle in radians.
 # ---
 # x:   The angle in radians.
 # ret: sin(x)
-#[spirv_op("GLSL.std.450", "Sin")]
+#[op("spirv", "GLSL.std.450", "Sin")]
 pub fun sin(x: f32) f32;
 
 # Cosine of an angle in radians.
 # ---
 # x:   The angle in radians.
 # ret: cos(x)
-#[spirv_op("GLSL.std.450", "Cos")]
+#[op("spirv", "GLSL.std.450", "Cos")]
 pub fun cos(x: f32) f32;
 
 # Tangent of an angle in radians.
 # ---
 # x:   The angle in radians.
 # ret: tan(x)
-#[spirv_op("GLSL.std.450", "Tan")]
+#[op("spirv", "GLSL.std.450", "Tan")]
 pub fun tan(x: f32) f32;
 
 # Arcsine.
 # ---
 # x:   A value in [-1, 1].
 # ret: asin(x) in [-pi/2, pi/2]
-#[spirv_op("GLSL.std.450", "Asin")]
+#[op("spirv", "GLSL.std.450", "Asin")]
 pub fun asin(x: f32) f32;
 
 # Arccosine.
 # ---
 # x:   A value in [-1, 1].
 # ret: acos(x) in [0, pi]
-#[spirv_op("GLSL.std.450", "Acos")]
+#[op("spirv", "GLSL.std.450", "Acos")]
 pub fun acos(x: f32) f32;
 
 # Arctangent of a single ratio.
 # ---
 # x:   The ratio.
 # ret: atan(x) in [-pi/2, pi/2]
-#[spirv_op("GLSL.std.450", "Atan")]
+#[op("spirv", "GLSL.std.450", "Atan")]
 pub fun atan(x: f32) f32;
 
 # e raised to x.
 # ---
 # x:   The value.
 # ret: e ** x
-#[spirv_op("GLSL.std.450", "Exp")]
+#[op("spirv", "GLSL.std.450", "Exp")]
 pub fun exp(x: f32) f32;
 
 # Natural logarithm.
 # ---
 # x:   A positive value.
 # ret: ln(x)
-#[spirv_op("GLSL.std.450", "Log")]
+#[op("spirv", "GLSL.std.450", "Log")]
 pub fun log(x: f32) f32;
 
 # 2 raised to x.
 # ---
 # x:   The value.
 # ret: 2 ** x
-#[spirv_op("GLSL.std.450", "Exp2")]
+#[op("spirv", "GLSL.std.450", "Exp2")]
 pub fun exp2(x: f32) f32;
 
 # Base-2 logarithm.
 # ---
 # x:   A positive value.
 # ret: log2(x)
-#[spirv_op("GLSL.std.450", "Log2")]
+#[op("spirv", "GLSL.std.450", "Log2")]
 pub fun log2(x: f32) f32;
 
 # Square root.
 # ---
 # x:   A non-negative value.
 # ret: sqrt(x)
-#[spirv_op("GLSL.std.450", "Sqrt")]
+#[op("spirv", "GLSL.std.450", "Sqrt")]
 pub fun sqrt(x: f32) f32;
 
 # Reciprocal square root, which is what a normalization actually wants.
 # ---
 # x:   A positive value.
 # ret: 1 / sqrt(x)
-#[spirv_op("GLSL.std.450", "InverseSqrt")]
+#[op("spirv", "GLSL.std.450", "InverseSqrt")]
 pub fun inverse_sqrt(x: f32) f32;
 
 # Arctangent of y/x, quadrant-correct.
@@ -207,7 +207,7 @@ pub fun inverse_sqrt(x: f32) f32;
 # y:   The numerator.
 # x:   The denominator.
 # ret: atan2(y, x) in [-pi, pi]
-#[spirv_op("GLSL.std.450", "Atan2")]
+#[op("spirv", "GLSL.std.450", "Atan2")]
 pub fun atan2(y: f32, x: f32) f32;
 
 # x raised to e.
@@ -215,7 +215,7 @@ pub fun atan2(y: f32, x: f32) f32;
 # x:   The base, which must not be negative.
 # e:   The exponent.
 # ret: x ** e
-#[spirv_op("GLSL.std.450", "Pow")]
+#[op("spirv", "GLSL.std.450", "Pow")]
 pub fun pow(x: f32, e: f32) f32;
 
 # Smaller of two values.
@@ -223,7 +223,7 @@ pub fun pow(x: f32, e: f32) f32;
 # a:   The first value.
 # b:   The second value.
 # ret: a where a < b, else b
-#[spirv_op("GLSL.std.450", "FMin")]
+#[op("spirv", "GLSL.std.450", "FMin")]
 pub fun min(a: f32, b: f32) f32;
 
 # Larger of two values.
@@ -231,7 +231,7 @@ pub fun min(a: f32, b: f32) f32;
 # a:   The first value.
 # b:   The second value.
 # ret: a where a > b, else b
-#[spirv_op("GLSL.std.450", "FMax")]
+#[op("spirv", "GLSL.std.450", "FMax")]
 pub fun max(a: f32, b: f32) f32;
 
 # A step from 0 to 1 at an edge.
@@ -239,7 +239,7 @@ pub fun max(a: f32, b: f32) f32;
 # edge:Where the step happens.
 # x:   The value.
 # ret: 0.0 below edge, else 1.0
-#[spirv_op("GLSL.std.450", "Step")]
+#[op("spirv", "GLSL.std.450", "Step")]
 pub fun step(edge: f32, x: f32) f32;
 
 # Constrain a value to a range.
@@ -248,7 +248,7 @@ pub fun step(edge: f32, x: f32) f32;
 # lo:  The lower bound.
 # hi:  The upper bound.
 # ret: min(max(x, lo), hi)
-#[spirv_op("GLSL.std.450", "FClamp")]
+#[op("spirv", "GLSL.std.450", "FClamp")]
 pub fun clamp(x: f32, lo: f32, hi: f32) f32;
 
 # Linear interpolation.
@@ -257,7 +257,7 @@ pub fun clamp(x: f32, lo: f32, hi: f32) f32;
 # b:   The value at t == 1.
 # t:   The interpolant.
 # ret: a * (1 - t) + b * t
-#[spirv_op("GLSL.std.450", "FMix")]
+#[op("spirv", "GLSL.std.450", "FMix")]
 pub fun mix(a: f32, b: f32, t: f32) f32;
 
 # A smooth Hermite step between two edges.
@@ -266,7 +266,7 @@ pub fun mix(a: f32, b: f32, t: f32) f32;
 # hi:  The upper edge.
 # x:   The value.
 # ret: 0.0 at or below lo, 1.0 at or above hi, a smooth ramp between
-#[spirv_op("GLSL.std.450", "SmoothStep")]
+#[op("spirv", "GLSL.std.450", "SmoothStep")]
 pub fun smooth_step(lo: f32, hi: f32, x: f32) f32;
 
 # Fused multiply-add.
@@ -275,7 +275,7 @@ pub fun smooth_step(lo: f32, hi: f32, x: f32) f32;
 # b:   The second factor.
 # c:   The addend.
 # ret: a * b + c
-#[spirv_op("GLSL.std.450", "Fma")]
+#[op("spirv", "GLSL.std.450", "Fma")]
 pub fun fma(a: f32, b: f32, c: f32) f32;
 
 
@@ -285,133 +285,133 @@ pub fun fma(a: f32, b: f32, c: f32) f32;
 # ---
 # x:   The values, one per lane.
 # ret: |x| per lane
-#[spirv_op("GLSL.std.450", "FAbs")]
+#[op("spirv", "GLSL.std.450", "FAbs")]
 pub fun abs_2(x: f32x2) f32x2;
 
 # Sign as -1, 0 or +1, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: -1.0 below zero, 0.0 at zero, 1.0 above per lane
-#[spirv_op("GLSL.std.450", "FSign")]
+#[op("spirv", "GLSL.std.450", "FSign")]
 pub fun sign_2(x: f32x2) f32x2;
 
 # Largest integer not greater than x, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: floor(x) per lane
-#[spirv_op("GLSL.std.450", "Floor")]
+#[op("spirv", "GLSL.std.450", "Floor")]
 pub fun floor_2(x: f32x2) f32x2;
 
 # Smallest integer not less than x, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: ceil(x) per lane
-#[spirv_op("GLSL.std.450", "Ceil")]
+#[op("spirv", "GLSL.std.450", "Ceil")]
 pub fun ceil_2(x: f32x2) f32x2;
 
 # Fractional part, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: x - floor(x), always in [0, 1) per lane
-#[spirv_op("GLSL.std.450", "Fract")]
+#[op("spirv", "GLSL.std.450", "Fract")]
 pub fun fract_2(x: f32x2) f32x2;
 
 # Degrees to radians, per lane.
 # ---
 # x:   An angle in degrees.
 # ret: the same angle in radians per lane
-#[spirv_op("GLSL.std.450", "Radians")]
+#[op("spirv", "GLSL.std.450", "Radians")]
 pub fun radians_2(x: f32x2) f32x2;
 
 # Radians to degrees, per lane.
 # ---
 # x:   An angle in radians.
 # ret: the same angle in degrees per lane
-#[spirv_op("GLSL.std.450", "Degrees")]
+#[op("spirv", "GLSL.std.450", "Degrees")]
 pub fun degrees_2(x: f32x2) f32x2;
 
 # Sine of an angle in radians, per lane.
 # ---
 # x:   The angle in radians.
 # ret: sin(x) per lane
-#[spirv_op("GLSL.std.450", "Sin")]
+#[op("spirv", "GLSL.std.450", "Sin")]
 pub fun sin_2(x: f32x2) f32x2;
 
 # Cosine of an angle in radians, per lane.
 # ---
 # x:   The angle in radians.
 # ret: cos(x) per lane
-#[spirv_op("GLSL.std.450", "Cos")]
+#[op("spirv", "GLSL.std.450", "Cos")]
 pub fun cos_2(x: f32x2) f32x2;
 
 # Tangent of an angle in radians, per lane.
 # ---
 # x:   The angle in radians.
 # ret: tan(x) per lane
-#[spirv_op("GLSL.std.450", "Tan")]
+#[op("spirv", "GLSL.std.450", "Tan")]
 pub fun tan_2(x: f32x2) f32x2;
 
 # Arcsine, per lane.
 # ---
 # x:   A value in [-1, 1].
 # ret: asin(x) in [-pi/2, pi/2] per lane
-#[spirv_op("GLSL.std.450", "Asin")]
+#[op("spirv", "GLSL.std.450", "Asin")]
 pub fun asin_2(x: f32x2) f32x2;
 
 # Arccosine, per lane.
 # ---
 # x:   A value in [-1, 1].
 # ret: acos(x) in [0, pi] per lane
-#[spirv_op("GLSL.std.450", "Acos")]
+#[op("spirv", "GLSL.std.450", "Acos")]
 pub fun acos_2(x: f32x2) f32x2;
 
 # Arctangent of a single ratio, per lane.
 # ---
 # x:   The ratios, one per lane.
 # ret: atan(x) in [-pi/2, pi/2] per lane
-#[spirv_op("GLSL.std.450", "Atan")]
+#[op("spirv", "GLSL.std.450", "Atan")]
 pub fun atan_2(x: f32x2) f32x2;
 
 # e raised to x, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: e ** x per lane
-#[spirv_op("GLSL.std.450", "Exp")]
+#[op("spirv", "GLSL.std.450", "Exp")]
 pub fun exp_2(x: f32x2) f32x2;
 
 # Natural logarithm, per lane.
 # ---
 # x:   A positive value.
 # ret: ln(x) per lane
-#[spirv_op("GLSL.std.450", "Log")]
+#[op("spirv", "GLSL.std.450", "Log")]
 pub fun log_2(x: f32x2) f32x2;
 
 # 2 raised to x, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: 2 ** x per lane
-#[spirv_op("GLSL.std.450", "Exp2")]
+#[op("spirv", "GLSL.std.450", "Exp2")]
 pub fun exp2_2(x: f32x2) f32x2;
 
 # Base-2 logarithm, per lane.
 # ---
 # x:   A positive value.
 # ret: log2(x) per lane
-#[spirv_op("GLSL.std.450", "Log2")]
+#[op("spirv", "GLSL.std.450", "Log2")]
 pub fun log2_2(x: f32x2) f32x2;
 
 # Square root, per lane.
 # ---
 # x:   A non-negative value.
 # ret: sqrt(x) per lane
-#[spirv_op("GLSL.std.450", "Sqrt")]
+#[op("spirv", "GLSL.std.450", "Sqrt")]
 pub fun sqrt_2(x: f32x2) f32x2;
 
 # Reciprocal square root, which is what a normalization actually wants, per lane.
 # ---
 # x:   A positive value.
 # ret: 1 / sqrt(x) per lane
-#[spirv_op("GLSL.std.450", "InverseSqrt")]
+#[op("spirv", "GLSL.std.450", "InverseSqrt")]
 pub fun inverse_sqrt_2(x: f32x2) f32x2;
 
 # Arctangent of y/x, quadrant-correct, per lane.
@@ -419,7 +419,7 @@ pub fun inverse_sqrt_2(x: f32x2) f32x2;
 # y:   The numerators, one per lane.
 # x:   The denominators, one per lane.
 # ret: atan2(y, x) in [-pi, pi] per lane
-#[spirv_op("GLSL.std.450", "Atan2")]
+#[op("spirv", "GLSL.std.450", "Atan2")]
 pub fun atan2_2(y: f32x2, x: f32x2) f32x2;
 
 # x raised to e, per lane.
@@ -427,7 +427,7 @@ pub fun atan2_2(y: f32x2, x: f32x2) f32x2;
 # x:   The base, which must not be negatives, one per lane.
 # e:   The exponents, one per lane.
 # ret: x ** e per lane
-#[spirv_op("GLSL.std.450", "Pow")]
+#[op("spirv", "GLSL.std.450", "Pow")]
 pub fun pow_2(x: f32x2, e: f32x2) f32x2;
 
 # Smaller of two values, per lane.
@@ -435,7 +435,7 @@ pub fun pow_2(x: f32x2, e: f32x2) f32x2;
 # a:   The first values, one per lane.
 # b:   The second values, one per lane.
 # ret: a where a < b, else b per lane
-#[spirv_op("GLSL.std.450", "FMin")]
+#[op("spirv", "GLSL.std.450", "FMin")]
 pub fun min_2(a: f32x2, b: f32x2) f32x2;
 
 # Larger of two values, per lane.
@@ -443,7 +443,7 @@ pub fun min_2(a: f32x2, b: f32x2) f32x2;
 # a:   The first values, one per lane.
 # b:   The second values, one per lane.
 # ret: a where a > b, else b per lane
-#[spirv_op("GLSL.std.450", "FMax")]
+#[op("spirv", "GLSL.std.450", "FMax")]
 pub fun max_2(a: f32x2, b: f32x2) f32x2;
 
 # A step from 0 to 1 at an edge, per lane.
@@ -451,7 +451,7 @@ pub fun max_2(a: f32x2, b: f32x2) f32x2;
 # edge:Where the step happens.
 # x:   The values, one per lane.
 # ret: 0.0 below edge, else 1.0 per lane
-#[spirv_op("GLSL.std.450", "Step")]
+#[op("spirv", "GLSL.std.450", "Step")]
 pub fun step_2(edge: f32x2, x: f32x2) f32x2;
 
 # Constrain a value to a range, per lane.
@@ -460,7 +460,7 @@ pub fun step_2(edge: f32x2, x: f32x2) f32x2;
 # lo:  The lower bounds, one per lane.
 # hi:  The upper bounds, one per lane.
 # ret: min(max(x, lo), hi) per lane
-#[spirv_op("GLSL.std.450", "FClamp")]
+#[op("spirv", "GLSL.std.450", "FClamp")]
 pub fun clamp_2(x: f32x2, lo: f32x2, hi: f32x2) f32x2;
 
 # Linear interpolation, per lane.
@@ -469,7 +469,7 @@ pub fun clamp_2(x: f32x2, lo: f32x2, hi: f32x2) f32x2;
 # b:   The value at t == 1s, one per lane.
 # t:   The interpolants, one per lane.
 # ret: a * (1 - t) + b * t per lane
-#[spirv_op("GLSL.std.450", "FMix")]
+#[op("spirv", "GLSL.std.450", "FMix")]
 pub fun mix_2(a: f32x2, b: f32x2, t: f32x2) f32x2;
 
 # A smooth Hermite step between two edges, per lane.
@@ -478,7 +478,7 @@ pub fun mix_2(a: f32x2, b: f32x2, t: f32x2) f32x2;
 # hi:  The upper edges, one per lane.
 # x:   The values, one per lane.
 # ret: 0.0 at or below lo, 1.0 at or above hi, a smooth ramp between per lane
-#[spirv_op("GLSL.std.450", "SmoothStep")]
+#[op("spirv", "GLSL.std.450", "SmoothStep")]
 pub fun smooth_step_2(lo: f32x2, hi: f32x2, x: f32x2) f32x2;
 
 # Fused multiply-add, per lane.
@@ -487,7 +487,7 @@ pub fun smooth_step_2(lo: f32x2, hi: f32x2, x: f32x2) f32x2;
 # b:   The second factors, one per lane.
 # c:   The addends, one per lane.
 # ret: a * b + c per lane
-#[spirv_op("GLSL.std.450", "Fma")]
+#[op("spirv", "GLSL.std.450", "Fma")]
 pub fun fma_2(a: f32x2, b: f32x2, c: f32x2) f32x2;
 
 
@@ -497,133 +497,133 @@ pub fun fma_2(a: f32x2, b: f32x2, c: f32x2) f32x2;
 # ---
 # x:   The values, one per lane.
 # ret: |x| per lane
-#[spirv_op("GLSL.std.450", "FAbs")]
+#[op("spirv", "GLSL.std.450", "FAbs")]
 pub fun abs_3(x: f32x3) f32x3;
 
 # Sign as -1, 0 or +1, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: -1.0 below zero, 0.0 at zero, 1.0 above per lane
-#[spirv_op("GLSL.std.450", "FSign")]
+#[op("spirv", "GLSL.std.450", "FSign")]
 pub fun sign_3(x: f32x3) f32x3;
 
 # Largest integer not greater than x, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: floor(x) per lane
-#[spirv_op("GLSL.std.450", "Floor")]
+#[op("spirv", "GLSL.std.450", "Floor")]
 pub fun floor_3(x: f32x3) f32x3;
 
 # Smallest integer not less than x, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: ceil(x) per lane
-#[spirv_op("GLSL.std.450", "Ceil")]
+#[op("spirv", "GLSL.std.450", "Ceil")]
 pub fun ceil_3(x: f32x3) f32x3;
 
 # Fractional part, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: x - floor(x), always in [0, 1) per lane
-#[spirv_op("GLSL.std.450", "Fract")]
+#[op("spirv", "GLSL.std.450", "Fract")]
 pub fun fract_3(x: f32x3) f32x3;
 
 # Degrees to radians, per lane.
 # ---
 # x:   An angle in degrees.
 # ret: the same angle in radians per lane
-#[spirv_op("GLSL.std.450", "Radians")]
+#[op("spirv", "GLSL.std.450", "Radians")]
 pub fun radians_3(x: f32x3) f32x3;
 
 # Radians to degrees, per lane.
 # ---
 # x:   An angle in radians.
 # ret: the same angle in degrees per lane
-#[spirv_op("GLSL.std.450", "Degrees")]
+#[op("spirv", "GLSL.std.450", "Degrees")]
 pub fun degrees_3(x: f32x3) f32x3;
 
 # Sine of an angle in radians, per lane.
 # ---
 # x:   The angle in radians.
 # ret: sin(x) per lane
-#[spirv_op("GLSL.std.450", "Sin")]
+#[op("spirv", "GLSL.std.450", "Sin")]
 pub fun sin_3(x: f32x3) f32x3;
 
 # Cosine of an angle in radians, per lane.
 # ---
 # x:   The angle in radians.
 # ret: cos(x) per lane
-#[spirv_op("GLSL.std.450", "Cos")]
+#[op("spirv", "GLSL.std.450", "Cos")]
 pub fun cos_3(x: f32x3) f32x3;
 
 # Tangent of an angle in radians, per lane.
 # ---
 # x:   The angle in radians.
 # ret: tan(x) per lane
-#[spirv_op("GLSL.std.450", "Tan")]
+#[op("spirv", "GLSL.std.450", "Tan")]
 pub fun tan_3(x: f32x3) f32x3;
 
 # Arcsine, per lane.
 # ---
 # x:   A value in [-1, 1].
 # ret: asin(x) in [-pi/2, pi/2] per lane
-#[spirv_op("GLSL.std.450", "Asin")]
+#[op("spirv", "GLSL.std.450", "Asin")]
 pub fun asin_3(x: f32x3) f32x3;
 
 # Arccosine, per lane.
 # ---
 # x:   A value in [-1, 1].
 # ret: acos(x) in [0, pi] per lane
-#[spirv_op("GLSL.std.450", "Acos")]
+#[op("spirv", "GLSL.std.450", "Acos")]
 pub fun acos_3(x: f32x3) f32x3;
 
 # Arctangent of a single ratio, per lane.
 # ---
 # x:   The ratios, one per lane.
 # ret: atan(x) in [-pi/2, pi/2] per lane
-#[spirv_op("GLSL.std.450", "Atan")]
+#[op("spirv", "GLSL.std.450", "Atan")]
 pub fun atan_3(x: f32x3) f32x3;
 
 # e raised to x, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: e ** x per lane
-#[spirv_op("GLSL.std.450", "Exp")]
+#[op("spirv", "GLSL.std.450", "Exp")]
 pub fun exp_3(x: f32x3) f32x3;
 
 # Natural logarithm, per lane.
 # ---
 # x:   A positive value.
 # ret: ln(x) per lane
-#[spirv_op("GLSL.std.450", "Log")]
+#[op("spirv", "GLSL.std.450", "Log")]
 pub fun log_3(x: f32x3) f32x3;
 
 # 2 raised to x, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: 2 ** x per lane
-#[spirv_op("GLSL.std.450", "Exp2")]
+#[op("spirv", "GLSL.std.450", "Exp2")]
 pub fun exp2_3(x: f32x3) f32x3;
 
 # Base-2 logarithm, per lane.
 # ---
 # x:   A positive value.
 # ret: log2(x) per lane
-#[spirv_op("GLSL.std.450", "Log2")]
+#[op("spirv", "GLSL.std.450", "Log2")]
 pub fun log2_3(x: f32x3) f32x3;
 
 # Square root, per lane.
 # ---
 # x:   A non-negative value.
 # ret: sqrt(x) per lane
-#[spirv_op("GLSL.std.450", "Sqrt")]
+#[op("spirv", "GLSL.std.450", "Sqrt")]
 pub fun sqrt_3(x: f32x3) f32x3;
 
 # Reciprocal square root, which is what a normalization actually wants, per lane.
 # ---
 # x:   A positive value.
 # ret: 1 / sqrt(x) per lane
-#[spirv_op("GLSL.std.450", "InverseSqrt")]
+#[op("spirv", "GLSL.std.450", "InverseSqrt")]
 pub fun inverse_sqrt_3(x: f32x3) f32x3;
 
 # Arctangent of y/x, quadrant-correct, per lane.
@@ -631,7 +631,7 @@ pub fun inverse_sqrt_3(x: f32x3) f32x3;
 # y:   The numerators, one per lane.
 # x:   The denominators, one per lane.
 # ret: atan2(y, x) in [-pi, pi] per lane
-#[spirv_op("GLSL.std.450", "Atan2")]
+#[op("spirv", "GLSL.std.450", "Atan2")]
 pub fun atan2_3(y: f32x3, x: f32x3) f32x3;
 
 # x raised to e, per lane.
@@ -639,7 +639,7 @@ pub fun atan2_3(y: f32x3, x: f32x3) f32x3;
 # x:   The base, which must not be negatives, one per lane.
 # e:   The exponents, one per lane.
 # ret: x ** e per lane
-#[spirv_op("GLSL.std.450", "Pow")]
+#[op("spirv", "GLSL.std.450", "Pow")]
 pub fun pow_3(x: f32x3, e: f32x3) f32x3;
 
 # Smaller of two values, per lane.
@@ -647,7 +647,7 @@ pub fun pow_3(x: f32x3, e: f32x3) f32x3;
 # a:   The first values, one per lane.
 # b:   The second values, one per lane.
 # ret: a where a < b, else b per lane
-#[spirv_op("GLSL.std.450", "FMin")]
+#[op("spirv", "GLSL.std.450", "FMin")]
 pub fun min_3(a: f32x3, b: f32x3) f32x3;
 
 # Larger of two values, per lane.
@@ -655,7 +655,7 @@ pub fun min_3(a: f32x3, b: f32x3) f32x3;
 # a:   The first values, one per lane.
 # b:   The second values, one per lane.
 # ret: a where a > b, else b per lane
-#[spirv_op("GLSL.std.450", "FMax")]
+#[op("spirv", "GLSL.std.450", "FMax")]
 pub fun max_3(a: f32x3, b: f32x3) f32x3;
 
 # A step from 0 to 1 at an edge, per lane.
@@ -663,7 +663,7 @@ pub fun max_3(a: f32x3, b: f32x3) f32x3;
 # edge:Where the step happens.
 # x:   The values, one per lane.
 # ret: 0.0 below edge, else 1.0 per lane
-#[spirv_op("GLSL.std.450", "Step")]
+#[op("spirv", "GLSL.std.450", "Step")]
 pub fun step_3(edge: f32x3, x: f32x3) f32x3;
 
 # Constrain a value to a range, per lane.
@@ -672,7 +672,7 @@ pub fun step_3(edge: f32x3, x: f32x3) f32x3;
 # lo:  The lower bounds, one per lane.
 # hi:  The upper bounds, one per lane.
 # ret: min(max(x, lo), hi) per lane
-#[spirv_op("GLSL.std.450", "FClamp")]
+#[op("spirv", "GLSL.std.450", "FClamp")]
 pub fun clamp_3(x: f32x3, lo: f32x3, hi: f32x3) f32x3;
 
 # Linear interpolation, per lane.
@@ -681,7 +681,7 @@ pub fun clamp_3(x: f32x3, lo: f32x3, hi: f32x3) f32x3;
 # b:   The value at t == 1s, one per lane.
 # t:   The interpolants, one per lane.
 # ret: a * (1 - t) + b * t per lane
-#[spirv_op("GLSL.std.450", "FMix")]
+#[op("spirv", "GLSL.std.450", "FMix")]
 pub fun mix_3(a: f32x3, b: f32x3, t: f32x3) f32x3;
 
 # A smooth Hermite step between two edges, per lane.
@@ -690,7 +690,7 @@ pub fun mix_3(a: f32x3, b: f32x3, t: f32x3) f32x3;
 # hi:  The upper edges, one per lane.
 # x:   The values, one per lane.
 # ret: 0.0 at or below lo, 1.0 at or above hi, a smooth ramp between per lane
-#[spirv_op("GLSL.std.450", "SmoothStep")]
+#[op("spirv", "GLSL.std.450", "SmoothStep")]
 pub fun smooth_step_3(lo: f32x3, hi: f32x3, x: f32x3) f32x3;
 
 # Fused multiply-add, per lane.
@@ -699,7 +699,7 @@ pub fun smooth_step_3(lo: f32x3, hi: f32x3, x: f32x3) f32x3;
 # b:   The second factors, one per lane.
 # c:   The addends, one per lane.
 # ret: a * b + c per lane
-#[spirv_op("GLSL.std.450", "Fma")]
+#[op("spirv", "GLSL.std.450", "Fma")]
 pub fun fma_3(a: f32x3, b: f32x3, c: f32x3) f32x3;
 
 
@@ -709,133 +709,133 @@ pub fun fma_3(a: f32x3, b: f32x3, c: f32x3) f32x3;
 # ---
 # x:   The values, one per lane.
 # ret: |x| per lane
-#[spirv_op("GLSL.std.450", "FAbs")]
+#[op("spirv", "GLSL.std.450", "FAbs")]
 pub fun abs_4(x: f32x4) f32x4;
 
 # Sign as -1, 0 or +1, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: -1.0 below zero, 0.0 at zero, 1.0 above per lane
-#[spirv_op("GLSL.std.450", "FSign")]
+#[op("spirv", "GLSL.std.450", "FSign")]
 pub fun sign_4(x: f32x4) f32x4;
 
 # Largest integer not greater than x, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: floor(x) per lane
-#[spirv_op("GLSL.std.450", "Floor")]
+#[op("spirv", "GLSL.std.450", "Floor")]
 pub fun floor_4(x: f32x4) f32x4;
 
 # Smallest integer not less than x, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: ceil(x) per lane
-#[spirv_op("GLSL.std.450", "Ceil")]
+#[op("spirv", "GLSL.std.450", "Ceil")]
 pub fun ceil_4(x: f32x4) f32x4;
 
 # Fractional part, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: x - floor(x), always in [0, 1) per lane
-#[spirv_op("GLSL.std.450", "Fract")]
+#[op("spirv", "GLSL.std.450", "Fract")]
 pub fun fract_4(x: f32x4) f32x4;
 
 # Degrees to radians, per lane.
 # ---
 # x:   An angle in degrees.
 # ret: the same angle in radians per lane
-#[spirv_op("GLSL.std.450", "Radians")]
+#[op("spirv", "GLSL.std.450", "Radians")]
 pub fun radians_4(x: f32x4) f32x4;
 
 # Radians to degrees, per lane.
 # ---
 # x:   An angle in radians.
 # ret: the same angle in degrees per lane
-#[spirv_op("GLSL.std.450", "Degrees")]
+#[op("spirv", "GLSL.std.450", "Degrees")]
 pub fun degrees_4(x: f32x4) f32x4;
 
 # Sine of an angle in radians, per lane.
 # ---
 # x:   The angle in radians.
 # ret: sin(x) per lane
-#[spirv_op("GLSL.std.450", "Sin")]
+#[op("spirv", "GLSL.std.450", "Sin")]
 pub fun sin_4(x: f32x4) f32x4;
 
 # Cosine of an angle in radians, per lane.
 # ---
 # x:   The angle in radians.
 # ret: cos(x) per lane
-#[spirv_op("GLSL.std.450", "Cos")]
+#[op("spirv", "GLSL.std.450", "Cos")]
 pub fun cos_4(x: f32x4) f32x4;
 
 # Tangent of an angle in radians, per lane.
 # ---
 # x:   The angle in radians.
 # ret: tan(x) per lane
-#[spirv_op("GLSL.std.450", "Tan")]
+#[op("spirv", "GLSL.std.450", "Tan")]
 pub fun tan_4(x: f32x4) f32x4;
 
 # Arcsine, per lane.
 # ---
 # x:   A value in [-1, 1].
 # ret: asin(x) in [-pi/2, pi/2] per lane
-#[spirv_op("GLSL.std.450", "Asin")]
+#[op("spirv", "GLSL.std.450", "Asin")]
 pub fun asin_4(x: f32x4) f32x4;
 
 # Arccosine, per lane.
 # ---
 # x:   A value in [-1, 1].
 # ret: acos(x) in [0, pi] per lane
-#[spirv_op("GLSL.std.450", "Acos")]
+#[op("spirv", "GLSL.std.450", "Acos")]
 pub fun acos_4(x: f32x4) f32x4;
 
 # Arctangent of a single ratio, per lane.
 # ---
 # x:   The ratios, one per lane.
 # ret: atan(x) in [-pi/2, pi/2] per lane
-#[spirv_op("GLSL.std.450", "Atan")]
+#[op("spirv", "GLSL.std.450", "Atan")]
 pub fun atan_4(x: f32x4) f32x4;
 
 # e raised to x, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: e ** x per lane
-#[spirv_op("GLSL.std.450", "Exp")]
+#[op("spirv", "GLSL.std.450", "Exp")]
 pub fun exp_4(x: f32x4) f32x4;
 
 # Natural logarithm, per lane.
 # ---
 # x:   A positive value.
 # ret: ln(x) per lane
-#[spirv_op("GLSL.std.450", "Log")]
+#[op("spirv", "GLSL.std.450", "Log")]
 pub fun log_4(x: f32x4) f32x4;
 
 # 2 raised to x, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: 2 ** x per lane
-#[spirv_op("GLSL.std.450", "Exp2")]
+#[op("spirv", "GLSL.std.450", "Exp2")]
 pub fun exp2_4(x: f32x4) f32x4;
 
 # Base-2 logarithm, per lane.
 # ---
 # x:   A positive value.
 # ret: log2(x) per lane
-#[spirv_op("GLSL.std.450", "Log2")]
+#[op("spirv", "GLSL.std.450", "Log2")]
 pub fun log2_4(x: f32x4) f32x4;
 
 # Square root, per lane.
 # ---
 # x:   A non-negative value.
 # ret: sqrt(x) per lane
-#[spirv_op("GLSL.std.450", "Sqrt")]
+#[op("spirv", "GLSL.std.450", "Sqrt")]
 pub fun sqrt_4(x: f32x4) f32x4;
 
 # Reciprocal square root, which is what a normalization actually wants, per lane.
 # ---
 # x:   A positive value.
 # ret: 1 / sqrt(x) per lane
-#[spirv_op("GLSL.std.450", "InverseSqrt")]
+#[op("spirv", "GLSL.std.450", "InverseSqrt")]
 pub fun inverse_sqrt_4(x: f32x4) f32x4;
 
 # Arctangent of y/x, quadrant-correct, per lane.
@@ -843,7 +843,7 @@ pub fun inverse_sqrt_4(x: f32x4) f32x4;
 # y:   The numerators, one per lane.
 # x:   The denominators, one per lane.
 # ret: atan2(y, x) in [-pi, pi] per lane
-#[spirv_op("GLSL.std.450", "Atan2")]
+#[op("spirv", "GLSL.std.450", "Atan2")]
 pub fun atan2_4(y: f32x4, x: f32x4) f32x4;
 
 # x raised to e, per lane.
@@ -851,7 +851,7 @@ pub fun atan2_4(y: f32x4, x: f32x4) f32x4;
 # x:   The base, which must not be negatives, one per lane.
 # e:   The exponents, one per lane.
 # ret: x ** e per lane
-#[spirv_op("GLSL.std.450", "Pow")]
+#[op("spirv", "GLSL.std.450", "Pow")]
 pub fun pow_4(x: f32x4, e: f32x4) f32x4;
 
 # Smaller of two values, per lane.
@@ -859,7 +859,7 @@ pub fun pow_4(x: f32x4, e: f32x4) f32x4;
 # a:   The first values, one per lane.
 # b:   The second values, one per lane.
 # ret: a where a < b, else b per lane
-#[spirv_op("GLSL.std.450", "FMin")]
+#[op("spirv", "GLSL.std.450", "FMin")]
 pub fun min_4(a: f32x4, b: f32x4) f32x4;
 
 # Larger of two values, per lane.
@@ -867,7 +867,7 @@ pub fun min_4(a: f32x4, b: f32x4) f32x4;
 # a:   The first values, one per lane.
 # b:   The second values, one per lane.
 # ret: a where a > b, else b per lane
-#[spirv_op("GLSL.std.450", "FMax")]
+#[op("spirv", "GLSL.std.450", "FMax")]
 pub fun max_4(a: f32x4, b: f32x4) f32x4;
 
 # A step from 0 to 1 at an edge, per lane.
@@ -875,7 +875,7 @@ pub fun max_4(a: f32x4, b: f32x4) f32x4;
 # edge:Where the step happens.
 # x:   The values, one per lane.
 # ret: 0.0 below edge, else 1.0 per lane
-#[spirv_op("GLSL.std.450", "Step")]
+#[op("spirv", "GLSL.std.450", "Step")]
 pub fun step_4(edge: f32x4, x: f32x4) f32x4;
 
 # Constrain a value to a range, per lane.
@@ -884,7 +884,7 @@ pub fun step_4(edge: f32x4, x: f32x4) f32x4;
 # lo:  The lower bounds, one per lane.
 # hi:  The upper bounds, one per lane.
 # ret: min(max(x, lo), hi) per lane
-#[spirv_op("GLSL.std.450", "FClamp")]
+#[op("spirv", "GLSL.std.450", "FClamp")]
 pub fun clamp_4(x: f32x4, lo: f32x4, hi: f32x4) f32x4;
 
 # Linear interpolation, per lane.
@@ -893,7 +893,7 @@ pub fun clamp_4(x: f32x4, lo: f32x4, hi: f32x4) f32x4;
 # b:   The value at t == 1s, one per lane.
 # t:   The interpolants, one per lane.
 # ret: a * (1 - t) + b * t per lane
-#[spirv_op("GLSL.std.450", "FMix")]
+#[op("spirv", "GLSL.std.450", "FMix")]
 pub fun mix_4(a: f32x4, b: f32x4, t: f32x4) f32x4;
 
 # A smooth Hermite step between two edges, per lane.
@@ -902,7 +902,7 @@ pub fun mix_4(a: f32x4, b: f32x4, t: f32x4) f32x4;
 # hi:  The upper edges, one per lane.
 # x:   The values, one per lane.
 # ret: 0.0 at or below lo, 1.0 at or above hi, a smooth ramp between per lane
-#[spirv_op("GLSL.std.450", "SmoothStep")]
+#[op("spirv", "GLSL.std.450", "SmoothStep")]
 pub fun smooth_step_4(lo: f32x4, hi: f32x4, x: f32x4) f32x4;
 
 # Fused multiply-add, per lane.
@@ -911,7 +911,7 @@ pub fun smooth_step_4(lo: f32x4, hi: f32x4, x: f32x4) f32x4;
 # b:   The second factors, one per lane.
 # c:   The addends, one per lane.
 # ret: a * b + c per lane
-#[spirv_op("GLSL.std.450", "Fma")]
+#[op("spirv", "GLSL.std.450", "Fma")]
 pub fun fma_4(a: f32x4, b: f32x4, c: f32x4) f32x4;
 
 
@@ -933,21 +933,21 @@ pub fun fma_4(a: f32x4, b: f32x4, c: f32x4) f32x4;
 # a:   The first vector.
 # b:   The second vector.
 # ret: the sum of the per-lane products
-#[spirv_op("core", "OpDot")]
+#[op("spirv", "core", "OpDot")]
 pub fun dot_2(a: f32x2, b: f32x2) f32;
 
 # Euclidean length.
 # ---
 # v:   The vector.
 # ret: sqrt(dot(v, v))
-#[spirv_op("GLSL.std.450", "Length")]
+#[op("spirv", "GLSL.std.450", "Length")]
 pub fun length_2(v: f32x2) f32;
 
 # A vector of length 1 in the same direction.
 # ---
 # v:   The vector.
 # ret: v / length(v)
-#[spirv_op("GLSL.std.450", "Normalize")]
+#[op("spirv", "GLSL.std.450", "Normalize")]
 pub fun normalize_2(v: f32x2) f32x2;
 
 # Distance between two points.
@@ -955,7 +955,7 @@ pub fun normalize_2(v: f32x2) f32x2;
 # a:   The first vector.
 # b:   The second vector.
 # ret: length(a - b)
-#[spirv_op("GLSL.std.450", "Distance")]
+#[op("spirv", "GLSL.std.450", "Distance")]
 pub fun distance_2(a: f32x2, b: f32x2) f32;
 
 # Reflect an incident vector about a normal.
@@ -963,7 +963,7 @@ pub fun distance_2(a: f32x2, b: f32x2) f32;
 # i:   The incident vector.
 # n:   The surface normal, which must already be normalized.
 # ret: i - 2 * dot(n, i) * n
-#[spirv_op("GLSL.std.450", "Reflect")]
+#[op("spirv", "GLSL.std.450", "Reflect")]
 pub fun reflect_2(i: f32x2, n: f32x2) f32x2;
 
 # Flip a vector to face away from a surface.
@@ -972,7 +972,7 @@ pub fun reflect_2(i: f32x2, n: f32x2) f32x2;
 # i:   The incident vector.
 # r:   The reference normal.
 # ret: n where dot(r, i) is below zero, else -n
-#[spirv_op("GLSL.std.450", "FaceForward")]
+#[op("spirv", "GLSL.std.450", "FaceForward")]
 pub fun face_forward_2(n: f32x2, i: f32x2, r: f32x2) f32x2;
 
 # Refract an incident vector through a surface.
@@ -981,7 +981,7 @@ pub fun face_forward_2(n: f32x2, i: f32x2, r: f32x2) f32x2;
 # n:   The surface normal, which must already be normalized.
 # eta: The ratio of indices of refraction. A scalar at every width.
 # ret: the refracted vector, or the zero vector under total internal reflection
-#[spirv_op("GLSL.std.450", "Refract")]
+#[op("spirv", "GLSL.std.450", "Refract")]
 pub fun refract_2(i: f32x2, n: f32x2, eta: f32) f32x2;
 
 
@@ -992,21 +992,21 @@ pub fun refract_2(i: f32x2, n: f32x2, eta: f32) f32x2;
 # a:   The first vector.
 # b:   The second vector.
 # ret: the sum of the per-lane products
-#[spirv_op("core", "OpDot")]
+#[op("spirv", "core", "OpDot")]
 pub fun dot_3(a: f32x3, b: f32x3) f32;
 
 # Euclidean length.
 # ---
 # v:   The vector.
 # ret: sqrt(dot(v, v))
-#[spirv_op("GLSL.std.450", "Length")]
+#[op("spirv", "GLSL.std.450", "Length")]
 pub fun length_3(v: f32x3) f32;
 
 # A vector of length 1 in the same direction.
 # ---
 # v:   The vector.
 # ret: v / length(v)
-#[spirv_op("GLSL.std.450", "Normalize")]
+#[op("spirv", "GLSL.std.450", "Normalize")]
 pub fun normalize_3(v: f32x3) f32x3;
 
 # Distance between two points.
@@ -1014,7 +1014,7 @@ pub fun normalize_3(v: f32x3) f32x3;
 # a:   The first vector.
 # b:   The second vector.
 # ret: length(a - b)
-#[spirv_op("GLSL.std.450", "Distance")]
+#[op("spirv", "GLSL.std.450", "Distance")]
 pub fun distance_3(a: f32x3, b: f32x3) f32;
 
 # Reflect an incident vector about a normal.
@@ -1022,7 +1022,7 @@ pub fun distance_3(a: f32x3, b: f32x3) f32;
 # i:   The incident vector.
 # n:   The surface normal, which must already be normalized.
 # ret: i - 2 * dot(n, i) * n
-#[spirv_op("GLSL.std.450", "Reflect")]
+#[op("spirv", "GLSL.std.450", "Reflect")]
 pub fun reflect_3(i: f32x3, n: f32x3) f32x3;
 
 # Flip a vector to face away from a surface.
@@ -1031,7 +1031,7 @@ pub fun reflect_3(i: f32x3, n: f32x3) f32x3;
 # i:   The incident vector.
 # r:   The reference normal.
 # ret: n where dot(r, i) is below zero, else -n
-#[spirv_op("GLSL.std.450", "FaceForward")]
+#[op("spirv", "GLSL.std.450", "FaceForward")]
 pub fun face_forward_3(n: f32x3, i: f32x3, r: f32x3) f32x3;
 
 # Refract an incident vector through a surface.
@@ -1040,7 +1040,7 @@ pub fun face_forward_3(n: f32x3, i: f32x3, r: f32x3) f32x3;
 # n:   The surface normal, which must already be normalized.
 # eta: The ratio of indices of refraction. A scalar at every width.
 # ret: the refracted vector, or the zero vector under total internal reflection
-#[spirv_op("GLSL.std.450", "Refract")]
+#[op("spirv", "GLSL.std.450", "Refract")]
 pub fun refract_3(i: f32x3, n: f32x3, eta: f32) f32x3;
 
 # Cross product.
@@ -1051,7 +1051,7 @@ pub fun refract_3(i: f32x3, n: f32x3, eta: f32) f32x3;
 # a:   The first vector.
 # b:   The second vector.
 # ret: the vector perpendicular to both, right-handed
-#[spirv_op("GLSL.std.450", "Cross")]
+#[op("spirv", "GLSL.std.450", "Cross")]
 pub fun cross_3(a: f32x3, b: f32x3) f32x3;
 
 
@@ -1062,21 +1062,21 @@ pub fun cross_3(a: f32x3, b: f32x3) f32x3;
 # a:   The first vector.
 # b:   The second vector.
 # ret: the sum of the per-lane products
-#[spirv_op("core", "OpDot")]
+#[op("spirv", "core", "OpDot")]
 pub fun dot_4(a: f32x4, b: f32x4) f32;
 
 # Euclidean length.
 # ---
 # v:   The vector.
 # ret: sqrt(dot(v, v))
-#[spirv_op("GLSL.std.450", "Length")]
+#[op("spirv", "GLSL.std.450", "Length")]
 pub fun length_4(v: f32x4) f32;
 
 # A vector of length 1 in the same direction.
 # ---
 # v:   The vector.
 # ret: v / length(v)
-#[spirv_op("GLSL.std.450", "Normalize")]
+#[op("spirv", "GLSL.std.450", "Normalize")]
 pub fun normalize_4(v: f32x4) f32x4;
 
 # Distance between two points.
@@ -1084,7 +1084,7 @@ pub fun normalize_4(v: f32x4) f32x4;
 # a:   The first vector.
 # b:   The second vector.
 # ret: length(a - b)
-#[spirv_op("GLSL.std.450", "Distance")]
+#[op("spirv", "GLSL.std.450", "Distance")]
 pub fun distance_4(a: f32x4, b: f32x4) f32;
 
 # Reflect an incident vector about a normal.
@@ -1092,7 +1092,7 @@ pub fun distance_4(a: f32x4, b: f32x4) f32;
 # i:   The incident vector.
 # n:   The surface normal, which must already be normalized.
 # ret: i - 2 * dot(n, i) * n
-#[spirv_op("GLSL.std.450", "Reflect")]
+#[op("spirv", "GLSL.std.450", "Reflect")]
 pub fun reflect_4(i: f32x4, n: f32x4) f32x4;
 
 # Flip a vector to face away from a surface.
@@ -1101,7 +1101,7 @@ pub fun reflect_4(i: f32x4, n: f32x4) f32x4;
 # i:   The incident vector.
 # r:   The reference normal.
 # ret: n where dot(r, i) is below zero, else -n
-#[spirv_op("GLSL.std.450", "FaceForward")]
+#[op("spirv", "GLSL.std.450", "FaceForward")]
 pub fun face_forward_4(n: f32x4, i: f32x4, r: f32x4) f32x4;
 
 # Refract an incident vector through a surface.
@@ -1110,5 +1110,5 @@ pub fun face_forward_4(n: f32x4, i: f32x4, r: f32x4) f32x4;
 # n:   The surface normal, which must already be normalized.
 # eta: The ratio of indices of refraction. A scalar at every width.
 # ret: the refracted vector, or the zero vector under total internal reflection
-#[spirv_op("GLSL.std.450", "Refract")]
+#[op("spirv", "GLSL.std.450", "Refract")]
 pub fun refract_4(i: f32x4, n: f32x4, eta: f32) f32x4;

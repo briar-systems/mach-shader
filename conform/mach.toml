@@ -33,3 +33,14 @@ need    = []
 
 [dep.mach-shader]
 path = ".."
+
+# the texture handles, bound and read one of every declared shape. Its own artifact
+# rather than more of `conform_frag`: a handle is bound at a descriptor and a maths
+# entry is not, so the two shaders have no declarations in common.
+[artifact.conform_tex_frag]
+kind    = "bin"
+entry   = "conform_tex_frag.mach"
+out     = "conform_tex_frag.spv"
+targets = ["spirv"]
+link    = []
+need    = []

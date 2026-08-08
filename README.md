@@ -19,10 +19,41 @@ fun frag_main() {
 ```
 
 `sh.normalize_3` does not compile to a call. Each declaration in `shader.math`
-carries a `#[spirv_op(set, name)]` decorator naming the SPIR-V instruction it *is*,
+carries an `#[op(target, set, name)]` decorator naming the SPIR-V instruction it *is*,
 and the compiler substitutes that instruction at the call site: an `OpExtInst` into
 `GLSL.std.450` for most of them, core `OpDot` for the `dot_*` family. The extended instruction
 set is imported once per module and only when something in that module uses it.
+
+## Textures
+
+`shader.texture` declares the image and sampler handles and the instructions that
+read them. A handle is a bodyless `def` carrying `#[handle(target, constructor,
+operands...)]`: the compiler knows only that a declaration with no body has its
+definition supplied by the owning target, and the SPIR-V target owns what a
+constructor is and what each operand means.
+
+```mach
+use tex: shader.texture;
+
+#[sampler(0, 0)] var albedo: tex.Sampler2D;
+#[input(0)] var in_uv: f32x2;
+#[output(0)] var out_colour: f32x4;
+
+#[stage("fragment")]
+fun frag_main() {
+    out_colour = tex.sample_2d(albedo, in_uv);
+}
+```
+
+A `Sampler2D` is an `OpTypeSampledImage` over an `OpTypeImage`, and it NAMES the
+image it wraps rather than restating that image's operands, so the two cannot
+disagree about the shape they share. Adding a handle is a declaration in that file
+rather than a compiler release.
+
+Four shapes are deliberately not declared, and each is refused by the target with a
+sentence naming the operand that causes it rather than being silently absent: a
+depth-comparison image, a multisampled image, the `Rect` / `Buffer` / `SubpassData`
+dimensionalities, and a storage image.
 
 ## Why this is not in the standard library
 
@@ -90,7 +121,7 @@ git = "https://github.com/briar-systems/mach-shader"
 ref = "tag/0.1.0"
 ```
 
-Requires a Mach with `#[spirv_op]` support (briar-systems/mach#2688).
+Requires a Mach with `#[op]` and `#[handle]` support (briar-systems/mach#2888).
 
 ## How it is checked
 
