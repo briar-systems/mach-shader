@@ -3,3 +3,4 @@
 # and this file never disagree about what the library is.
 
 fwd shader.math;
+fwd shader.texture;

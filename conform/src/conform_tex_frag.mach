@@ -1,0 +1,50 @@
+# Binds and reads one handle of every declared shape.
+#
+# This exists to be compiled, not to shade anything. Each declaration forces the
+# compiler to mint the target's type from the operands the library wrote, and each
+# call forces it to emit the instruction against that type, so an operand the target
+# would refuse or a signature SPIR-V rejects turns into a build failure here. The
+# library on its own compiles to nothing and would catch neither.
+#
+# Every result is written to the output so no call can be eliminated as dead.
+
+use tex: shader.texture;
+
+#[sampler(0, 0)] var ramp:    tex.Sampler1D;
+#[sampler(0, 1)] var albedo:  tex.Sampler2D;
+#[sampler(0, 2)] var volume:  tex.Sampler3D;
+#[sampler(0, 3)] var env:     tex.SamplerCube;
+#[sampler(0, 4)] var layers:  tex.Sampler2DArray;
+#[sampler(0, 5)] var envs:    tex.SamplerCubeArray;
+#[sampler(0, 6)] var ids:     tex.USampler2D;
+#[sampler(0, 7)] var signed:  tex.ISampler2D;
+
+# a second descriptor SET, and the separately-bound form: an image and a sampler
+# with no relationship until an instruction combines them.
+#[sampler(1, 0)] var base_tex: tex.Texture2D;
+#[sampler(1, 1)] var base_smp: tex.Sampler;
+
+#[input(0)] var in_uv:  f32x2;
+#[input(1)] var in_uvw: f32x4;
+
+#[output(0)] var out_colour: f32x4;
+#[output(1)] var out_ids:    u32x4;
+
+#[stage("fragment")]
+fun frag_main() {
+    out_colour = tex.sample_1d(ramp, in_uv[0])
+               + tex.sample_2d(albedo, in_uv)
+               + tex.sample_3d(volume, in_uvw)
+               + tex.sample_cube(env, in_uvw)
+               + tex.sample_2d_array(layers, in_uvw)
+               + tex.sample_cube_array(envs, in_uvw)
+               + tex.sample_2d(tex.combine_2d(base_tex, base_smp), in_uv);
+    out_ids    = tex.sample_2d_u(ids, in_uv);
+}
+
+# the signed path, kept out of the chain above because its result type is a signed
+# vector and mixing it in would be a cast rather than a sample.
+#[stage("fragment")]
+fun frag_signed() {
+    out_ids = tex.sample_2d_i(signed, in_uv)::u32x4;
+}
