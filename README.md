@@ -118,7 +118,7 @@ shader wanted the 3-wide one, which is the common case in lighting.
 ```toml
 [dep.shader]
 git = "https://github.com/briar-systems/mach-shader"
-ref = "tag/v0.3.0"
+ref = "branch/main"
 ```
 
 Requires Mach 5.0 or newer.
