@@ -138,6 +138,19 @@ so no call can be eliminated. A decorator naming an instruction that does not
 exist, or a signature SPIR-V will not accept at that width, fails there. CI builds
 it and runs `spirv-val` over the result.
 
+## Releasing
+
+Versions follow semver, judged from what has landed on `dev` since the last tag:
+a breaking change is major, a feature is minor, and a fix is patch.
+
+1. On a `chore/<issue>` branch off `dev`, set `version` in `mach.toml`, rename
+   `## [Unreleased]` in CHANGELOG.md to `## [X.Y.Z] - YYYY-MM-DD`, open a fresh
+   `## [Unreleased]` above it, and update the compare links. Merge it into `dev`.
+2. Merge `dev` into `main` with a merge commit.
+3. Tag that merge `vX.Y.Z` (annotated), push the tag, and publish a GitHub
+   release named `vX.Y.Z` whose notes are that version's changelog section.
+4. Merge `main` back into `dev`.
+
 ## What is not here, and why
 
 The GLSL.std.450 set is much larger than this. The omissions are reasoned rather
