@@ -10,41 +10,76 @@
 
 use tex: shader.texture;
 
-#[sampler(0, 0)] var ramp:    tex.Sampler1D;
-#[sampler(0, 1)] var albedo:  tex.Sampler2D;
-#[sampler(0, 2)] var volume:  tex.Sampler3D;
-#[sampler(0, 3)] var env:     tex.SamplerCube;
-#[sampler(0, 4)] var layers:  tex.Sampler2DArray;
-#[sampler(0, 5)] var envs:    tex.SamplerCubeArray;
-#[sampler(0, 6)] var ids:     tex.USampler2D;
-#[sampler(0, 7)] var signed:  tex.ISampler2D;
+#[sampler(0, 0)]
+var ramp: tex.Sampler1D;
+#[sampler(0, 1)]
+var albedo: tex.Sampler2D;
+#[sampler(0, 2)]
+var volume: tex.Sampler3D;
+#[sampler(0, 3)]
+var env: tex.SamplerCube;
+#[sampler(0, 4)]
+var layers: tex.Sampler2DArray;
+#[sampler(0, 5)]
+var envs: tex.SamplerCubeArray;
+#[sampler(0, 6)]
+var ids: tex.USampler2D;
+#[sampler(0, 7)]
+var signed: tex.ISampler2D;
 
 # a second descriptor SET, and the separately-bound form: an image and a sampler
 # with no relationship until an instruction combines them.
-#[sampler(1, 0)] var base_tex: tex.Texture2D;
-#[sampler(1, 1)] var base_smp: tex.Sampler;
+#[sampler(1, 0)]
+var base_tex: tex.Texture2D;
+#[sampler(1, 1)]
+var base_smp: tex.Sampler;
+#[sampler(1, 2)]
+var line_tex: tex.Texture1D;
+#[sampler(1, 3)]
+var volume_tex: tex.Texture3D;
+#[sampler(1, 4)]
+var env_tex: tex.TextureCube;
+#[sampler(1, 5)]
+var layers_tex: tex.Texture2DArray;
+#[sampler(1, 6)]
+var envs_tex: tex.TextureCubeArray;
+#[sampler(1, 7)]
+var ids_tex: tex.UTexture2D;
+#[sampler(1, 8)]
+var signed_tex: tex.ITexture2D;
 
-#[input(0)] var in_uv:  f32x2;
-#[input(1)] var in_uvw: f32x4;
+#[input(0)]
+var in_uv: f32x2;
+#[input(1)]
+var in_uvw: f32x4;
 
-#[output(0)] var out_colour: f32x4;
-#[output(1)] var out_ids:    u32x4;
+#[output(0)]
+var out_colour: f32x4;
+#[output(1)]
+var out_ids: u32x4;
 
 #[stage("fragment")]
 fun frag_main() {
     out_colour = tex.sample_1d(ramp, in_uv[0])
-               + tex.sample_2d(albedo, in_uv)
-               + tex.sample_3d(volume, in_uvw)
-               + tex.sample_cube(env, in_uvw)
-               + tex.sample_2d_array(layers, in_uvw)
-               + tex.sample_cube_array(envs, in_uvw)
-               + tex.sample_2d(tex.combine_2d(base_tex, base_smp), in_uv);
-    out_ids    = tex.sample_2d_u(ids, in_uv);
+        + tex.sample_2d(albedo, in_uv)
+        + tex.sample_3d(volume, in_uvw)
+        + tex.sample_cube(env, in_uvw)
+        + tex.sample_2d_array(layers, in_uvw)
+        + tex.sample_cube_array(envs, in_uvw)
+        + tex.sample_2d(tex.combine_2d(base_tex, base_smp), in_uv)
+        + tex.sample_1d(tex.combine_1d(line_tex, base_smp), in_uv[0])
+        + tex.sample_3d(tex.combine_3d(volume_tex, base_smp), in_uvw)
+        + tex.sample_cube(tex.combine_cube(env_tex, base_smp), in_uvw)
+        + tex.sample_2d_array(tex.combine_2d_array(layers_tex, base_smp), in_uvw)
+        + tex.sample_cube_array(tex.combine_cube_array(envs_tex, base_smp), in_uvw);
+    out_ids = tex.sample_2d_u(ids, in_uv)
+        + tex.sample_2d_u(tex.combine_2d_u(ids_tex, base_smp), in_uv);
 }
 
 # the signed path, kept out of the chain above because its result type is a signed
 # vector and mixing it in would be a cast rather than a sample.
 #[stage("fragment")]
 fun frag_signed() {
-    out_ids = tex.sample_2d_i(signed, in_uv)::u32x4;
+    out_ids = (tex.sample_2d_i(signed, in_uv)
+        + tex.sample_2d_i(tex.combine_2d_i(signed_tex, base_smp), in_uv))::u32x4;
 }

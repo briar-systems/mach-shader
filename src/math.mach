@@ -66,7 +66,6 @@
 #
 # This file is generated. See tools/genmath.py.
 
-
 # ---------- scalar ----------
 
 # Absolute value.
@@ -277,7 +276,6 @@ pub fun smooth_step(lo: f32, hi: f32, x: f32) f32;
 # ret: a * b + c
 #[op("spirv", "GLSL.std.450", "Fma")]
 pub fun fma(a: f32, b: f32, c: f32) f32;
-
 
 # ---------- per lane of an f32x2 ----------
 
@@ -490,7 +488,6 @@ pub fun smooth_step_2(lo: f32x2, hi: f32x2, x: f32x2) f32x2;
 #[op("spirv", "GLSL.std.450", "Fma")]
 pub fun fma_2(a: f32x2, b: f32x2, c: f32x2) f32x2;
 
-
 # ---------- per lane of an f32x3 ----------
 
 # Absolute value, per lane.
@@ -701,7 +698,6 @@ pub fun smooth_step_3(lo: f32x3, hi: f32x3, x: f32x3) f32x3;
 # ret: a * b + c per lane
 #[op("spirv", "GLSL.std.450", "Fma")]
 pub fun fma_3(a: f32x3, b: f32x3, c: f32x3) f32x3;
-
 
 # ---------- per lane of an f32x4 ----------
 
@@ -914,7 +910,6 @@ pub fun smooth_step_4(lo: f32x4, hi: f32x4, x: f32x4) f32x4;
 #[op("spirv", "GLSL.std.450", "Fma")]
 pub fun fma_4(a: f32x4, b: f32x4, c: f32x4) f32x4;
 
-
 # ---------- geometry ----------
 #
 # These consume vectors and have no scalar form, but they carry their width like
@@ -924,7 +919,6 @@ pub fun fma_4(a: f32x4, b: f32x4, c: f32x4) f32x4;
 # `dot` is the odd instruction of the group. GLSL spells it beside `length` and
 # `normalize`, but it is not a GLSL.std.450 entry at all; it is core `OpDot`, and
 # its decorator says so.
-
 
 # ----- f32x2 -----
 
@@ -983,7 +977,6 @@ pub fun face_forward_2(n: f32x2, i: f32x2, r: f32x2) f32x2;
 # ret: the refracted vector, or the zero vector under total internal reflection
 #[op("spirv", "GLSL.std.450", "Refract")]
 pub fun refract_2(i: f32x2, n: f32x2, eta: f32) f32x2;
-
 
 # ----- f32x3 -----
 
@@ -1053,7 +1046,6 @@ pub fun refract_3(i: f32x3, n: f32x3, eta: f32) f32x3;
 # ret: the vector perpendicular to both, right-handed
 #[op("spirv", "GLSL.std.450", "Cross")]
 pub fun cross_3(a: f32x3, b: f32x3) f32x3;
-
 
 # ----- f32x4 -----
 

@@ -1,6 +1,6 @@
 [project]
 id = "shader"
-version = "0.2.0"
+version = "0.3.0"
 src = "src"
 out = "out/{target.name}/{profile.name}"
 
@@ -23,11 +23,25 @@ os  = "linux"
 abi = "aapcs64"
 
 [profile.debug]
+default = true
 opt = 0
 debug = false
 simd = "scalarize"
+vectorize = false
+float_reassoc = false
 
 [profile.release]
 opt = 2
 debug = false
 simd = "scalarize"
+vectorize = false
+float_reassoc = false
+
+[artifact.shader]
+kind = "static"
+entry = "lib.mach"
+out = "lib/shader{artifact.suffix}"
+targets = ["linux-x86_64", "linux-arm64"]
+link = []
+need = []
+default = true

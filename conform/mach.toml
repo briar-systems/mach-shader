@@ -22,6 +22,8 @@ of  = "spv"
 opt   = 2
 debug = false
 simd  = "scalarize"
+vectorize = false
+float_reassoc = false
 
 [artifact.conform_frag]
 kind    = "bin"
@@ -31,7 +33,7 @@ targets = ["spirv"]
 link    = []
 need    = []
 
-[dep.mach-shader]
+[dep.shader]
 path = ".."
 
 # the texture handles, bound and read one of every declared shape. Its own artifact

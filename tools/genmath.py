@@ -6,6 +6,14 @@ generated rather than hand-maintained: adding a vector width or an instruction
 is an edit to the table, not 130 edits to the file.
 """
 
+import os
+import re
+import subprocess
+import sys
+
+# `mach fmt -` (stdin) first shipped in mach 5.1.0
+MIN_MACH = (5, 1, 0)
+
 HEADER = '''# Shader-side maths: the functions that ARE SPIR-V instructions.
 #
 # Every declaration here is one SPIR-V instruction, named by an `#[op(target, set,
@@ -269,6 +277,30 @@ for suffix, ty, label in widths():
         out.append("")
 
 text = "\n".join(out)
-while "\n\n\n\n" in text:
-    text = text.replace("\n\n\n\n", "\n\n\n")
-print(text.rstrip() + "\n", end="")
+
+
+def require_mach(mach):
+    try:
+        info = subprocess.run([mach, "info"], capture_output=True, text=True).stdout
+    except OSError as err:
+        sys.exit(f"genmath: cannot run the mach compiler '{mach}': {err}")
+    found = re.match(r"mach (\d+)\.(\d+)\.(\d+)", info)
+    want = ".".join(map(str, MIN_MACH))
+    if not found:
+        sys.exit(f"genmath: could not read the version of '{mach}' from `mach info`; mach {want} or newer is required")
+    have = tuple(int(n) for n in found.groups())
+    if have < MIN_MACH:
+        sys.exit(f"genmath: '{mach}' is mach {'.'.join(map(str, have))}, but mach {want} or newer is required for `mach fmt -`; "
+                 "install a newer compiler or point MACH at one")
+
+
+mach = os.environ.get("MACH", "mach")
+require_mach(mach)
+
+# mach fmt owns the layout, so the committed file is what it would write
+result = subprocess.run([mach, "fmt", "-"],
+                        input=text, capture_output=True, text=True)
+if result.returncode != 0:
+    sys.stderr.write("mach fmt rejected the generated file:\n" + result.stdout + result.stderr)
+    sys.exit(1)
+print(result.stdout, end="")
