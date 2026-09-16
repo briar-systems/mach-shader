@@ -71,7 +71,7 @@ fun frag_main() {
         + tex.sample_3d(tex.combine_3d(volume_tex, base_smp), in_uvw)
         + tex.sample_cube(tex.combine_cube(env_tex, base_smp), in_uvw)
         + tex.sample_2d_array(tex.combine_2d_array(layers_tex, base_smp), in_uvw)
-        + tex.sample_cube_array(tex.combine_cube_array(envs_tex, base_smp), in_uvw);
+        + tex.sample_cube_array(envs, in_uvw);
     out_ids = tex.sample_2d_u(ids, in_uv)
         + tex.sample_2d_u(tex.combine_2d_u(ids_tex, base_smp), in_uv);
 }
