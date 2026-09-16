@@ -8,7 +8,7 @@
 #
 # The result is written to the output so no call can be eliminated as dead.
 
-use sh: shader.math;
+use  sh: shader.math;
 
 #[input(0)]
 var a2: f32x2;
