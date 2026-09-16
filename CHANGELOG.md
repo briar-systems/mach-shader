@@ -10,10 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Requires Mach 5.0. The manifests use the 5.0 schema (#5).
 - `src/math.mach` is laid out by `mach fmt`, and `tools/genmath.py` pipes its output through `mach fmt -` (#7).
+- `tools/genmath.py` requires mach 5.1.0 and says so when the compiler is older (#14).
 - CI runs the family's shared tiered workflow and ends in a `gate` job (#7, #10).
 
 ### Added
 - CHANGELOG.md and a written release process (#13).
+- `tools/texcheck.py`: CI asserts that every declared image shape is sampled and combined in `conform_tex_frag`, which now calls every `combine_*` (#15).
 
 ## [0.2.0] - 2026-08-09
 
