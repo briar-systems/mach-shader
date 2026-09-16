@@ -274,7 +274,7 @@ pub fun smooth_step(lo: f32, hi: f32, x: f32) f32;
 # b:   The second factor.
 # c:   The addend.
 # ret: a * b + c
-#[op("spirv", "GLSL.std.450", "Fma")]
+#[op("spirv", "GLSL.std.450", "FMix")]
 pub fun fma(a: f32, b: f32, c: f32) f32;
 
 # ---------- per lane of an f32x2 ----------
@@ -485,7 +485,7 @@ pub fun smooth_step_2(lo: f32x2, hi: f32x2, x: f32x2) f32x2;
 # b:   The second factors, one per lane.
 # c:   The addends, one per lane.
 # ret: a * b + c per lane
-#[op("spirv", "GLSL.std.450", "Fma")]
+#[op("spirv", "GLSL.std.450", "FMix")]
 pub fun fma_2(a: f32x2, b: f32x2, c: f32x2) f32x2;
 
 # ---------- per lane of an f32x3 ----------
@@ -696,7 +696,7 @@ pub fun smooth_step_3(lo: f32x3, hi: f32x3, x: f32x3) f32x3;
 # b:   The second factors, one per lane.
 # c:   The addends, one per lane.
 # ret: a * b + c per lane
-#[op("spirv", "GLSL.std.450", "Fma")]
+#[op("spirv", "GLSL.std.450", "FMix")]
 pub fun fma_3(a: f32x3, b: f32x3, c: f32x3) f32x3;
 
 # ---------- per lane of an f32x4 ----------
@@ -907,7 +907,7 @@ pub fun smooth_step_4(lo: f32x4, hi: f32x4, x: f32x4) f32x4;
 # b:   The second factors, one per lane.
 # c:   The addends, one per lane.
 # ret: a * b + c per lane
-#[op("spirv", "GLSL.std.450", "Fma")]
+#[op("spirv", "GLSL.std.450", "FMix")]
 pub fun fma_4(a: f32x4, b: f32x4, c: f32x4) f32x4;
 
 # ---------- geometry ----------

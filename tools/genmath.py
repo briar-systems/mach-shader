@@ -115,7 +115,7 @@ TERNARY = [
     ("clamp",       "FClamp",     ["x", "lo", "hi"], "Constrain a value to a range.",             "min(max(x, lo), hi)"),
     ("mix",         "FMix",       ["a", "b", "t"],   "Linear interpolation.",                     "a * (1 - t) + b * t"),
     ("smooth_step", "SmoothStep", ["lo", "hi", "x"], "A smooth Hermite step between two edges.",  "0.0 at or below lo, 1.0 at or above hi, a smooth ramp between"),
-    ("fma",         "Fma",        ["a", "b", "c"],   "Fused multiply-add.",                       "a * b + c"),
+    ("fma",         "FMix",       ["a", "b", "c"],   "Fused multiply-add.",                       "a * b + c"),
 ]
 
 # Parameter wording that depends on the function rather than the parameter name.
