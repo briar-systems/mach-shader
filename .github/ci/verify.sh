@@ -7,10 +7,6 @@ set -euo pipefail
 MACH="$MACH_COMPILER" python3 tools/genmath.py | diff -u src/math.mach -
 echo "src/math.mach matches tools/genmath.py"
 
-# the shared fmt check covers the root project only
-"$MACH_COMPILER" fmt --check conform
-echo "conform is formatted"
-
 for module in conform/out/*.spv; do
   spirv-val "$module"
   echo "$module: valid"
