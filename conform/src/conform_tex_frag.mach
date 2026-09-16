@@ -10,36 +10,50 @@
 
 use tex: shader.texture;
 
-#[sampler(0, 0)] var ramp:    tex.Sampler1D;
-#[sampler(0, 1)] var albedo:  tex.Sampler2D;
-#[sampler(0, 2)] var volume:  tex.Sampler3D;
-#[sampler(0, 3)] var env:     tex.SamplerCube;
-#[sampler(0, 4)] var layers:  tex.Sampler2DArray;
-#[sampler(0, 5)] var envs:    tex.SamplerCubeArray;
-#[sampler(0, 6)] var ids:     tex.USampler2D;
-#[sampler(0, 7)] var signed:  tex.ISampler2D;
+#[sampler(0, 0)]
+var ramp: tex.Sampler1D;
+#[sampler(0, 1)]
+var albedo: tex.Sampler2D;
+#[sampler(0, 2)]
+var volume: tex.Sampler3D;
+#[sampler(0, 3)]
+var env: tex.SamplerCube;
+#[sampler(0, 4)]
+var layers: tex.Sampler2DArray;
+#[sampler(0, 5)]
+var envs: tex.SamplerCubeArray;
+#[sampler(0, 6)]
+var ids: tex.USampler2D;
+#[sampler(0, 7)]
+var signed: tex.ISampler2D;
 
 # a second descriptor SET, and the separately-bound form: an image and a sampler
 # with no relationship until an instruction combines them.
-#[sampler(1, 0)] var base_tex: tex.Texture2D;
-#[sampler(1, 1)] var base_smp: tex.Sampler;
+#[sampler(1, 0)]
+var base_tex: tex.Texture2D;
+#[sampler(1, 1)]
+var base_smp: tex.Sampler;
 
-#[input(0)] var in_uv:  f32x2;
-#[input(1)] var in_uvw: f32x4;
+#[input(0)]
+var in_uv: f32x2;
+#[input(1)]
+var in_uvw: f32x4;
 
-#[output(0)] var out_colour: f32x4;
-#[output(1)] var out_ids:    u32x4;
+#[output(0)]
+var out_colour: f32x4;
+#[output(1)]
+var out_ids: u32x4;
 
 #[stage("fragment")]
 fun frag_main() {
     out_colour = tex.sample_1d(ramp, in_uv[0])
-               + tex.sample_2d(albedo, in_uv)
-               + tex.sample_3d(volume, in_uvw)
-               + tex.sample_cube(env, in_uvw)
-               + tex.sample_2d_array(layers, in_uvw)
-               + tex.sample_cube_array(envs, in_uvw)
-               + tex.sample_2d(tex.combine_2d(base_tex, base_smp), in_uv);
-    out_ids    = tex.sample_2d_u(ids, in_uv);
+        + tex.sample_2d(albedo, in_uv)
+        + tex.sample_3d(volume, in_uvw)
+        + tex.sample_cube(env, in_uvw)
+        + tex.sample_2d_array(layers, in_uvw)
+        + tex.sample_cube_array(envs, in_uvw)
+        + tex.sample_2d(tex.combine_2d(base_tex, base_smp), in_uv);
+    out_ids = tex.sample_2d_u(ids, in_uv);
 }
 
 # the signed path, kept out of the chain above because its result type is a signed
