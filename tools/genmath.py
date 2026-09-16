@@ -6,6 +6,10 @@ generated rather than hand-maintained: adding a vector width or an instruction
 is an edit to the table, not 130 edits to the file.
 """
 
+import os
+import subprocess
+import sys
+
 HEADER = '''# Shader-side maths: the functions that ARE SPIR-V instructions.
 #
 # Every declaration here is one SPIR-V instruction, named by an `#[op(target, set,
@@ -269,6 +273,11 @@ for suffix, ty, label in widths():
         out.append("")
 
 text = "\n".join(out)
-while "\n\n\n\n" in text:
-    text = text.replace("\n\n\n\n", "\n\n\n")
-print(text.rstrip() + "\n", end="")
+
+# mach fmt owns the layout, so the committed file is what it would write
+result = subprocess.run([os.environ.get("MACH", "mach"), "fmt", "-"],
+                        input=text, capture_output=True, text=True)
+if result.returncode != 0:
+    sys.stderr.write("mach fmt rejected the generated file:\n" + result.stdout + result.stderr)
+    sys.exit(1)
+print(result.stdout, end="")
