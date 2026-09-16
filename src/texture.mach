@@ -102,18 +102,25 @@ pub def USampler2D;
 # the sample.
 #[op("spirv", "core", "OpSampledImage")]
 pub fun combine_2d(t: Texture2D, s: Sampler) Sampler2D;
+
 #[op("spirv", "core", "OpSampledImage")]
 pub fun combine_1d(t: Texture1D, s: Sampler) Sampler1D;
+
 #[op("spirv", "core", "OpSampledImage")]
 pub fun combine_3d(t: Texture3D, s: Sampler) Sampler3D;
+
 #[op("spirv", "core", "OpSampledImage")]
 pub fun combine_cube(t: TextureCube, s: Sampler) SamplerCube;
+
 #[op("spirv", "core", "OpSampledImage")]
 pub fun combine_2d_array(t: Texture2DArray, s: Sampler) Sampler2DArray;
+
 #[op("spirv", "core", "OpSampledImage")]
 pub fun combine_cube_array(t: TextureCubeArray, s: Sampler) SamplerCubeArray;
+
 #[op("spirv", "core", "OpSampledImage")]
 pub fun combine_2d_i(t: ITexture2D, s: Sampler) ISampler2D;
+
 #[op("spirv", "core", "OpSampledImage")]
 pub fun combine_2d_u(t: UTexture2D, s: Sampler) USampler2D;
 
@@ -127,19 +134,25 @@ pub fun combine_2d_u(t: UTexture2D, s: Sampler) USampler2D;
 # `f32x2`.
 #[op("spirv", "core", "OpImageSampleImplicitLod")]
 pub fun sample_1d(s: Sampler1D, u: f32) f32x4;
+
 #[op("spirv", "core", "OpImageSampleImplicitLod")]
 pub fun sample_2d(s: Sampler2D, uv: f32x2) f32x4;
+
 #[op("spirv", "core", "OpImageSampleImplicitLod")]
 pub fun sample_3d(s: Sampler3D, uvw: f32x4) f32x4;
+
 #[op("spirv", "core", "OpImageSampleImplicitLod")]
 pub fun sample_cube(s: SamplerCube, dir: f32x4) f32x4;
+
 #[op("spirv", "core", "OpImageSampleImplicitLod")]
 pub fun sample_2d_array(s: Sampler2DArray, uvl: f32x4) f32x4;
+
 #[op("spirv", "core", "OpImageSampleImplicitLod")]
 pub fun sample_cube_array(s: SamplerCubeArray, dirl: f32x4) f32x4;
 
 # the integer paths, whose result type shares the image's component type
 #[op("spirv", "core", "OpImageSampleImplicitLod")]
 pub fun sample_2d_i(s: ISampler2D, uv: f32x2) i32x4;
+
 #[op("spirv", "core", "OpImageSampleImplicitLod")]
 pub fun sample_2d_u(s: USampler2D, uv: f32x2) u32x4;
