@@ -24,3 +24,8 @@ for op in Cross Refract Reflect FaceForward Normalize Length Distance \
 done
 grep -q 'OpDot' "$RUNNER_TEMP/conform.spvasm" || { echo "::error::missing core OpDot"; exit 1; }
 echo "every checked instruction is present"
+
+# the same proof for the texture module: every image shape the library declares
+# is read by a sample and built by a combine, so a dropped call fails here
+spirv-dis conform/out/conform_tex_frag.spv > "$RUNNER_TEMP/conform_tex.spvasm"
+python3 tools/texcheck.py src/texture.mach "$RUNNER_TEMP/conform_tex.spvasm"
