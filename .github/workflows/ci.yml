@@ -49,7 +49,7 @@ jobs:
         run: |
           set -euo pipefail
           cd conform
-          mach dep pull
+          mach dep pull .
           mach build . --target spirv --profile release
 
       - name: Validate the emitted module
