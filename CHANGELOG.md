@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- Requires Mach 5.3. Both manifests declare `mach = "^5.3"`, which silences the compiler-range warning (#28).
 - Copyright is attributed to Briar Systems LLC (#26).
 
 ## [0.3.0] - 2026-09-16
