@@ -12,6 +12,12 @@ on:
 permissions:
   contents: read
 
+# a tag push can be delivered twice. a second run for the same tag waits, then
+# finds the release published and ends green. cancelling could abort a publish
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   verify:
     uses: briar-systems/.github/.github/workflows/mach-release.yml@main
