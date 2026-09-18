@@ -8,7 +8,7 @@ name: CI
 
 on:
   pull_request:
-  # release.yml calls this with heavy: all for a tag, which has no base branch
+  # cd.yml calls this with heavy: all for a tag, which has no base branch
   workflow_call:
     inputs:
       heavy:
