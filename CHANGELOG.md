@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-09-25
+
 ### Changed
 - Requires Mach 5.3. Both manifests declare `mach = "^5.3"`, which silences the compiler-range warning (#28).
 - Copyright is attributed to Briar Systems LLC (#26).
@@ -39,7 +41,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The width-carrying naming rule: scalar entries take the plain name, and vector entries end in their lane count (`sqrt_3`, `dot_3`, `cross_3`).
 - `tools/genmath.py`, which generates `src/math.mach`, and `conform/`, the conformance shader CI validates with `spirv-val`.
 
-[Unreleased]: https://github.com/briar-systems/mach-shader/compare/v0.3.0...dev
+[Unreleased]: https://github.com/briar-systems/mach-shader/compare/v0.3.1...dev
+[0.3.1]: https://github.com/briar-systems/mach-shader/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/briar-systems/mach-shader/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/briar-systems/mach-shader/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/briar-systems/mach-shader/releases/tag/v0.1.0
