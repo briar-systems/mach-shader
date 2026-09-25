@@ -1,6 +1,6 @@
 [project]
 id = "shader"
-version = "0.3.1"
+version = "0.3.2"
 mach = "^5.3"
 src = "src"
 out = "out/{target.name}/{profile.name}"
@@ -40,7 +40,7 @@ float_reassoc = false
 
 [artifact.shader]
 kind = "static"
-entry = "lib.mach"
+entry = "lib/shader.mach"
 out = "lib/shader{artifact.suffix}"
 targets = ["linux-x86_64", "linux-arm64"]
 link = []
