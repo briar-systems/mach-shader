@@ -40,7 +40,7 @@ float_reassoc = false
 
 [artifact.shader]
 kind = "static"
-entry = "lib.mach"
+entry = "lib/shader.mach"
 out = "lib/shader{artifact.suffix}"
 targets = ["linux-x86_64", "linux-arm64"]
 link = []
