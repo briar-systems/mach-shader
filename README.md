@@ -115,10 +115,19 @@ shader wanted the 3-wide one, which is the common case in lighting.
 
 ## Using it
 
+Add it with `mach dep add`, which declares the dependency at a caret range over
+the newest compatible release and realizes it:
+
+```sh
+mach dep add . shader --git https://github.com/briar-systems/mach-shader
+```
+
+That writes this stanza to `mach.toml`:
+
 ```toml
 [dep.shader]
 git = "https://github.com/briar-systems/mach-shader"
-ref = "branch/main"
+version = "^0.3.0"
 ```
 
 Requires Mach 5.3 or newer. The manifest declares `mach = "^5.3"`, and 5.3 is the
