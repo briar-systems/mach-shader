@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-09-25
+
 ### Changed
 - chore: the library entry moves from `src/lib.mach` to `src/lib/shader.mach` (#38), named after the artifact as across the family (briar-systems/.github#107). Its full module path is now `shader.lib.shader` where it was `shader.lib`. A bare `use shader;` binds it as before, and `shader.math` and `shader.texture` are unchanged.
 
