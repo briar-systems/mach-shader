@@ -115,13 +115,23 @@ shader wanted the 3-wide one, which is the common case in lighting.
 
 ## Using it
 
+Add it with `mach dep add`, which declares the dependency at a caret range over
+the newest compatible release and realizes it:
+
+```sh
+mach dep add . shader --git https://github.com/briar-systems/mach-shader
+```
+
+That writes this stanza to `mach.toml`:
+
 ```toml
 [dep.shader]
 git = "https://github.com/briar-systems/mach-shader"
-ref = "branch/main"
+version = "^0.3.0"
 ```
 
-Requires Mach 5.0 or newer.
+Requires Mach 5.3 or newer. The manifest declares `mach = "^5.3"`, and 5.3 is the
+first release that reads that key.
 
 ## How it is checked
 
@@ -148,9 +158,15 @@ a breaking change is major, a feature is minor, and a fix is patch.
    `## [Unreleased]` in CHANGELOG.md to `## [X.Y.Z] - YYYY-MM-DD`, open a fresh
    `## [Unreleased]` above it, and update the compare links. Merge it into `dev`.
 2. Merge `dev` into `main` with a merge commit.
-3. Tag that merge `vX.Y.Z` (annotated), push the tag, and publish a GitHub
-   release named `vX.Y.Z` whose notes are that version's changelog section.
+3. Tag that merge `vX.Y.Z` (annotated) and push the tag. The Release workflow
+   (`.github/workflows/cd.yml`, the family's shared `mach-release.yml`)
+   checks the tag against the manifest and changelog, runs the full CI tier, and
+   publishes the GitHub release with that version's changelog section as notes.
+   Watch that run to success.
 4. Merge `main` back into `dev`.
+
+`gh workflow run cd.yml --ref dev` rehearses the same path without a tag,
+and deletes its draft when it finishes.
 
 ## What is not here, and why
 

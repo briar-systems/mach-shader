@@ -1,0 +1,39 @@
+name: Release
+
+# a pushed vX.Y.Z tag is a release. the family's mach-release.yml checks it,
+# this repo's full CI tier runs, and the shared workflow publishes it. a
+# workflow_dispatch rehearses the same path without a tag.
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# a tag push can be delivered twice. a second run for the same tag waits, then
+# finds the release published and ends green. cancelling could abort a publish
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    uses: briar-systems/.github/.github/workflows/mach-release.yml@main
+    with:
+      stage: verify
+
+  ci:
+    needs: verify
+    uses: ./.github/workflows/ci.yml
+    with:
+      heavy: all
+
+  publish:
+    needs: [verify, ci]
+    uses: briar-systems/.github/.github/workflows/mach-release.yml@main
+    permissions:
+      contents: write
+    with:
+      stage: publish
