@@ -127,7 +127,7 @@ That writes this stanza to `mach.toml`:
 ```toml
 [dep.shader]
 git = "https://github.com/briar-systems/mach-shader"
-version = "^0.3.0"
+version = "^0.4.0"
 ```
 
 Requires Mach 6. The manifest declares `mach = "^6"`.
