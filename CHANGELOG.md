@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-09-26
+
+### Changed
+- **Breaking: requires mach 6** (#42). `mach.toml` and `conform/mach.toml` declare `mach = "^6"` where they declared `^5.3`, so a consumer of shader must move to mach 6 with it. The declarations are unchanged. The library has no std dependency and no tests, so nothing else moves. CI seeds mach v6.0.0.
+- readme: The dependency stanza declares `version = "^0.4.0"`, and the requirement line names mach 6.
+
 ## [0.3.2] - 2026-09-25
 
 ### Changed
