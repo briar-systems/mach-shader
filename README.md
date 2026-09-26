@@ -130,8 +130,7 @@ git = "https://github.com/briar-systems/mach-shader"
 version = "^0.3.0"
 ```
 
-Requires Mach 5.3 or newer. The manifest declares `mach = "^5.3"`, and 5.3 is the
-first release that reads that key.
+Requires Mach 6. The manifest declares `mach = "^6"`.
 
 ## How it is checked
 
