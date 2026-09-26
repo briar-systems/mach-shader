@@ -30,6 +30,8 @@ jobs:
     uses: briar-systems/.github/.github/workflows/mach-lib.yml@main
     with:
       heavy: ${{ inputs.heavy }}
+      # the manifests require mach 6, above the family pin
+      mach-version: v6.0.0
       # conform declares only a release profile
       profiles: '["release"]'
       # every declaration is bodyless, so there is nothing for mach test to run
