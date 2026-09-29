@@ -55,6 +55,39 @@ sentence naming the operand that causes it rather than being silently absent: a
 depth-comparison image, a multisampled image, the `Rect` / `Buffer` / `SubpassData`
 dimensionalities, and a storage image.
 
+## Compute
+
+A compute stage is a `#[stage("compute")]` function sized by `#[workgroup(x, y,
+z)]`, and it emits a GLCompute entry point with that `LocalSize`. It reads and
+writes `#[storage(set, binding)]` buffers rather than varyings, since Vulkan has no
+`Output` class in a compute stage, and a buffer marked `"readonly"` is emitted
+`NonWritable`. Its ids are the `global_invocation`, `local_invocation` and
+`workgroup_id` built-ins, each a `u32x3`. The maths in `shader.math` works in a
+compute body exactly as it does in a fragment one.
+
+```mach
+use sh: shader.math;
+
+rec Field { values: [256]f32; }
+
+#[storage(0, 0, "readonly")] var src: Field;
+#[storage(0, 1)]             var dst: Field;
+#[builtin("global_invocation")] var gid: u32x3;
+
+#[stage("compute")]
+#[workgroup(64, 1, 1)]
+fun step() {
+    val i: u32 = gid[0];
+    dst.values[i] = sh.sqrt(src.values[i]);
+}
+```
+
+All of that is the compiler's, so this library adds no declaration for it.
+Workgroup shared memory, barriers, atomics, storage images and write-only buffers
+need compiler support that does not exist yet, tracked in
+[mach#4252](https://github.com/briar-systems/mach/issues/4252), and their
+declarations land here when it does.
+
 ## Why this is not in the standard library
 
 `std.math.sqrt_f32` promises a documented IEEE result and delivers it on every
@@ -145,8 +178,11 @@ The library itself compiles to nothing - every declaration is bodyless - so
 building it proves nothing. `conform/` is the actual check: a fragment shader that
 calls one entry from every family at every width, writing the result to its output
 so no call can be eliminated. A decorator naming an instruction that does not
-exist, or a signature SPIR-V will not accept at that width, fails there. CI builds
-it and runs `spirv-val` over the result.
+exist, or a signature SPIR-V will not accept at that width, fails there. Beside it,
+`conform_tex_frag` binds and samples every texture handle, and `conform_comp` is a
+compute stage with a workgroup size, every compute built-in and a read-only and a
+read-write buffer. CI builds them, runs `spirv-val` over each, and checks the
+disassembly for what validation alone would not catch.
 
 ## Releasing
 
