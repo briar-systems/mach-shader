@@ -29,3 +29,16 @@ echo "every checked instruction is present"
 # is read by a sample and built by a combine, so a dropped call fails here
 spirv-dis conform/out/conform_tex_frag.spv > "$RUNNER_TEMP/conform_tex.spvasm"
 python3 tools/texcheck.py src/texture.mach "$RUNNER_TEMP/conform_tex.spvasm"
+
+# the compute stage: an entry point that validates can still have lost its
+# workgroup size, a built-in or the read-only buffer's decoration, and each of
+# those is a pipeline the host builds against a different interface
+spirv-dis conform/out/conform_comp.spv > "$RUNNER_TEMP/conform_comp.spvasm"
+for want in 'OpEntryPoint GLCompute %[0-9a-z_]* "comp_main"' \
+            'OpExecutionMode %[0-9a-z_]* LocalSize 64 1 1' \
+            'BuiltIn GlobalInvocationId' 'BuiltIn LocalInvocationId' 'BuiltIn WorkgroupId' \
+            'OpDecorate %[0-9a-z_]* NonWritable' 'StorageBuffer'; do
+  grep -q "$want" "$RUNNER_TEMP/conform_comp.spvasm" \
+    || { echo "::error::conform_comp is missing: $want"; exit 1; }
+done
+echo "the compute stage carries its workgroup size, built-ins and buffers"
