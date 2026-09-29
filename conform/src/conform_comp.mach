@@ -1,0 +1,40 @@
+# A compute stage over everything the compiler carries for one today.
+#
+# This exists to be compiled and validated, not to be dispatched. It declares a
+# workgroup size, reads every compute built-in, reads a `"readonly"` storage buffer
+# and writes a read-write one, and calls into `shader.math` from a compute body, so
+# a stage the target stops accepting, a built-in it mistypes or a buffer it
+# decorates wrongly fails here rather than in a consumer's pipeline.
+#
+# Every result is written to a buffer so no read can be eliminated as dead.
+
+use sh: shader.math;
+
+rec Inputs {
+    values: [256]f32;
+}
+
+rec Outputs {
+    values: [256]f32;
+    ids:    [256]u32;
+}
+
+#[storage(0, 0, "readonly")]
+var inputs: Inputs;
+#[storage(0, 1)]
+var outputs: Outputs;
+
+#[builtin("global_invocation")]
+var global_id: u32x3;
+#[builtin("local_invocation")]
+var local_id: u32x3;
+#[builtin("workgroup_id")]
+var group_id: u32x3;
+
+#[stage("compute")]
+#[workgroup(64, 1, 1)]
+fun comp_main() {
+    val i: u32 = global_id[0];
+    outputs.values[i] = sh.fma(sh.sqrt(inputs.values[i]), 2.0, 1.0);
+    outputs.ids[i]    = group_id[0] * 64 + local_id[0];
+}

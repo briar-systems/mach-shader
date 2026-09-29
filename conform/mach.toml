@@ -47,3 +47,14 @@ out     = "conform_tex_frag.spv"
 targets = ["spirv"]
 link    = []
 need    = []
+
+# a compute stage: its workgroup size, its built-ins and its storage buffers. Its own
+# artifact because a compute stage binds buffers rather than varyings, so it shares
+# no interface with the fragment shaders.
+[artifact.conform_comp]
+kind    = "bin"
+entry   = "conform_comp.mach"
+out     = "conform_comp.spv"
+targets = ["spirv"]
+link    = []
+need    = []
