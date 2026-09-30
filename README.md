@@ -181,8 +181,9 @@ so no call can be eliminated. A decorator naming an instruction that does not
 exist, or a signature SPIR-V will not accept at that width, fails there. Beside it,
 `conform_tex_frag` binds and samples every texture handle, and `conform_comp` is a
 compute stage with a workgroup size, every compute built-in and a read-only and a
-read-write buffer. CI builds them, runs `spirv-val` over each, and checks the
-disassembly for what validation alone would not catch.
+read-write buffer. `conform/verify.sh` (needs spirv-tools) builds them, runs
+`spirv-val` over each, and checks the disassembly for what validation alone
+would not catch.
 
 ## Releasing
 
@@ -194,9 +195,8 @@ a breaking change is major, a feature is minor, and a fix is patch.
    `## [Unreleased]` above it, and update the compare links. Merge it into `dev`.
 2. Merge `dev` into `main` with a merge commit.
 3. Tag that merge `vX.Y.Z` (annotated) and push the tag. The Release workflow
-   (`.github/workflows/cd.yml`, the family's shared `mach-release.yml`)
-   checks the tag against the manifest and changelog, runs the full CI tier, and
-   publishes the GitHub release with that version's changelog section as notes.
+   (`.github/workflows/cd.yml`) checks the tag against the manifest, builds on
+   every host the library ships to, and publishes the GitHub release with that version's changelog section as notes.
    Watch that run to success.
 4. Merge `main` back into `dev`.
 

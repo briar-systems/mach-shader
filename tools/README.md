@@ -11,6 +11,6 @@ python3 tools/genmath.py > src/math.mach
 
 It pipes its output through `mach fmt -`, so it needs **mach 5.1.0 or newer**. It
 uses the `mach` on `PATH`, or the compiler the `MACH` environment variable names,
-and stops with a clear message when that compiler is older. CI runs the generator
-and diffs the result against the committed file, so the two must always be
+and stops with a clear message when that compiler is older. `conform/verify.sh`
+runs the generator and diffs the result against the committed file, so the two must always be
 committed together.
