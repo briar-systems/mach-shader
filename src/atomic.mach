@@ -1,0 +1,725 @@
+# Shader-side atomics: read-modify-write operations on one value, indivisible across
+# every invocation that reaches the same memory.
+#
+# Every declaration here is one SPIR-V instruction, named by `#[op]`, as in
+# `shader.math`. Like a barrier, an atomic is never inlined away or reordered: the
+# compiler treats it as reading and writing all memory, at every optimization level.
+#
+# THE POINTER TAKES ITS STORAGE CLASS FROM THE CALL. An atomic has no body, so its
+# pointer parameter is whatever the argument points into: an element or member of a
+# `#[storage]` buffer, of a `#[shared]` variable, or a storage image texel from
+# `shader.texture`'s `image_texel_*`. `atomic_add_u32(?counts.n[i], ...)` and
+# `atomic_add_u32(?tile[i], ...)` are the same declaration. A `"readonly"` binding
+# admits only an atomic load and a `"writeonly"` one only an atomic store.
+#
+# SCOPE AND SEMANTICS ARE CONSTANTS. Each atomic takes the `SCOPE_*` it is atomic
+# across and the `SEMANTICS_*` that order the memory around it, from `shader.sync`, as
+# constants written at the call. A relaxed atomic passes `SEMANTICS_RELAXED`.
+#
+# THE TYPE DECIDES THE FEATURE. A 32-bit integer atomic is core in every storage
+# class. Every other type needs the Vulkan device feature of its storage class, named
+# in the target's `extensions`: `buffer_*` on buffer memory, `shared_*` on workgroup
+# memory and `image_*` on an image texel, where Vulkan defines only a 64-bit integer
+# and an `f32`. A 64-bit integer needs `*_int64_atomics`; an `f16`, `f32` or `f64`
+# load, store or exchange `*_float{16,32,64}_atomics`; an add `*_float{16,32,64}_atomic_add`;
+# a min or max `*_float{16,32,64}_atomic_min_max`. An `f16` atomic also needs `float16`,
+# and an `f16` storage buffer `storage_buffer_16bit_access`. A call whose feature the
+# target does not select is refused there, naming it.
+#
+# THE NAMING RULE. Every entry carries the type it operates on after an underscore:
+# `atomic_add_u32`, `atomic_add_i64`, `atomic_add_f32`. There is no unsuffixed entry,
+# so no type is the default that a later one would have to break. The signed and
+# unsigned forms are distinct where the instruction is, so `atomic_min_i32` is
+# `OpAtomicSMin` and `atomic_min_u32` is `OpAtomicUMin`, and a float's add, min and
+# max are the `OpAtomicF*EXT` instructions.
+#
+# THIS IS A SHADER-ONLY MODULE. On any target other than SPIR-V a call to one of these
+# fails to link, for the reason `shader.math` gives.
+#
+# This file is generated. See tools/genatomic.py.
+
+# Read the value atomically.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# ret:       the value
+#[op("spirv", "core", "OpAtomicLoad")]
+pub fun atomic_load_u32(p: *u32, scope: u32, semantics: u32) u32;
+
+# Write a value atomically.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# value:     The value to write.
+#[op("spirv", "core", "OpAtomicStore")]
+pub fun atomic_store_u32(p: *u32, scope: u32, semantics: u32, value: u32);
+
+# Write a value and return the one it replaced.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# value:     The value to write.
+# ret:       the value before the write
+#[op("spirv", "core", "OpAtomicExchange")]
+pub fun atomic_exchange_u32(p: *u32, scope: u32, semantics: u32, value: u32) u32;
+
+# Write a value if the current one equals a comparator, and return the current one.
+# ---
+# p:          The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:      The `SCOPE_*` the operation is atomic across.
+# equal:      The `SEMANTICS_*` when the write happens.
+# unequal:    The `SEMANTICS_*` when it does not, no stronger than `equal` and never a release.
+# value:      The value to write.
+# comparator: The value the current one must equal.
+# ret:        the value before the operation, which equals `comparator` exactly when the write happened
+#[op("spirv", "core", "OpAtomicCompareExchange")]
+pub fun atomic_compare_exchange_u32(p: *u32, scope: u32, equal: u32, unequal: u32, value: u32, comparator: u32) u32;
+
+# Add one.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# ret:       the value before the increment
+#[op("spirv", "core", "OpAtomicIIncrement")]
+pub fun atomic_increment_u32(p: *u32, scope: u32, semantics: u32) u32;
+
+# Subtract one.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# ret:       the value before the decrement
+#[op("spirv", "core", "OpAtomicIDecrement")]
+pub fun atomic_decrement_u32(p: *u32, scope: u32, semantics: u32) u32;
+
+# Add a value.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# value:     The value to add.
+# ret:       the value before the add
+#[op("spirv", "core", "OpAtomicIAdd")]
+pub fun atomic_add_u32(p: *u32, scope: u32, semantics: u32, value: u32) u32;
+
+# Subtract a value.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# value:     The value to subtract.
+# ret:       the value before the subtraction
+#[op("spirv", "core", "OpAtomicISub")]
+pub fun atomic_sub_u32(p: *u32, scope: u32, semantics: u32, value: u32) u32;
+
+# Keep the smaller of the value and another.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# value:     The value to compare with.
+# ret:       the value before the operation
+#[op("spirv", "core", "OpAtomicUMin")]
+pub fun atomic_min_u32(p: *u32, scope: u32, semantics: u32, value: u32) u32;
+
+# Keep the larger of the value and another.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# value:     The value to compare with.
+# ret:       the value before the operation
+#[op("spirv", "core", "OpAtomicUMax")]
+pub fun atomic_max_u32(p: *u32, scope: u32, semantics: u32, value: u32) u32;
+
+# Bitwise-and a mask into the value.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# value:     The mask.
+# ret:       the value before the operation
+#[op("spirv", "core", "OpAtomicAnd")]
+pub fun atomic_and_u32(p: *u32, scope: u32, semantics: u32, value: u32) u32;
+
+# Bitwise-or a mask into the value.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# value:     The mask.
+# ret:       the value before the operation
+#[op("spirv", "core", "OpAtomicOr")]
+pub fun atomic_or_u32(p: *u32, scope: u32, semantics: u32, value: u32) u32;
+
+# Bitwise-xor a mask into the value.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# value:     The mask.
+# ret:       the value before the operation
+#[op("spirv", "core", "OpAtomicXor")]
+pub fun atomic_xor_u32(p: *u32, scope: u32, semantics: u32, value: u32) u32;
+
+# Read the value atomically.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# ret:       the value
+#[op("spirv", "core", "OpAtomicLoad")]
+pub fun atomic_load_i32(p: *i32, scope: u32, semantics: u32) i32;
+
+# Write a value atomically.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# value:     The value to write.
+#[op("spirv", "core", "OpAtomicStore")]
+pub fun atomic_store_i32(p: *i32, scope: u32, semantics: u32, value: i32);
+
+# Write a value and return the one it replaced.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# value:     The value to write.
+# ret:       the value before the write
+#[op("spirv", "core", "OpAtomicExchange")]
+pub fun atomic_exchange_i32(p: *i32, scope: u32, semantics: u32, value: i32) i32;
+
+# Write a value if the current one equals a comparator, and return the current one.
+# ---
+# p:          The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:      The `SCOPE_*` the operation is atomic across.
+# equal:      The `SEMANTICS_*` when the write happens.
+# unequal:    The `SEMANTICS_*` when it does not, no stronger than `equal` and never a release.
+# value:      The value to write.
+# comparator: The value the current one must equal.
+# ret:        the value before the operation, which equals `comparator` exactly when the write happened
+#[op("spirv", "core", "OpAtomicCompareExchange")]
+pub fun atomic_compare_exchange_i32(p: *i32, scope: u32, equal: u32, unequal: u32, value: i32, comparator: i32) i32;
+
+# Add one.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# ret:       the value before the increment
+#[op("spirv", "core", "OpAtomicIIncrement")]
+pub fun atomic_increment_i32(p: *i32, scope: u32, semantics: u32) i32;
+
+# Subtract one.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# ret:       the value before the decrement
+#[op("spirv", "core", "OpAtomicIDecrement")]
+pub fun atomic_decrement_i32(p: *i32, scope: u32, semantics: u32) i32;
+
+# Add a value.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# value:     The value to add.
+# ret:       the value before the add
+#[op("spirv", "core", "OpAtomicIAdd")]
+pub fun atomic_add_i32(p: *i32, scope: u32, semantics: u32, value: i32) i32;
+
+# Subtract a value.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# value:     The value to subtract.
+# ret:       the value before the subtraction
+#[op("spirv", "core", "OpAtomicISub")]
+pub fun atomic_sub_i32(p: *i32, scope: u32, semantics: u32, value: i32) i32;
+
+# Keep the smaller of the value and another.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# value:     The value to compare with.
+# ret:       the value before the operation
+#[op("spirv", "core", "OpAtomicSMin")]
+pub fun atomic_min_i32(p: *i32, scope: u32, semantics: u32, value: i32) i32;
+
+# Keep the larger of the value and another.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# value:     The value to compare with.
+# ret:       the value before the operation
+#[op("spirv", "core", "OpAtomicSMax")]
+pub fun atomic_max_i32(p: *i32, scope: u32, semantics: u32, value: i32) i32;
+
+# Bitwise-and a mask into the value.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# value:     The mask.
+# ret:       the value before the operation
+#[op("spirv", "core", "OpAtomicAnd")]
+pub fun atomic_and_i32(p: *i32, scope: u32, semantics: u32, value: i32) i32;
+
+# Bitwise-or a mask into the value.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# value:     The mask.
+# ret:       the value before the operation
+#[op("spirv", "core", "OpAtomicOr")]
+pub fun atomic_or_i32(p: *i32, scope: u32, semantics: u32, value: i32) i32;
+
+# Bitwise-xor a mask into the value.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# value:     The mask.
+# ret:       the value before the operation
+#[op("spirv", "core", "OpAtomicXor")]
+pub fun atomic_xor_i32(p: *i32, scope: u32, semantics: u32, value: i32) i32;
+
+# Read the value atomically.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# ret:       the value
+#[op("spirv", "core", "OpAtomicLoad")]
+pub fun atomic_load_u64(p: *u64, scope: u32, semantics: u32) u64;
+
+# Write a value atomically.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# value:     The value to write.
+#[op("spirv", "core", "OpAtomicStore")]
+pub fun atomic_store_u64(p: *u64, scope: u32, semantics: u32, value: u64);
+
+# Write a value and return the one it replaced.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# value:     The value to write.
+# ret:       the value before the write
+#[op("spirv", "core", "OpAtomicExchange")]
+pub fun atomic_exchange_u64(p: *u64, scope: u32, semantics: u32, value: u64) u64;
+
+# Write a value if the current one equals a comparator, and return the current one.
+# ---
+# p:          The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:      The `SCOPE_*` the operation is atomic across.
+# equal:      The `SEMANTICS_*` when the write happens.
+# unequal:    The `SEMANTICS_*` when it does not, no stronger than `equal` and never a release.
+# value:      The value to write.
+# comparator: The value the current one must equal.
+# ret:        the value before the operation, which equals `comparator` exactly when the write happened
+#[op("spirv", "core", "OpAtomicCompareExchange")]
+pub fun atomic_compare_exchange_u64(p: *u64, scope: u32, equal: u32, unequal: u32, value: u64, comparator: u64) u64;
+
+# Add one.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# ret:       the value before the increment
+#[op("spirv", "core", "OpAtomicIIncrement")]
+pub fun atomic_increment_u64(p: *u64, scope: u32, semantics: u32) u64;
+
+# Subtract one.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# ret:       the value before the decrement
+#[op("spirv", "core", "OpAtomicIDecrement")]
+pub fun atomic_decrement_u64(p: *u64, scope: u32, semantics: u32) u64;
+
+# Add a value.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# value:     The value to add.
+# ret:       the value before the add
+#[op("spirv", "core", "OpAtomicIAdd")]
+pub fun atomic_add_u64(p: *u64, scope: u32, semantics: u32, value: u64) u64;
+
+# Subtract a value.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# value:     The value to subtract.
+# ret:       the value before the subtraction
+#[op("spirv", "core", "OpAtomicISub")]
+pub fun atomic_sub_u64(p: *u64, scope: u32, semantics: u32, value: u64) u64;
+
+# Keep the smaller of the value and another.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# value:     The value to compare with.
+# ret:       the value before the operation
+#[op("spirv", "core", "OpAtomicUMin")]
+pub fun atomic_min_u64(p: *u64, scope: u32, semantics: u32, value: u64) u64;
+
+# Keep the larger of the value and another.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# value:     The value to compare with.
+# ret:       the value before the operation
+#[op("spirv", "core", "OpAtomicUMax")]
+pub fun atomic_max_u64(p: *u64, scope: u32, semantics: u32, value: u64) u64;
+
+# Bitwise-and a mask into the value.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# value:     The mask.
+# ret:       the value before the operation
+#[op("spirv", "core", "OpAtomicAnd")]
+pub fun atomic_and_u64(p: *u64, scope: u32, semantics: u32, value: u64) u64;
+
+# Bitwise-or a mask into the value.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# value:     The mask.
+# ret:       the value before the operation
+#[op("spirv", "core", "OpAtomicOr")]
+pub fun atomic_or_u64(p: *u64, scope: u32, semantics: u32, value: u64) u64;
+
+# Bitwise-xor a mask into the value.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# value:     The mask.
+# ret:       the value before the operation
+#[op("spirv", "core", "OpAtomicXor")]
+pub fun atomic_xor_u64(p: *u64, scope: u32, semantics: u32, value: u64) u64;
+
+# Read the value atomically.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# ret:       the value
+#[op("spirv", "core", "OpAtomicLoad")]
+pub fun atomic_load_i64(p: *i64, scope: u32, semantics: u32) i64;
+
+# Write a value atomically.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# value:     The value to write.
+#[op("spirv", "core", "OpAtomicStore")]
+pub fun atomic_store_i64(p: *i64, scope: u32, semantics: u32, value: i64);
+
+# Write a value and return the one it replaced.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# value:     The value to write.
+# ret:       the value before the write
+#[op("spirv", "core", "OpAtomicExchange")]
+pub fun atomic_exchange_i64(p: *i64, scope: u32, semantics: u32, value: i64) i64;
+
+# Write a value if the current one equals a comparator, and return the current one.
+# ---
+# p:          The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:      The `SCOPE_*` the operation is atomic across.
+# equal:      The `SEMANTICS_*` when the write happens.
+# unequal:    The `SEMANTICS_*` when it does not, no stronger than `equal` and never a release.
+# value:      The value to write.
+# comparator: The value the current one must equal.
+# ret:        the value before the operation, which equals `comparator` exactly when the write happened
+#[op("spirv", "core", "OpAtomicCompareExchange")]
+pub fun atomic_compare_exchange_i64(p: *i64, scope: u32, equal: u32, unequal: u32, value: i64, comparator: i64) i64;
+
+# Add one.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# ret:       the value before the increment
+#[op("spirv", "core", "OpAtomicIIncrement")]
+pub fun atomic_increment_i64(p: *i64, scope: u32, semantics: u32) i64;
+
+# Subtract one.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# ret:       the value before the decrement
+#[op("spirv", "core", "OpAtomicIDecrement")]
+pub fun atomic_decrement_i64(p: *i64, scope: u32, semantics: u32) i64;
+
+# Add a value.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# value:     The value to add.
+# ret:       the value before the add
+#[op("spirv", "core", "OpAtomicIAdd")]
+pub fun atomic_add_i64(p: *i64, scope: u32, semantics: u32, value: i64) i64;
+
+# Subtract a value.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# value:     The value to subtract.
+# ret:       the value before the subtraction
+#[op("spirv", "core", "OpAtomicISub")]
+pub fun atomic_sub_i64(p: *i64, scope: u32, semantics: u32, value: i64) i64;
+
+# Keep the smaller of the value and another.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# value:     The value to compare with.
+# ret:       the value before the operation
+#[op("spirv", "core", "OpAtomicSMin")]
+pub fun atomic_min_i64(p: *i64, scope: u32, semantics: u32, value: i64) i64;
+
+# Keep the larger of the value and another.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# value:     The value to compare with.
+# ret:       the value before the operation
+#[op("spirv", "core", "OpAtomicSMax")]
+pub fun atomic_max_i64(p: *i64, scope: u32, semantics: u32, value: i64) i64;
+
+# Bitwise-and a mask into the value.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# value:     The mask.
+# ret:       the value before the operation
+#[op("spirv", "core", "OpAtomicAnd")]
+pub fun atomic_and_i64(p: *i64, scope: u32, semantics: u32, value: i64) i64;
+
+# Bitwise-or a mask into the value.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# value:     The mask.
+# ret:       the value before the operation
+#[op("spirv", "core", "OpAtomicOr")]
+pub fun atomic_or_i64(p: *i64, scope: u32, semantics: u32, value: i64) i64;
+
+# Bitwise-xor a mask into the value.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# value:     The mask.
+# ret:       the value before the operation
+#[op("spirv", "core", "OpAtomicXor")]
+pub fun atomic_xor_i64(p: *i64, scope: u32, semantics: u32, value: i64) i64;
+
+# Read the value atomically.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# ret:       the value
+#[op("spirv", "core", "OpAtomicLoad")]
+pub fun atomic_load_f16(p: *f16, scope: u32, semantics: u32) f16;
+
+# Write a value atomically.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# value:     The value to write.
+#[op("spirv", "core", "OpAtomicStore")]
+pub fun atomic_store_f16(p: *f16, scope: u32, semantics: u32, value: f16);
+
+# Write a value and return the one it replaced.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# value:     The value to write.
+# ret:       the value before the write
+#[op("spirv", "core", "OpAtomicExchange")]
+pub fun atomic_exchange_f16(p: *f16, scope: u32, semantics: u32, value: f16) f16;
+
+# Add a value.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# value:     The value to add.
+# ret:       the value before the add
+#[op("spirv", "core", "OpAtomicFAddEXT")]
+pub fun atomic_add_f16(p: *f16, scope: u32, semantics: u32, value: f16) f16;
+
+# Keep the smaller of the value and another.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# value:     The value to compare with.
+# ret:       the value before the operation
+#[op("spirv", "core", "OpAtomicFMinEXT")]
+pub fun atomic_min_f16(p: *f16, scope: u32, semantics: u32, value: f16) f16;
+
+# Keep the larger of the value and another.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# value:     The value to compare with.
+# ret:       the value before the operation
+#[op("spirv", "core", "OpAtomicFMaxEXT")]
+pub fun atomic_max_f16(p: *f16, scope: u32, semantics: u32, value: f16) f16;
+
+# Read the value atomically.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# ret:       the value
+#[op("spirv", "core", "OpAtomicLoad")]
+pub fun atomic_load_f32(p: *f32, scope: u32, semantics: u32) f32;
+
+# Write a value atomically.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# value:     The value to write.
+#[op("spirv", "core", "OpAtomicStore")]
+pub fun atomic_store_f32(p: *f32, scope: u32, semantics: u32, value: f32);
+
+# Write a value and return the one it replaced.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# value:     The value to write.
+# ret:       the value before the write
+#[op("spirv", "core", "OpAtomicExchange")]
+pub fun atomic_exchange_f32(p: *f32, scope: u32, semantics: u32, value: f32) f32;
+
+# Add a value.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# value:     The value to add.
+# ret:       the value before the add
+#[op("spirv", "core", "OpAtomicFAddEXT")]
+pub fun atomic_add_f32(p: *f32, scope: u32, semantics: u32, value: f32) f32;
+
+# Keep the smaller of the value and another.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# value:     The value to compare with.
+# ret:       the value before the operation
+#[op("spirv", "core", "OpAtomicFMinEXT")]
+pub fun atomic_min_f32(p: *f32, scope: u32, semantics: u32, value: f32) f32;
+
+# Keep the larger of the value and another.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# value:     The value to compare with.
+# ret:       the value before the operation
+#[op("spirv", "core", "OpAtomicFMaxEXT")]
+pub fun atomic_max_f32(p: *f32, scope: u32, semantics: u32, value: f32) f32;
+
+# Read the value atomically.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# ret:       the value
+#[op("spirv", "core", "OpAtomicLoad")]
+pub fun atomic_load_f64(p: *f64, scope: u32, semantics: u32) f64;
+
+# Write a value atomically.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# value:     The value to write.
+#[op("spirv", "core", "OpAtomicStore")]
+pub fun atomic_store_f64(p: *f64, scope: u32, semantics: u32, value: f64);
+
+# Write a value and return the one it replaced.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# value:     The value to write.
+# ret:       the value before the write
+#[op("spirv", "core", "OpAtomicExchange")]
+pub fun atomic_exchange_f64(p: *f64, scope: u32, semantics: u32, value: f64) f64;
+
+# Add a value.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# value:     The value to add.
+# ret:       the value before the add
+#[op("spirv", "core", "OpAtomicFAddEXT")]
+pub fun atomic_add_f64(p: *f64, scope: u32, semantics: u32, value: f64) f64;
+
+# Keep the smaller of the value and another.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# value:     The value to compare with.
+# ret:       the value before the operation
+#[op("spirv", "core", "OpAtomicFMinEXT")]
+pub fun atomic_min_f64(p: *f64, scope: u32, semantics: u32, value: f64) f64;
+
+# Keep the larger of the value and another.
+# ---
+# p:         The address of the value, in a storage buffer, workgroup memory or an image texel.
+# scope:     The `SCOPE_*` the operation is atomic across.
+# semantics: The `SEMANTICS_*` ordering memory around it.
+# value:     The value to compare with.
+# ret:       the value before the operation
+#[op("spirv", "core", "OpAtomicFMaxEXT")]
+pub fun atomic_max_f64(p: *f64, scope: u32, semantics: u32, value: f64) f64;
