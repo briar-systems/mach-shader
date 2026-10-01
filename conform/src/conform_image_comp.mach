@@ -1,0 +1,98 @@
+# Every storage image and texel buffer, read, written and queried, and an atomic on a
+# texel of each atomic-format image.
+#
+# This exists to be compiled and validated, not to be dispatched. Each handle is bound
+# by `#[storage]` or, for a uniform texel buffer, `#[sampler]`, so a handle the target
+# mints wrongly or binds through the wrong class fails here. Every result is written
+# to a buffer or an image so no read can be eliminated.
+
+use at:  shader.atomic;
+use sy:  shader.sync;
+use tex: shader.texture;
+
+#[storage(0, 0)]
+var line:          tex.StorageImage1D;
+#[storage(0, 1)]
+var plane:         tex.StorageImage2D;
+#[storage(0, 2)]
+var volume:        tex.StorageImage3D;
+#[storage(0, 3)]
+var layers:        tex.StorageImage2DArray;
+#[storage(0, 4)]
+var signed:        tex.IStorageImage2D;
+#[storage(0, 5)]
+var ids:           tex.UStorageImage2D;
+#[storage(0, 6)]
+var heat:          tex.StorageImage2DR32f;
+#[storage(0, 8)]
+var counts:        tex.UStorageImage2DR32ui;
+#[storage(0, 10)]
+var wide_counts:   tex.UStorageImage2DR64ui;
+#[storage(0, 11)]
+var texels:        tex.StorageTexelBuffer;
+#[storage(0, 12)]
+var signed_texels: tex.IStorageTexelBuffer;
+#[storage(0, 13)]
+var id_texels:     tex.UStorageTexelBuffer;
+
+#[sampler(1, 0)]
+var lut:        tex.TexelBuffer;
+#[sampler(1, 1)]
+var signed_lut: tex.ITexelBuffer;
+#[sampler(1, 2)]
+var id_lut:     tex.UTexelBuffer;
+
+rec Sizes {
+    n: [8]i32x4;
+}
+
+#[storage(2, 0, "writeonly")]
+var sizes: Sizes;
+
+#[builtin("global_invocation")]
+var gid: u32x3;
+
+# an image's texels are image memory, atomic across the device
+val IMG: u32 = sy.SEMANTICS_ACQUIRE_RELEASE | sy.SEMANTICS_IMAGE_MEMORY;
+
+#[stage("compute")]
+#[workgroup(8, 8, 1)]
+fun read_write() {
+    val x:  i32   = gid[0]::i32;
+    val p:  i32x2 = i32x2{x, gid[1]::i32};
+    val p3: i32x3 = i32x3{x, gid[1]::i32, gid[2]::i32};
+    tex.image_write_1d(line, x, tex.image_read_1d(line, x) + tex.fetch_buffer(lut, x));
+    tex.image_write_2d(plane, p, tex.image_read_2d(plane, p) + tex.image_read_2d_r32f(heat, p));
+    tex.image_write_3d(volume, p3, tex.image_read_3d(volume, p3));
+    tex.image_write_2d_array(layers, p3, tex.image_read_2d_array(layers, p3));
+    tex.image_write_2d_i(signed, p, tex.image_read_2d_i(signed, p));
+    tex.image_write_2d_u(ids, p, tex.image_read_2d_u(ids, p) + tex.image_read_2d_r32ui(counts, p));
+    tex.image_write_2d_r32f(heat, p, tex.image_read_2d(plane, p));
+    tex.image_write_2d_r32ui(counts, p, tex.image_read_2d_u(ids, p));
+    tex.image_write_2d_r64ui(wide_counts, p, tex.image_read_2d_r64ui(wide_counts, p));
+    tex.image_write_buffer(texels, x, tex.image_read_buffer(texels, x));
+    tex.image_write_buffer_i(signed_texels, x, tex.image_read_buffer_i(signed_texels, x) + tex.fetch_buffer_i(signed_lut, x));
+    tex.image_write_buffer_u(id_texels, x, tex.image_read_buffer_u(id_texels, x) + tex.fetch_buffer_u(id_lut, x));
+}
+
+#[stage("compute")]
+#[workgroup(1, 1, 1)]
+fun query() {
+    val s2: i32x2 = tex.image_size_2d(plane) + tex.image_size_2d_i(signed) + tex.image_size_2d_u(ids)
+        + tex.image_size_2d_r32f(heat) + tex.image_size_2d_r32ui(counts) + tex.image_size_2d_r64ui(wide_counts);
+    val s3: i32x3 = tex.image_size_3d(volume) + tex.image_size_2d_array(layers);
+    val n:  i32   = tex.image_size_1d(line) + tex.image_size_buffer(lut) + tex.image_size_buffer_i(signed_lut)
+        + tex.image_size_buffer_u(id_lut) + tex.image_size_storage_buffer(texels)
+        + tex.image_size_storage_buffer_i(signed_texels) + tex.image_size_storage_buffer_u(id_texels);
+    sizes.n[0] = i32x4{s2[0], s2[1], s3[2], n};
+}
+
+#[stage("compute")]
+#[workgroup(8, 8, 1)]
+fun texel_atomics() {
+    val p: i32x2 = i32x2{gid[0]::i32, gid[1]::i32};
+    val c: u32   = at.atomic_add_u32(tex.image_texel_2d_r32ui(?counts, p, 0), sy.SCOPE_DEVICE, IMG, 1);
+    val h: f32   = at.atomic_add_f32(tex.image_texel_2d_r32f(?heat, p, 0), sy.SCOPE_DEVICE, IMG, 0.5);
+    val w: u64   = at.atomic_or_u64(tex.image_texel_2d_r64ui(?wide_counts, p, 0), sy.SCOPE_DEVICE, IMG, c::u64);
+    sizes.n[1] = i32x4{c::i32, h::i32, w::i32, 0};
+}

@@ -1,0 +1,244 @@
+# Every atomic, on storage-buffer memory and on workgroup memory.
+#
+# This exists to be compiled and validated, not to be dispatched. An atomic takes its
+# pointer's storage class from the call, so each declaration in `shader.atomic` is
+# called once with an element of a `#[storage]` buffer and once with an element of a
+# `#[shared]` variable, and each of those is a different instruction in the module.
+# The image-texel case is `conform_image_comp`'s.
+#
+# The target names no `env`, so it holds every atomic feature and the module declares
+# each capability its types need.
+
+use at: shader.atomic;
+use sy: shader.sync;
+
+rec Words {
+    v_u32: [64]u32;
+    v_i32: [64]i32;
+    v_u64: [64]u64;
+    v_i64: [64]i64;
+    v_f16: [64]f16;
+    v_f32: [64]f32;
+    v_f64: [64]f64;
+}
+
+#[storage(0, 0)]
+var words: Words;
+#[shared]
+var s_u32: [64]u32;
+#[shared]
+var s_i32: [64]i32;
+#[shared]
+var s_u64: [64]u64;
+#[shared]
+var s_i64: [64]i64;
+#[shared]
+var s_f16: [64]f16;
+#[shared]
+var s_f32: [64]f32;
+#[shared]
+var s_f64: [64]f64;
+
+#[builtin("local_invocation_index")]
+var lid: u32;
+
+# buffer memory is atomic across the device and ordered as uniform memory, workgroup
+# memory across the workgroup and ordered as workgroup memory
+val BUF: u32 = sy.SEMANTICS_UNIFORM_MEMORY;
+val WG:  u32 = sy.SEMANTICS_WORKGROUP_MEMORY;
+
+#[stage("compute")]
+#[workgroup(64, 1, 1)]
+fun atomics_u32() {
+    val i:   u32 = lid;
+    var acc: u32 = words.v_u32[i];
+    acc = acc + at.atomic_load_u32(?words.v_u32[i], sy.SCOPE_DEVICE, sy.SEMANTICS_ACQUIRE | BUF);
+    at.atomic_store_u32(?words.v_u32[i], sy.SCOPE_DEVICE, sy.SEMANTICS_RELEASE | BUF, acc);
+    acc = acc + at.atomic_exchange_u32(?words.v_u32[i], sy.SCOPE_DEVICE, sy.SEMANTICS_ACQUIRE_RELEASE | BUF, 1);
+    acc = acc + at.atomic_compare_exchange_u32(?words.v_u32[i], sy.SCOPE_DEVICE, sy.SEMANTICS_ACQUIRE_RELEASE | BUF, sy.SEMANTICS_ACQUIRE | BUF, acc, 1);
+    acc = acc + at.atomic_increment_u32(?words.v_u32[i], sy.SCOPE_DEVICE, sy.SEMANTICS_RELAXED);
+    acc = acc + at.atomic_decrement_u32(?words.v_u32[i], sy.SCOPE_DEVICE, sy.SEMANTICS_RELAXED);
+    acc = acc + at.atomic_add_u32(?words.v_u32[i], sy.SCOPE_DEVICE, sy.SEMANTICS_ACQUIRE_RELEASE | BUF, 1);
+    acc = acc + at.atomic_sub_u32(?words.v_u32[i], sy.SCOPE_DEVICE, sy.SEMANTICS_ACQUIRE_RELEASE | BUF, 1);
+    acc = acc + at.atomic_min_u32(?words.v_u32[i], sy.SCOPE_DEVICE, sy.SEMANTICS_ACQUIRE_RELEASE | BUF, 1);
+    acc = acc + at.atomic_max_u32(?words.v_u32[i], sy.SCOPE_DEVICE, sy.SEMANTICS_ACQUIRE_RELEASE | BUF, 1);
+    acc = acc + at.atomic_and_u32(?words.v_u32[i], sy.SCOPE_DEVICE, sy.SEMANTICS_ACQUIRE_RELEASE | BUF, 1);
+    acc = acc + at.atomic_or_u32(?words.v_u32[i], sy.SCOPE_DEVICE, sy.SEMANTICS_ACQUIRE_RELEASE | BUF, 1);
+    acc = acc + at.atomic_xor_u32(?words.v_u32[i], sy.SCOPE_DEVICE, sy.SEMANTICS_ACQUIRE_RELEASE | BUF, 1);
+    acc = acc + at.atomic_load_u32(?s_u32[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE | WG);
+    at.atomic_store_u32(?s_u32[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_RELEASE | WG, acc);
+    acc                 = acc + at.atomic_exchange_u32(?s_u32[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE_RELEASE | WG, 1);
+    acc                 = acc + at.atomic_compare_exchange_u32(?s_u32[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE_RELEASE | WG, sy.SEMANTICS_ACQUIRE | WG, acc, 1);
+    acc                 = acc + at.atomic_increment_u32(?s_u32[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_RELAXED);
+    acc                 = acc + at.atomic_decrement_u32(?s_u32[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_RELAXED);
+    acc                 = acc + at.atomic_add_u32(?s_u32[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE_RELEASE | WG, 1);
+    acc                 = acc + at.atomic_sub_u32(?s_u32[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE_RELEASE | WG, 1);
+    acc                 = acc + at.atomic_min_u32(?s_u32[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE_RELEASE | WG, 1);
+    acc                 = acc + at.atomic_max_u32(?s_u32[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE_RELEASE | WG, 1);
+    acc                 = acc + at.atomic_and_u32(?s_u32[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE_RELEASE | WG, 1);
+    acc                 = acc + at.atomic_or_u32(?s_u32[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE_RELEASE | WG, 1);
+    acc                 = acc + at.atomic_xor_u32(?s_u32[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE_RELEASE | WG, 1);
+    words.v_u32[63 - i] = acc;
+}
+
+#[stage("compute")]
+#[workgroup(64, 1, 1)]
+fun atomics_i32() {
+    val i:   u32 = lid;
+    var acc: i32 = words.v_i32[i];
+    acc = acc + at.atomic_load_i32(?words.v_i32[i], sy.SCOPE_DEVICE, sy.SEMANTICS_ACQUIRE | BUF);
+    at.atomic_store_i32(?words.v_i32[i], sy.SCOPE_DEVICE, sy.SEMANTICS_RELEASE | BUF, acc);
+    acc = acc + at.atomic_exchange_i32(?words.v_i32[i], sy.SCOPE_DEVICE, sy.SEMANTICS_ACQUIRE_RELEASE | BUF, 1);
+    acc = acc + at.atomic_compare_exchange_i32(?words.v_i32[i], sy.SCOPE_DEVICE, sy.SEMANTICS_ACQUIRE_RELEASE | BUF, sy.SEMANTICS_ACQUIRE | BUF, acc, 1);
+    acc = acc + at.atomic_increment_i32(?words.v_i32[i], sy.SCOPE_DEVICE, sy.SEMANTICS_RELAXED);
+    acc = acc + at.atomic_decrement_i32(?words.v_i32[i], sy.SCOPE_DEVICE, sy.SEMANTICS_RELAXED);
+    acc = acc + at.atomic_add_i32(?words.v_i32[i], sy.SCOPE_DEVICE, sy.SEMANTICS_ACQUIRE_RELEASE | BUF, 1);
+    acc = acc + at.atomic_sub_i32(?words.v_i32[i], sy.SCOPE_DEVICE, sy.SEMANTICS_ACQUIRE_RELEASE | BUF, 1);
+    acc = acc + at.atomic_min_i32(?words.v_i32[i], sy.SCOPE_DEVICE, sy.SEMANTICS_ACQUIRE_RELEASE | BUF, 1);
+    acc = acc + at.atomic_max_i32(?words.v_i32[i], sy.SCOPE_DEVICE, sy.SEMANTICS_ACQUIRE_RELEASE | BUF, 1);
+    acc = acc + at.atomic_and_i32(?words.v_i32[i], sy.SCOPE_DEVICE, sy.SEMANTICS_ACQUIRE_RELEASE | BUF, 1);
+    acc = acc + at.atomic_or_i32(?words.v_i32[i], sy.SCOPE_DEVICE, sy.SEMANTICS_ACQUIRE_RELEASE | BUF, 1);
+    acc = acc + at.atomic_xor_i32(?words.v_i32[i], sy.SCOPE_DEVICE, sy.SEMANTICS_ACQUIRE_RELEASE | BUF, 1);
+    acc = acc + at.atomic_load_i32(?s_i32[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE | WG);
+    at.atomic_store_i32(?s_i32[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_RELEASE | WG, acc);
+    acc                 = acc + at.atomic_exchange_i32(?s_i32[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE_RELEASE | WG, 1);
+    acc                 = acc + at.atomic_compare_exchange_i32(?s_i32[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE_RELEASE | WG, sy.SEMANTICS_ACQUIRE | WG, acc, 1);
+    acc                 = acc + at.atomic_increment_i32(?s_i32[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_RELAXED);
+    acc                 = acc + at.atomic_decrement_i32(?s_i32[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_RELAXED);
+    acc                 = acc + at.atomic_add_i32(?s_i32[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE_RELEASE | WG, 1);
+    acc                 = acc + at.atomic_sub_i32(?s_i32[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE_RELEASE | WG, 1);
+    acc                 = acc + at.atomic_min_i32(?s_i32[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE_RELEASE | WG, 1);
+    acc                 = acc + at.atomic_max_i32(?s_i32[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE_RELEASE | WG, 1);
+    acc                 = acc + at.atomic_and_i32(?s_i32[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE_RELEASE | WG, 1);
+    acc                 = acc + at.atomic_or_i32(?s_i32[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE_RELEASE | WG, 1);
+    acc                 = acc + at.atomic_xor_i32(?s_i32[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE_RELEASE | WG, 1);
+    words.v_i32[63 - i] = acc;
+}
+
+#[stage("compute")]
+#[workgroup(64, 1, 1)]
+fun atomics_u64() {
+    val i:   u32 = lid;
+    var acc: u64 = words.v_u64[i];
+    acc = acc + at.atomic_load_u64(?words.v_u64[i], sy.SCOPE_DEVICE, sy.SEMANTICS_ACQUIRE | BUF);
+    at.atomic_store_u64(?words.v_u64[i], sy.SCOPE_DEVICE, sy.SEMANTICS_RELEASE | BUF, acc);
+    acc = acc + at.atomic_exchange_u64(?words.v_u64[i], sy.SCOPE_DEVICE, sy.SEMANTICS_ACQUIRE_RELEASE | BUF, 1);
+    acc = acc + at.atomic_compare_exchange_u64(?words.v_u64[i], sy.SCOPE_DEVICE, sy.SEMANTICS_ACQUIRE_RELEASE | BUF, sy.SEMANTICS_ACQUIRE | BUF, acc, 1);
+    acc = acc + at.atomic_increment_u64(?words.v_u64[i], sy.SCOPE_DEVICE, sy.SEMANTICS_RELAXED);
+    acc = acc + at.atomic_decrement_u64(?words.v_u64[i], sy.SCOPE_DEVICE, sy.SEMANTICS_RELAXED);
+    acc = acc + at.atomic_add_u64(?words.v_u64[i], sy.SCOPE_DEVICE, sy.SEMANTICS_ACQUIRE_RELEASE | BUF, 1);
+    acc = acc + at.atomic_sub_u64(?words.v_u64[i], sy.SCOPE_DEVICE, sy.SEMANTICS_ACQUIRE_RELEASE | BUF, 1);
+    acc = acc + at.atomic_min_u64(?words.v_u64[i], sy.SCOPE_DEVICE, sy.SEMANTICS_ACQUIRE_RELEASE | BUF, 1);
+    acc = acc + at.atomic_max_u64(?words.v_u64[i], sy.SCOPE_DEVICE, sy.SEMANTICS_ACQUIRE_RELEASE | BUF, 1);
+    acc = acc + at.atomic_and_u64(?words.v_u64[i], sy.SCOPE_DEVICE, sy.SEMANTICS_ACQUIRE_RELEASE | BUF, 1);
+    acc = acc + at.atomic_or_u64(?words.v_u64[i], sy.SCOPE_DEVICE, sy.SEMANTICS_ACQUIRE_RELEASE | BUF, 1);
+    acc = acc + at.atomic_xor_u64(?words.v_u64[i], sy.SCOPE_DEVICE, sy.SEMANTICS_ACQUIRE_RELEASE | BUF, 1);
+    acc = acc + at.atomic_load_u64(?s_u64[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE | WG);
+    at.atomic_store_u64(?s_u64[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_RELEASE | WG, acc);
+    acc                 = acc + at.atomic_exchange_u64(?s_u64[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE_RELEASE | WG, 1);
+    acc                 = acc + at.atomic_compare_exchange_u64(?s_u64[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE_RELEASE | WG, sy.SEMANTICS_ACQUIRE | WG, acc, 1);
+    acc                 = acc + at.atomic_increment_u64(?s_u64[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_RELAXED);
+    acc                 = acc + at.atomic_decrement_u64(?s_u64[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_RELAXED);
+    acc                 = acc + at.atomic_add_u64(?s_u64[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE_RELEASE | WG, 1);
+    acc                 = acc + at.atomic_sub_u64(?s_u64[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE_RELEASE | WG, 1);
+    acc                 = acc + at.atomic_min_u64(?s_u64[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE_RELEASE | WG, 1);
+    acc                 = acc + at.atomic_max_u64(?s_u64[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE_RELEASE | WG, 1);
+    acc                 = acc + at.atomic_and_u64(?s_u64[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE_RELEASE | WG, 1);
+    acc                 = acc + at.atomic_or_u64(?s_u64[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE_RELEASE | WG, 1);
+    acc                 = acc + at.atomic_xor_u64(?s_u64[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE_RELEASE | WG, 1);
+    words.v_u64[63 - i] = acc;
+}
+
+#[stage("compute")]
+#[workgroup(64, 1, 1)]
+fun atomics_i64() {
+    val i:   u32 = lid;
+    var acc: i64 = words.v_i64[i];
+    acc = acc + at.atomic_load_i64(?words.v_i64[i], sy.SCOPE_DEVICE, sy.SEMANTICS_ACQUIRE | BUF);
+    at.atomic_store_i64(?words.v_i64[i], sy.SCOPE_DEVICE, sy.SEMANTICS_RELEASE | BUF, acc);
+    acc = acc + at.atomic_exchange_i64(?words.v_i64[i], sy.SCOPE_DEVICE, sy.SEMANTICS_ACQUIRE_RELEASE | BUF, 1);
+    acc = acc + at.atomic_compare_exchange_i64(?words.v_i64[i], sy.SCOPE_DEVICE, sy.SEMANTICS_ACQUIRE_RELEASE | BUF, sy.SEMANTICS_ACQUIRE | BUF, acc, 1);
+    acc = acc + at.atomic_increment_i64(?words.v_i64[i], sy.SCOPE_DEVICE, sy.SEMANTICS_RELAXED);
+    acc = acc + at.atomic_decrement_i64(?words.v_i64[i], sy.SCOPE_DEVICE, sy.SEMANTICS_RELAXED);
+    acc = acc + at.atomic_add_i64(?words.v_i64[i], sy.SCOPE_DEVICE, sy.SEMANTICS_ACQUIRE_RELEASE | BUF, 1);
+    acc = acc + at.atomic_sub_i64(?words.v_i64[i], sy.SCOPE_DEVICE, sy.SEMANTICS_ACQUIRE_RELEASE | BUF, 1);
+    acc = acc + at.atomic_min_i64(?words.v_i64[i], sy.SCOPE_DEVICE, sy.SEMANTICS_ACQUIRE_RELEASE | BUF, 1);
+    acc = acc + at.atomic_max_i64(?words.v_i64[i], sy.SCOPE_DEVICE, sy.SEMANTICS_ACQUIRE_RELEASE | BUF, 1);
+    acc = acc + at.atomic_and_i64(?words.v_i64[i], sy.SCOPE_DEVICE, sy.SEMANTICS_ACQUIRE_RELEASE | BUF, 1);
+    acc = acc + at.atomic_or_i64(?words.v_i64[i], sy.SCOPE_DEVICE, sy.SEMANTICS_ACQUIRE_RELEASE | BUF, 1);
+    acc = acc + at.atomic_xor_i64(?words.v_i64[i], sy.SCOPE_DEVICE, sy.SEMANTICS_ACQUIRE_RELEASE | BUF, 1);
+    acc = acc + at.atomic_load_i64(?s_i64[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE | WG);
+    at.atomic_store_i64(?s_i64[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_RELEASE | WG, acc);
+    acc                 = acc + at.atomic_exchange_i64(?s_i64[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE_RELEASE | WG, 1);
+    acc                 = acc + at.atomic_compare_exchange_i64(?s_i64[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE_RELEASE | WG, sy.SEMANTICS_ACQUIRE | WG, acc, 1);
+    acc                 = acc + at.atomic_increment_i64(?s_i64[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_RELAXED);
+    acc                 = acc + at.atomic_decrement_i64(?s_i64[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_RELAXED);
+    acc                 = acc + at.atomic_add_i64(?s_i64[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE_RELEASE | WG, 1);
+    acc                 = acc + at.atomic_sub_i64(?s_i64[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE_RELEASE | WG, 1);
+    acc                 = acc + at.atomic_min_i64(?s_i64[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE_RELEASE | WG, 1);
+    acc                 = acc + at.atomic_max_i64(?s_i64[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE_RELEASE | WG, 1);
+    acc                 = acc + at.atomic_and_i64(?s_i64[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE_RELEASE | WG, 1);
+    acc                 = acc + at.atomic_or_i64(?s_i64[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE_RELEASE | WG, 1);
+    acc                 = acc + at.atomic_xor_i64(?s_i64[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE_RELEASE | WG, 1);
+    words.v_i64[63 - i] = acc;
+}
+
+#[stage("compute")]
+#[workgroup(64, 1, 1)]
+fun atomics_f16() {
+    val i:   u32 = lid;
+    var acc: f16 = words.v_f16[i];
+    acc = acc + at.atomic_load_f16(?words.v_f16[i], sy.SCOPE_DEVICE, sy.SEMANTICS_ACQUIRE | BUF);
+    at.atomic_store_f16(?words.v_f16[i], sy.SCOPE_DEVICE, sy.SEMANTICS_RELEASE | BUF, acc);
+    acc = acc + at.atomic_exchange_f16(?words.v_f16[i], sy.SCOPE_DEVICE, sy.SEMANTICS_ACQUIRE_RELEASE | BUF, 1.0);
+    acc = acc + at.atomic_add_f16(?words.v_f16[i], sy.SCOPE_DEVICE, sy.SEMANTICS_ACQUIRE_RELEASE | BUF, 1.0);
+    acc = acc + at.atomic_min_f16(?words.v_f16[i], sy.SCOPE_DEVICE, sy.SEMANTICS_ACQUIRE_RELEASE | BUF, 1.0);
+    acc = acc + at.atomic_max_f16(?words.v_f16[i], sy.SCOPE_DEVICE, sy.SEMANTICS_ACQUIRE_RELEASE | BUF, 1.0);
+    acc = acc + at.atomic_load_f16(?s_f16[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE | WG);
+    at.atomic_store_f16(?s_f16[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_RELEASE | WG, acc);
+    acc                 = acc + at.atomic_exchange_f16(?s_f16[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE_RELEASE | WG, 1.0);
+    acc                 = acc + at.atomic_add_f16(?s_f16[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE_RELEASE | WG, 1.0);
+    acc                 = acc + at.atomic_min_f16(?s_f16[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE_RELEASE | WG, 1.0);
+    acc                 = acc + at.atomic_max_f16(?s_f16[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE_RELEASE | WG, 1.0);
+    words.v_f16[63 - i] = acc;
+}
+
+#[stage("compute")]
+#[workgroup(64, 1, 1)]
+fun atomics_f32() {
+    val i:   u32 = lid;
+    var acc: f32 = words.v_f32[i];
+    acc = acc + at.atomic_load_f32(?words.v_f32[i], sy.SCOPE_DEVICE, sy.SEMANTICS_ACQUIRE | BUF);
+    at.atomic_store_f32(?words.v_f32[i], sy.SCOPE_DEVICE, sy.SEMANTICS_RELEASE | BUF, acc);
+    acc = acc + at.atomic_exchange_f32(?words.v_f32[i], sy.SCOPE_DEVICE, sy.SEMANTICS_ACQUIRE_RELEASE | BUF, 1.0);
+    acc = acc + at.atomic_add_f32(?words.v_f32[i], sy.SCOPE_DEVICE, sy.SEMANTICS_ACQUIRE_RELEASE | BUF, 1.0);
+    acc = acc + at.atomic_min_f32(?words.v_f32[i], sy.SCOPE_DEVICE, sy.SEMANTICS_ACQUIRE_RELEASE | BUF, 1.0);
+    acc = acc + at.atomic_max_f32(?words.v_f32[i], sy.SCOPE_DEVICE, sy.SEMANTICS_ACQUIRE_RELEASE | BUF, 1.0);
+    acc = acc + at.atomic_load_f32(?s_f32[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE | WG);
+    at.atomic_store_f32(?s_f32[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_RELEASE | WG, acc);
+    acc                 = acc + at.atomic_exchange_f32(?s_f32[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE_RELEASE | WG, 1.0);
+    acc                 = acc + at.atomic_add_f32(?s_f32[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE_RELEASE | WG, 1.0);
+    acc                 = acc + at.atomic_min_f32(?s_f32[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE_RELEASE | WG, 1.0);
+    acc                 = acc + at.atomic_max_f32(?s_f32[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE_RELEASE | WG, 1.0);
+    words.v_f32[63 - i] = acc;
+}
+
+#[stage("compute")]
+#[workgroup(64, 1, 1)]
+fun atomics_f64() {
+    val i:   u32 = lid;
+    var acc: f64 = words.v_f64[i];
+    acc = acc + at.atomic_load_f64(?words.v_f64[i], sy.SCOPE_DEVICE, sy.SEMANTICS_ACQUIRE | BUF);
+    at.atomic_store_f64(?words.v_f64[i], sy.SCOPE_DEVICE, sy.SEMANTICS_RELEASE | BUF, acc);
+    acc = acc + at.atomic_exchange_f64(?words.v_f64[i], sy.SCOPE_DEVICE, sy.SEMANTICS_ACQUIRE_RELEASE | BUF, 1.0);
+    acc = acc + at.atomic_add_f64(?words.v_f64[i], sy.SCOPE_DEVICE, sy.SEMANTICS_ACQUIRE_RELEASE | BUF, 1.0);
+    acc = acc + at.atomic_min_f64(?words.v_f64[i], sy.SCOPE_DEVICE, sy.SEMANTICS_ACQUIRE_RELEASE | BUF, 1.0);
+    acc = acc + at.atomic_max_f64(?words.v_f64[i], sy.SCOPE_DEVICE, sy.SEMANTICS_ACQUIRE_RELEASE | BUF, 1.0);
+    acc = acc + at.atomic_load_f64(?s_f64[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE | WG);
+    at.atomic_store_f64(?s_f64[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_RELEASE | WG, acc);
+    acc                 = acc + at.atomic_exchange_f64(?s_f64[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE_RELEASE | WG, 1.0);
+    acc                 = acc + at.atomic_add_f64(?s_f64[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE_RELEASE | WG, 1.0);
+    acc                 = acc + at.atomic_min_f64(?s_f64[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE_RELEASE | WG, 1.0);
+    acc                 = acc + at.atomic_max_f64(?s_f64[i], sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE_RELEASE | WG, 1.0);
+    words.v_f64[63 - i] = acc;
+}

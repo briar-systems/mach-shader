@@ -4,3 +4,6 @@
 
 fwd shader.math;
 fwd shader.texture;
+fwd shader.sync;
+fwd shader.atomic;
+fwd shader.subgroup;

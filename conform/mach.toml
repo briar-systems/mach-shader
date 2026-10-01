@@ -9,15 +9,25 @@
 [project]
 id      = "conform"
 version = "0.1.0"
-mach    = "^6"
+mach    = "^6.9"
 src     = "src"
-out     = "out"
+out     = "out/{profile.name}"
 
 [target.spirv]
 isa = "spirv"
 os  = "freestanding"
 abi = "spirv"
 of  = "spv"
+
+# both optimization levels, so a constant operand a wrapper writes in its own body is
+# shown to reach the instruction as a constant whether or not the wrapper is inlined
+[profile.debug]
+default = true
+opt   = 0
+debug = false
+simd  = "scalarize"
+vectorize = false
+float_reassoc = false
 
 [profile.release]
 opt   = 2
@@ -44,6 +54,63 @@ path = ".."
 kind    = "bin"
 entry   = "conform_tex_frag.mach"
 out     = "conform_tex_frag.spv"
+targets = ["spirv"]
+link    = []
+need    = []
+
+# a compute stage: its workgroup size, its built-ins and its storage buffers. Its own
+# artifact because a compute stage binds buffers rather than varyings, so it shares
+# no interface with the fragment shaders.
+[artifact.conform_comp]
+kind    = "bin"
+entry   = "conform_comp.mach"
+out     = "conform_comp.spv"
+targets = ["spirv"]
+link    = []
+need    = []
+
+# every atomic, on a storage buffer and on workgroup memory
+[artifact.conform_atomic_comp]
+kind    = "bin"
+entry   = "conform_atomic_comp.mach"
+out     = "conform_atomic_comp.spv"
+targets = ["spirv"]
+link    = []
+need    = []
+
+# the texture reads that are not a plain sample: depth comparisons, gathers, fetches
+# and queries
+[artifact.conform_sample_frag]
+kind    = "bin"
+entry   = "conform_sample_frag.mach"
+out     = "conform_sample_frag.spv"
+targets = ["spirv"]
+link    = []
+need    = []
+
+# every storage image and texel buffer, read, written, queried and reached by an atomic
+[artifact.conform_image_comp]
+kind    = "bin"
+entry   = "conform_image_comp.mach"
+out     = "conform_image_comp.spv"
+targets = ["spirv"]
+link    = []
+need    = []
+
+# every barrier, raw and through the wrappers, at both optimization levels
+[artifact.conform_sync_comp]
+kind    = "bin"
+entry   = "conform_sync_comp.mach"
+out     = "conform_sync_comp.spv"
+targets = ["spirv"]
+link    = []
+need    = []
+
+# every subgroup operation, over every value type it takes
+[artifact.conform_subgroup_comp]
+kind    = "bin"
+entry   = "conform_subgroup_comp.mach"
+out     = "conform_subgroup_comp.spv"
 targets = ["spirv"]
 link    = []
 need    = []

@@ -1,0 +1,106 @@
+# Shader-side synchronization: the operand constants every barrier and atomic takes,
+# and the barriers themselves.
+#
+# Every bodyless declaration here is one SPIR-V instruction, named by `#[op]`, as in
+# `shader.math`. A barrier is never inlined away or reordered: the compiler treats
+# it as reading and writing all memory, at every optimization level.
+#
+# SCOPES AND SEMANTICS ARE CONSTANTS. SPIR-V takes a `Scope` and a `MemorySemantics`
+# as constant ids, so each argument must be a constant the compiler can emit as one:
+# a literal or one of the `pub val`s below, never a value computed at run time. A
+# non-constant argument is refused at the call, naming the operand.
+#
+# THE MEMORY MODEL HOLDS THEM. A module is written under the Vulkan memory model when
+# its target selects `vulkan_memory_model` (which `vulkan1.3` does), and under GLSL450
+# otherwise. Under the Vulkan model `SCOPE_DEVICE` needs
+# `vulkan_memory_model_device_scope`, and under GLSL450 `SCOPE_QUEUE_FAMILY` and the
+# `SEMANTICS_MAKE_*` and `SEMANTICS_VOLATILE` bits need `vulkan_memory_model`.
+# Sequentially consistent semantics are refused under either, since Vulkan defines no
+# such order, so there is no constant for them.
+#
+# A CONTROL BARRIER IS REACHED IN UNIFORM CONTROL FLOW. Every invocation of its
+# execution scope executes it or none does. That is the program's obligation, as in
+# GLSL and WGSL, and nothing checks it: a barrier some invocations skip is undefined
+# behaviour on the device.
+#
+# THIS IS A SHADER-ONLY MODULE. On any target other than SPIR-V a call to one of these
+# fails to link, for the reason `shader.math` gives.
+
+# the `Scope` an instruction synchronizes or operates across. a Vulkan barrier executes
+# at `SCOPE_WORKGROUP` or `SCOPE_SUBGROUP` only, and every subgroup operation takes
+# `SCOPE_SUBGROUP`
+pub val SCOPE_DEVICE:       u32 = 1;
+pub val SCOPE_WORKGROUP:    u32 = 2;
+pub val SCOPE_SUBGROUP:     u32 = 3;
+pub val SCOPE_INVOCATION:   u32 = 4;
+pub val SCOPE_QUEUE_FAMILY: u32 = 5;
+
+# the `MemorySemantics` bits: one ordering, or none for a relaxed atomic, combined
+# with `|` with the storage classes it orders
+pub val SEMANTICS_RELAXED:         u32 = 0x0;
+pub val SEMANTICS_ACQUIRE:         u32 = 0x2;
+pub val SEMANTICS_RELEASE:         u32 = 0x4;
+pub val SEMANTICS_ACQUIRE_RELEASE: u32 = 0x8;
+
+# the storage classes a semantics orders: storage buffers, workgroup memory and
+# storage images
+pub val SEMANTICS_UNIFORM_MEMORY:   u32 = 0x40;
+pub val SEMANTICS_WORKGROUP_MEMORY: u32 = 0x100;
+pub val SEMANTICS_IMAGE_MEMORY:     u32 = 0x800;
+
+# the Vulkan memory model's availability and visibility bits, and volatile access
+pub val SEMANTICS_MAKE_AVAILABLE: u32 = 0x2000;
+pub val SEMANTICS_MAKE_VISIBLE:   u32 = 0x4000;
+pub val SEMANTICS_VOLATILE:       u32 = 0x8000;
+
+# Wait until every invocation of a scope reaches this barrier, and order memory as the
+# semantics say.
+# ---
+# execution: The `SCOPE_*` whose invocations wait: workgroup or subgroup.
+# memory:    The `SCOPE_*` the memory ordering is visible across.
+# semantics: The `SEMANTICS_*` ordering and storage classes.
+#[op("spirv", "core", "OpControlBarrier")]
+pub fun control_barrier(execution: u32, memory: u32, semantics: u32);
+
+# Order memory as the semantics say, without waiting for any other invocation.
+# ---
+# memory:    The `SCOPE_*` the ordering is visible across.
+# semantics: The `SEMANTICS_*` ordering and storage classes.
+#[op("spirv", "core", "OpMemoryBarrier")]
+pub fun memory_barrier(memory: u32, semantics: u32);
+
+# Wait for the whole workgroup, with its workgroup memory written before the barrier
+# visible to every invocation after it.
+#
+# GLSL's `barrier()` and WGSL's `workgroupBarrier()`. Its operands are constants in
+# its own body, so they reach the instruction as constants at every optimization
+# level.
+pub fun workgroup_barrier() {
+    control_barrier(SCOPE_WORKGROUP, SCOPE_WORKGROUP, SEMANTICS_ACQUIRE_RELEASE | SEMANTICS_WORKGROUP_MEMORY);
+}
+
+# Wait for the whole workgroup, with its storage-buffer writes before the barrier
+# visible to every invocation of it after.
+#
+# WGSL's `storageBarrier()`. It orders the workgroup only: no barrier orders memory
+# between workgroups, which takes an atomic or a second dispatch.
+pub fun storage_barrier() {
+    control_barrier(SCOPE_WORKGROUP, SCOPE_WORKGROUP, SEMANTICS_ACQUIRE_RELEASE | SEMANTICS_UNIFORM_MEMORY);
+}
+
+# Wait for the whole workgroup, with its storage-image writes before the barrier
+# visible to every invocation of it after.
+#
+# WGSL's `textureBarrier()`.
+pub fun image_barrier() {
+    control_barrier(SCOPE_WORKGROUP, SCOPE_WORKGROUP, SEMANTICS_ACQUIRE_RELEASE | SEMANTICS_IMAGE_MEMORY);
+}
+
+# Wait for the subgroup, with every write it made before the barrier to buffers,
+# workgroup memory and images visible to it after.
+#
+# GLSL's `subgroupBarrier()`. Subgroup scope needs SPIR-V 1.3, so `vulkan1.1` or later.
+pub fun subgroup_barrier() {
+    control_barrier(SCOPE_SUBGROUP, SCOPE_SUBGROUP,
+        SEMANTICS_ACQUIRE_RELEASE | SEMANTICS_UNIFORM_MEMORY | SEMANTICS_WORKGROUP_MEMORY | SEMANTICS_IMAGE_MEMORY);
+}

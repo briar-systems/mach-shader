@@ -1,0 +1,106 @@
+# Every subgroup operation, over every value type it takes.
+#
+# This exists to be compiled and validated, not to be dispatched. The target names no
+# `env`, so it holds every subgroup feature, and each family's capability is declared
+# by the operations that need it. Every result is written to a buffer so no call can
+# be eliminated.
+
+use sg: shader.subgroup;
+use sy: shader.sync;
+
+rec Results {
+    u: [64]u32;
+    i: [64]i32;
+    f: [64]f32;
+    b: [64]u32x4;
+}
+
+#[storage(0, 0)]
+var results: Results;
+
+#[builtin("subgroup_invocation")]
+var lane: u32;
+#[builtin("local_invocation_index")]
+var lid:  u32;
+
+val S: u32 = sy.SCOPE_SUBGROUP;
+
+#[stage("compute")]
+#[workgroup(64, 1, 1)]
+fun ballots() {
+    val i:      u32   = lid;
+    val odd:    u32   = lane & 1;
+    val ballot: u32x4 = sg.subgroup_ballot(S, odd);
+    results.b[i] = ballot;
+    results.u[i] = sg.subgroup_elect(S) + sg.subgroup_all(S, odd) + sg.subgroup_any(S, odd)
+        + sg.subgroup_inverse_ballot(S, ballot) + sg.subgroup_ballot_bit_extract(S, ballot, lane)
+        + sg.subgroup_ballot_bit_count(S, sg.GROUP_REDUCE, ballot)
+        + sg.subgroup_ballot_bit_count(S, sg.GROUP_INCLUSIVE_SCAN, ballot)
+        + sg.subgroup_ballot_bit_count(S, sg.GROUP_EXCLUSIVE_SCAN, ballot)
+        + sg.subgroup_ballot_find_lsb(S, ballot) + sg.subgroup_ballot_find_msb(S, ballot)
+        + sg.subgroup_logical_and(S, sg.GROUP_REDUCE, odd) + sg.subgroup_logical_or(S, sg.GROUP_INCLUSIVE_SCAN, odd)
+        + sg.subgroup_logical_xor(S, sg.GROUP_EXCLUSIVE_SCAN, odd)
+        + sg.subgroup_clustered_logical_and(S, sg.GROUP_CLUSTERED_REDUCE, odd, 4)
+        + sg.subgroup_clustered_logical_or(S, sg.GROUP_CLUSTERED_REDUCE, odd, 4)
+        + sg.subgroup_clustered_logical_xor(S, sg.GROUP_CLUSTERED_REDUCE, odd, 4);
+}
+
+#[stage("compute")]
+#[workgroup(64, 1, 1)]
+fun values_u32() {
+    val i: u32 = lid;
+    val v: u32 = results.u[i];
+    var r: u32 = sg.subgroup_broadcast_u32(S, v, 0) + sg.subgroup_broadcast_first_u32(S, v)
+        + sg.subgroup_shuffle_u32(S, v, lane ^ 1) + sg.subgroup_shuffle_xor_u32(S, v, 1)
+        + sg.subgroup_shuffle_up_u32(S, v, 1) + sg.subgroup_shuffle_down_u32(S, v, 1)
+        + sg.subgroup_quad_broadcast_u32(S, v, 3) + sg.subgroup_quad_swap_u32(S, v, sg.QUAD_SWAP_HORIZONTAL)
+        + sg.subgroup_quad_swap_u32(S, v, sg.QUAD_SWAP_VERTICAL) + sg.subgroup_quad_swap_u32(S, v, sg.QUAD_SWAP_DIAGONAL);
+    r                 = r + sg.subgroup_add_u32(S, sg.GROUP_REDUCE, v) + sg.subgroup_clustered_add_u32(S, sg.GROUP_CLUSTERED_REDUCE, v, 4);
+    r                 = r + sg.subgroup_mul_u32(S, sg.GROUP_INCLUSIVE_SCAN, v) + sg.subgroup_clustered_mul_u32(S, sg.GROUP_CLUSTERED_REDUCE, v, 4);
+    r                 = r + sg.subgroup_min_u32(S, sg.GROUP_EXCLUSIVE_SCAN, v) + sg.subgroup_clustered_min_u32(S, sg.GROUP_CLUSTERED_REDUCE, v, 4);
+    r                 = r + sg.subgroup_max_u32(S, sg.GROUP_REDUCE, v) + sg.subgroup_clustered_max_u32(S, sg.GROUP_CLUSTERED_REDUCE, v, 4);
+    r                 = r + sg.subgroup_and_u32(S, sg.GROUP_INCLUSIVE_SCAN, v) + sg.subgroup_clustered_and_u32(S, sg.GROUP_CLUSTERED_REDUCE, v, 4);
+    r                 = r + sg.subgroup_or_u32(S, sg.GROUP_EXCLUSIVE_SCAN, v) + sg.subgroup_clustered_or_u32(S, sg.GROUP_CLUSTERED_REDUCE, v, 4);
+    r                 = r + sg.subgroup_xor_u32(S, sg.GROUP_REDUCE, v) + sg.subgroup_clustered_xor_u32(S, sg.GROUP_CLUSTERED_REDUCE, v, 4);
+    results.u[63 - i] = r;
+    results.u[i]      = sg.subgroup_all_equal_u32(S, v);
+}
+
+#[stage("compute")]
+#[workgroup(64, 1, 1)]
+fun values_i32() {
+    val i: u32 = lid;
+    val v: i32 = results.i[i];
+    var r: i32 = sg.subgroup_broadcast_i32(S, v, 0) + sg.subgroup_broadcast_first_i32(S, v)
+        + sg.subgroup_shuffle_i32(S, v, lane ^ 1) + sg.subgroup_shuffle_xor_i32(S, v, 1)
+        + sg.subgroup_shuffle_up_i32(S, v, 1) + sg.subgroup_shuffle_down_i32(S, v, 1)
+        + sg.subgroup_quad_broadcast_i32(S, v, 3) + sg.subgroup_quad_swap_i32(S, v, sg.QUAD_SWAP_HORIZONTAL)
+        + sg.subgroup_quad_swap_i32(S, v, sg.QUAD_SWAP_VERTICAL) + sg.subgroup_quad_swap_i32(S, v, sg.QUAD_SWAP_DIAGONAL);
+    r                 = r + sg.subgroup_add_i32(S, sg.GROUP_REDUCE, v) + sg.subgroup_clustered_add_i32(S, sg.GROUP_CLUSTERED_REDUCE, v, 4);
+    r                 = r + sg.subgroup_mul_i32(S, sg.GROUP_INCLUSIVE_SCAN, v) + sg.subgroup_clustered_mul_i32(S, sg.GROUP_CLUSTERED_REDUCE, v, 4);
+    r                 = r + sg.subgroup_min_i32(S, sg.GROUP_EXCLUSIVE_SCAN, v) + sg.subgroup_clustered_min_i32(S, sg.GROUP_CLUSTERED_REDUCE, v, 4);
+    r                 = r + sg.subgroup_max_i32(S, sg.GROUP_REDUCE, v) + sg.subgroup_clustered_max_i32(S, sg.GROUP_CLUSTERED_REDUCE, v, 4);
+    r                 = r + sg.subgroup_and_i32(S, sg.GROUP_INCLUSIVE_SCAN, v) + sg.subgroup_clustered_and_i32(S, sg.GROUP_CLUSTERED_REDUCE, v, 4);
+    r                 = r + sg.subgroup_or_i32(S, sg.GROUP_EXCLUSIVE_SCAN, v) + sg.subgroup_clustered_or_i32(S, sg.GROUP_CLUSTERED_REDUCE, v, 4);
+    r                 = r + sg.subgroup_xor_i32(S, sg.GROUP_REDUCE, v) + sg.subgroup_clustered_xor_i32(S, sg.GROUP_CLUSTERED_REDUCE, v, 4);
+    results.i[63 - i] = r;
+    results.u[i]      = sg.subgroup_all_equal_i32(S, v);
+}
+
+#[stage("compute")]
+#[workgroup(64, 1, 1)]
+fun values_f32() {
+    val i: u32 = lid;
+    val v: f32 = results.f[i];
+    var r: f32 = sg.subgroup_broadcast_f32(S, v, 0) + sg.subgroup_broadcast_first_f32(S, v)
+        + sg.subgroup_shuffle_f32(S, v, lane ^ 1) + sg.subgroup_shuffle_xor_f32(S, v, 1)
+        + sg.subgroup_shuffle_up_f32(S, v, 1) + sg.subgroup_shuffle_down_f32(S, v, 1)
+        + sg.subgroup_quad_broadcast_f32(S, v, 3) + sg.subgroup_quad_swap_f32(S, v, sg.QUAD_SWAP_HORIZONTAL)
+        + sg.subgroup_quad_swap_f32(S, v, sg.QUAD_SWAP_VERTICAL) + sg.subgroup_quad_swap_f32(S, v, sg.QUAD_SWAP_DIAGONAL);
+    r                 = r + sg.subgroup_add_f32(S, sg.GROUP_REDUCE, v) + sg.subgroup_clustered_add_f32(S, sg.GROUP_CLUSTERED_REDUCE, v, 4);
+    r                 = r + sg.subgroup_mul_f32(S, sg.GROUP_INCLUSIVE_SCAN, v) + sg.subgroup_clustered_mul_f32(S, sg.GROUP_CLUSTERED_REDUCE, v, 4);
+    r                 = r + sg.subgroup_min_f32(S, sg.GROUP_EXCLUSIVE_SCAN, v) + sg.subgroup_clustered_min_f32(S, sg.GROUP_CLUSTERED_REDUCE, v, 4);
+    r                 = r + sg.subgroup_max_f32(S, sg.GROUP_REDUCE, v) + sg.subgroup_clustered_max_f32(S, sg.GROUP_CLUSTERED_REDUCE, v, 4);
+    results.f[63 - i] = r;
+    results.u[i]      = sg.subgroup_all_equal_f32(S, v);
+}
