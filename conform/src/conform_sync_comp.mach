@@ -1,0 +1,37 @@
+# Every barrier, raw and wrapped, around workgroup memory.
+#
+# This exists to be compiled and validated, not to be dispatched. The wrappers in
+# `shader.sync` write their scope and semantics as constants in their own bodies, and
+# SPIR-V takes those operands only as constants, so each wrapper is called here and the
+# module is built at both optimization levels: at O0 the wrapper is a function of its
+# own and at O2 it is inlined, and either way its operands must reach the instruction
+# as constants.
+
+use sy: shader.sync;
+
+rec Field {
+    values: [64]f32;
+}
+
+#[storage(0, 0)]
+var field: Field;
+#[shared]
+var tile:  [64]f32;
+
+#[builtin("local_invocation_index")]
+var lid: u32;
+
+#[stage("compute")]
+#[workgroup(64, 1, 1)]
+fun comp_main() {
+    val i: u32 = lid;
+    tile[i] = field.values[i];
+    sy.workgroup_barrier();
+    field.values[i] = tile[63 - i];
+    sy.storage_barrier();
+    sy.image_barrier();
+    sy.subgroup_barrier();
+    sy.memory_barrier(sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE_RELEASE | sy.SEMANTICS_WORKGROUP_MEMORY);
+    sy.control_barrier(sy.SCOPE_WORKGROUP, sy.SCOPE_WORKGROUP, sy.SEMANTICS_ACQUIRE_RELEASE | sy.SEMANTICS_UNIFORM_MEMORY);
+    tile[i] = tile[i] + field.values[63 - i];
+}

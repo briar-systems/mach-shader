@@ -4,7 +4,10 @@
 usage: texcheck.py <texture.mach> <module.spvasm>
 
 The expected shapes come from the `#[handle("spirv", "image", ...)]` declarations,
-so a handle added to the library is checked without editing this script. A shape
+so a handle added to the library is checked without editing this script. Only the
+plain sampled images are this check's: a depth image, a storage image and a texel
+buffer are never sampled by `OpImageSampleImplicitLod`, and `tools/opcheck.py`
+covers the instructions that read them. A shape
 is (texel scalar, dimensionality, arrayed) as SPIR-V spells it. SPIR-V integers
 carry no sign here, so `TEXEL_I32` and `TEXEL_U32` images are one shape in the
 module, and the signed and unsigned entries cannot be told apart by type.
@@ -17,7 +20,7 @@ TEXEL = {"TEXEL_F32": "float", "TEXEL_I32": "int", "TEXEL_U32": "int"}
 DIM = {"DIM_1D": "1D", "DIM_2D": "2D", "DIM_3D": "3D", "DIM_CUBE": "Cube"}
 ARRAYED = {"NONARRAYED": "0", "ARRAYED": "1"}
 
-HANDLE = re.compile(r'#\[handle\("spirv",\s*"image",\s*(\w+),\s*(\w+),\s*\w+,\s*(\w+),')
+HANDLE = re.compile(r'#\[handle\("spirv",\s*"image",\s*(\w+),\s*(\w+),\s*NO_DEPTH,\s*(\w+),\s*\w+,\s*SAMPLED,')
 
 
 def declared(path):
@@ -29,6 +32,8 @@ def declared(path):
             continue
         name = re.match(r"pub def (\w+);", lines[i + 1].strip()).group(1)
         texel, dim, arrayed = m.groups()
+        if dim == "DIM_BUFFER":
+            continue
         shapes.setdefault((TEXEL[texel], DIM[dim], ARRAYED[arrayed]), []).append(name)
     return shapes
 
