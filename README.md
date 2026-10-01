@@ -55,7 +55,8 @@ format, which is `FORMAT_UNKNOWN` for every sampled image. The module names each
 operand value, the 42 formats included, so a shape the library does not declare is
 one `def` in the consumer's own source.
 
-Beside the plain samples it declares the depth images and their comparisons
+Beside the implicit-lod samples it declares the explicit-lod ones a compute stage
+samples with (`sample_lod_*`, `sample_grad_*`), the depth images and their comparisons
 (`sample_compare_*`, `sample_compare_lod_*`, `gather_compare_*`), gathers
 (`gather_*`), integer-coordinate fetches (`fetch_*`) and the size and level queries
 (`size_*`, `levels_*`). A multisampled image is never sampled and is not declared, and
@@ -85,10 +86,12 @@ fun blit() {
 
 The `StorageImage*` handles are `FORMAT_UNKNOWN`, so one handle binds a view of any
 format, under the `storage_read_without_format` and `storage_write_without_format`
-extensions that `vulkan1.3` selects. The `*R32f`, `*R32i`, `*R32ui`, `*R64i` and
-`*R64ui` images carry the formats Vulkan defines an image atomic on, and
-`image_texel_*` gives an atomic in `shader.atomic` the address of one of their
-texels. A texel buffer is a `TexelBuffer`, fetched and bound by `#[sampler]`, or a
+extensions that `vulkan1.3` selects. The `*R32f`, `*R32ui` and `*R64ui` images carry
+formats Vulkan defines an image atomic on, and `image_texel_*` gives an atomic in
+`shader.atomic` the address of one of their texels. No storage image of a signed
+integer format is declared yet: mach 6.9 gives one a sign-less texel type, which
+Vulkan rejects ([mach#4377](https://github.com/briar-systems/mach/issues/4377)), so
+a signed storage image is `IStorageImage2D`, of format `Unknown`. A texel buffer is a `TexelBuffer`, fetched and bound by `#[sampler]`, or a
 `StorageTexelBuffer`, read and written and bound by `#[storage]`.
 
 ## Compute
@@ -308,10 +311,10 @@ The GLSL.std.450 set is much larger than this. The omissions are reasoned rather
 than pending:
 
 - **`Modf`, `Frexp`** take a pointer to write their second result through. Mach
-  6.9 hands an out-pointer into a Function-storage subobject to a call
-  ([mach#4278](https://github.com/briar-systems/mach/issues/4278)), but the
-  compiler's SPIR-V table has no row for either instruction, so a declaration is
-  refused as an instruction the target does not define. The `*Struct` forms return
+  6.9 hands an out-pointer into a Function-storage subobject to a call, but its
+  SPIR-V table has no row for either instruction, so a declaration is refused as an
+  instruction the target does not define. They land here once a mach release carries
+  the rows ([mach#4378](https://github.com/briar-systems/mach/issues/4378)). The `*Struct` forms return
   a two-member struct that is not spellable as a Mach return type.
 - **`Determinant`, `MatrixInverse`** need a matrix type, which Mach does not have
   by design - matrices belong in a library over vectors.
