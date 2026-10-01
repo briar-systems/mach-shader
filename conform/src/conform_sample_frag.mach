@@ -3,7 +3,9 @@
 #
 # This exists to be compiled and validated, not to shade anything. It is a fragment
 # stage because an implicit-lod comparison derives its level from a fragment stage's
-# derivatives. Every result is written to an output so no call can be eliminated.
+# derivatives, and it carries a compute stage beside it for the explicit-lod samples,
+# which a compute stage reaches and an implicit-lod one cannot. Every result is
+# written to an output or a buffer so no call can be eliminated.
 
 use tex: shader.texture;
 
@@ -27,6 +29,11 @@ var envs:              tex.SamplerCubeArray;
 var signed:            tex.ISampler2D;
 #[sampler(0, 9)]
 var ids:               tex.USampler2D;
+
+#[sampler(0, 10)]
+var ramp:   tex.Sampler1D;
+#[sampler(0, 11)]
+var volume: tex.Sampler3D;
 
 # the separately-bound images the fetches and queries read, and the sampler the depth
 # images are combined with
@@ -132,4 +139,36 @@ fun frag_query() {
         + tex.levels_depth_2d(depth_tex) + tex.levels_depth_2d_array(depth_layers_tex)
         + tex.levels_depth_cube(depth_cube_tex) + tex.levels_depth_cube_array(depth_cubes_tex);
     out_size = i32x4{s2[0] + s3[0], s2[1] + s3[1], s3[2], levels + tex.size_1d(line_tex, 0)};
+}
+
+rec Samples {
+    colour: [64]f32x4;
+    signed: [64]i32x4;
+    ids:    [64]u32x4;
+}
+
+#[storage(2, 0, "writeonly")]
+var samples: Samples;
+
+#[builtin("local_invocation_index")]
+var lid: u32;
+
+#[stage("compute")]
+#[workgroup(64, 1, 1)]
+fun comp_explicit() {
+    val i:  u32   = lid;
+    val t:  f32   = i::f32 / 64.0;
+    val t2: f32x2 = f32x2{t, t};
+    val t3: f32x3 = f32x3{t, t, t};
+    val t4: f32x4 = f32x4{t, t, t, t};
+    val L:  u32   = tex.IMAGE_OPERANDS_LOD;
+    val G:  u32   = tex.IMAGE_OPERANDS_GRAD;
+    samples.colour[i] = tex.sample_lod_1d(ramp, t, L, 0.0) + tex.sample_lod_2d(albedo, t2, L, 1.0)
+        + tex.sample_lod_3d(volume, t3, L, 0.0) + tex.sample_lod_cube(env, t3, L, 0.0)
+        + tex.sample_lod_2d_array(layers, t3, L, 0.0) + tex.sample_lod_cube_array(envs, t4, L, 0.0)
+        + tex.sample_grad_1d(ramp, t, G, 0.1, 0.1) + tex.sample_grad_2d(albedo, t2, G, t2, t2)
+        + tex.sample_grad_3d(volume, t3, G, t3, t3) + tex.sample_grad_cube(env, t3, G, t3, t3)
+        + tex.sample_grad_2d_array(layers, t3, G, t2, t2) + tex.sample_grad_cube_array(envs, t4, G, t3, t3);
+    samples.signed[i] = tex.sample_lod_2d_i(signed, t2, L, 0.0) + tex.sample_grad_2d_i(signed, t2, G, t2, t2);
+    samples.ids[i]    = tex.sample_lod_2d_u(ids, t2, L, 0.0) + tex.sample_grad_2d_u(ids, t2, G, t2, t2);
 }
