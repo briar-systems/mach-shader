@@ -50,10 +50,46 @@ image it wraps rather than restating that image's operands, so the two cannot
 disagree about the shape they share. Adding a handle is a declaration in that file
 rather than a compiler release.
 
-Four shapes are deliberately not declared, and each is refused by the target with a
-sentence naming the operand that causes it rather than being silently absent: a
-depth-comparison image, a multisampled image, the `Rect` / `Buffer` / `SubpassData`
-dimensionalities, and a storage image.
+A handle's operands are the seven `OpTypeImage` operands, the last of them the image
+format, which is `FORMAT_UNKNOWN` for every sampled image. The module names each
+operand value, the 42 formats included, so a shape the library does not declare is
+one `def` in the consumer's own source.
+
+Beside the plain samples it declares the depth images and their comparisons
+(`sample_compare_*`, `sample_compare_lod_*`, `gather_compare_*`), gathers
+(`gather_*`), integer-coordinate fetches (`fetch_*`) and the size and level queries
+(`size_*`, `levels_*`). A multisampled image is never sampled and is not declared, and
+the target refuses the `Rect` and `SubpassData` dimensionalities by naming the
+operand.
+
+### Storage images and texel buffers
+
+A storage image is read and written texel by texel, with no sampler, and binds
+through `#[storage]` like a buffer, `"readonly"`, `"writeonly"` and `"coherent"`
+included:
+
+```mach
+use tex: shader.texture;
+
+#[storage(0, 0, "readonly")]  var src: tex.StorageImage2D;
+#[storage(0, 1, "writeonly")] var dst: tex.StorageImage2D;
+#[builtin("global_invocation")] var gid: u32x3;
+
+#[stage("compute")]
+#[workgroup(8, 8, 1)]
+fun blit() {
+    val at: i32x2 = i32x2{gid[0]::i32, gid[1]::i32};
+    tex.image_write_2d(dst, at, tex.image_read_2d(src, at));
+}
+```
+
+The `StorageImage*` handles are `FORMAT_UNKNOWN`, so one handle binds a view of any
+format, under the `storage_read_without_format` and `storage_write_without_format`
+extensions that `vulkan1.3` selects. The `*R32f`, `*R32i`, `*R32ui`, `*R64i` and
+`*R64ui` images carry the formats Vulkan defines an image atomic on, and
+`image_texel_*` gives an atomic in `shader.atomic` the address of one of their
+texels. A texel buffer is a `TexelBuffer`, fetched and bound by `#[sampler]`, or a
+`StorageTexelBuffer`, read and written and bound by `#[storage]`.
 
 ## Compute
 
@@ -82,11 +118,53 @@ fun step() {
 }
 ```
 
-All of that is the compiler's, so this library adds no declaration for it.
-Workgroup shared memory, barriers, atomics, storage images and write-only buffers
-need compiler support that does not exist yet, tracked in
-[mach#4252](https://github.com/briar-systems/mach/issues/4252), and their
-declarations land here when it does.
+All of that is the compiler's. What a compute body calls is this library's, each
+one a bodyless `#[op]` declaration like the maths:
+
+- `shader.sync`: the `SCOPE_*` and `SEMANTICS_*` operand constants,
+  `control_barrier` and `memory_barrier`, and the wrappers `workgroup_barrier`,
+  `storage_barrier`, `image_barrier` and `subgroup_barrier`.
+- `shader.atomic`: every SPIR-V atomic over `u32`, `i32`, `u64` and `i64`, and the
+  load, store, exchange, add, min and max over `f16`, `f32` and `f64`.
+- `shader.subgroup`: the `OpGroupNonUniform*` families, the `GROUP_*` operations and
+  the `QUAD_SWAP_*` directions.
+- `shader.texture`: the storage images and texel buffers above.
+
+```mach
+use at: shader.atomic;
+use sy: shader.sync;
+
+rec Histogram { bins: [64]u32; }
+
+#[storage(0, 0)] var histogram: Histogram;
+#[shared]        var local_bins: [64]u32;
+#[builtin("local_invocation_index")] var lid: u32;
+
+#[stage("compute")]
+#[workgroup(64, 1, 1)]
+fun count() {
+    at.atomic_add_u32(?local_bins[lid & 63], sy.SCOPE_WORKGROUP, sy.SEMANTICS_RELAXED, 1);
+    sy.workgroup_barrier();
+    at.atomic_add_u32(?histogram.bins[lid], sy.SCOPE_DEVICE, sy.SEMANTICS_RELAXED, local_bins[lid]);
+}
+```
+
+An atomic's pointer takes its storage class from the call, so one declaration
+covers a storage buffer, workgroup memory and an image texel. A scope, a memory
+semantics, a group operation and a broadcast lane are constants SPIR-V takes by
+value, and each is refused at the call unless it is a literal or a `pub val`.
+
+That is also why the wrappers are only the four barriers. Each writes its operands as
+constants in its own body, so they reach the instruction as constants whether the
+wrapper is inlined (O2) or called (O0), and `conform_sync_comp` holds that at both
+levels. A wrapper that took a scope or semantics as a parameter would compile at O2,
+where inlining folds it, and be refused at O0, so none is shipped.
+
+Every type other than a 32-bit integer atomic, and every subgroup family but
+`Elect`, needs a Vulkan device feature that the target names in its `extensions`
+(`buffer_float32_atomic_add`, `subgroup_arithmetic`, and so on). The module headers
+list them, and a call whose feature the target does not select is refused with its
+name.
 
 ## Why this is not in the standard library
 
@@ -141,6 +219,15 @@ suffix would make the 2-lane `exp` collide with the scalar `exp2`. Because the t
 also differ in operand type, reaching for the wrong one is a type error rather
 than a wrong result.
 
+`shader.atomic` and `shader.subgroup` grow along the component type as well, so an
+entry over a value the caller chooses carries that value's mach type after the
+underscore: `atomic_add_u32`, `atomic_add_f32`, `subgroup_min_i32`. No type is the
+unsuffixed default. The signed and unsigned forms differ where the instruction
+does, so `atomic_min_i32` is `OpAtomicSMin` and `atomic_min_u32` is `OpAtomicUMin`. An
+entry whose operand types are fixed, like `subgroup_ballot`, takes the plain name.
+`shader.texture` names the handle instead, as it always has: `image_read_2d_u`,
+`fetch_buffer_i`.
+
 The rule is uniform so that the axes this module grows along - the instruction,
 the lane count, and eventually the component type - each stay a drop-in. An
 unsuffixed `dot` meaning the 4-wide form would have had to break the first time a
@@ -163,27 +250,39 @@ git = "https://github.com/briar-systems/mach-shader"
 version = "^0.4.0"
 ```
 
-Requires Mach 6. The manifest declares `mach = "^6"`.
+Requires Mach 6.9. The manifest declares `mach = "^6.9"`, the release whose image
+handle takes the format operand and whose `#[op]` admits barriers, atomics and
+subgroup operations.
 
 ## How it is checked
 
 `src/math.mach` is generated by `tools/genmath.py` from a table of instructions
 and a list of widths, because the library is that rule applied 134 times and
-hand-maintaining it would let the widths drift apart. The generator passes
-its output through `mach fmt -`, so it needs mach 5.1.0 or newer (see
-`tools/README.md`), either the `mach` on `PATH` or the one the
-`MACH` environment variable names, and a formatted tree never drifts from it.
+hand-maintaining it would let the widths drift apart. `src/atomic.mach` and
+`src/subgroup.mach` are generated the same way, by `tools/genatomic.py` and
+`tools/gensubgroup.py`, from their instructions and the types each takes. Each
+generator passes its output through `mach fmt -`, so it needs mach 5.1.0 or newer
+(see `tools/README.md`), either the `mach` on `PATH` or the one the `MACH`
+environment variable names, and a formatted tree never drifts from it.
 
 The library itself compiles to nothing - every declaration is bodyless - so
 building it proves nothing. `conform/` is the actual check: a fragment shader that
 calls one entry from every family at every width, writing the result to its output
 so no call can be eliminated. A decorator naming an instruction that does not
 exist, or a signature SPIR-V will not accept at that width, fails there. Beside it,
-`conform_tex_frag` binds and samples every texture handle, and `conform_comp` is a
-compute stage with a workgroup size, every compute built-in and a read-only and a
-read-write buffer. `conform/verify.sh` (needs spirv-tools) builds them, runs
-`spirv-val` over each, and checks the disassembly for what validation alone
-would not catch.
+`conform_tex_frag` binds and samples every texture handle, `conform_sample_frag`
+makes every comparison, gather, fetch and query, and `conform_comp` is a compute
+stage with a workgroup size, every compute built-in and a read-only and a read-write
+buffer. `conform_atomic_comp` calls every atomic on a storage buffer and on workgroup
+memory, `conform_image_comp` reads, writes and queries every storage image and texel
+buffer and reaches each atomic-format texel, `conform_sync_comp` calls every barrier
+and `conform_subgroup_comp` every subgroup operation.
+
+`conform/verify.sh` (needs spirv-tools) builds them at O0 and O2, runs `spirv-val`
+over each both as SPIR-V and against `vulkan1.3`, and checks the disassembly for
+what validation alone would not catch: `tools/opcheck.py` requires every `#[op]`
+declared in `shader.texture`, `shader.sync`, `shader.atomic` and `shader.subgroup`
+to be called by a conformance shader and to reach its module.
 
 ## Releasing
 
@@ -208,11 +307,12 @@ and deletes its draft when it finishes.
 The GLSL.std.450 set is much larger than this. The omissions are reasoned rather
 than pending:
 
-- **`Modf`, `Frexp`** take a pointer to write their second result through. SPIR-V
-  here is logical addressing: a pointer has exactly one pointee type and none may
-  be cast, and there is no way to hand the back end a Function-storage out-pointer
-  at a call site. The `*Struct` forms return a two-member struct that is not
-  spellable as a Mach return type.
+- **`Modf`, `Frexp`** take a pointer to write their second result through. Mach
+  6.9 hands an out-pointer into a Function-storage subobject to a call
+  ([mach#4278](https://github.com/briar-systems/mach/issues/4278)), but the
+  compiler's SPIR-V table has no row for either instruction, so a declaration is
+  refused as an instruction the target does not define. The `*Struct` forms return
+  a two-member struct that is not spellable as a Mach return type.
 - **`Determinant`, `MatrixInverse`** need a matrix type, which Mach does not have
   by design - matrices belong in a library over vectors.
 - **the `Pack*` / `Unpack*` family** reinterprets one width's bits as another's,
