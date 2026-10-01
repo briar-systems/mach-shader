@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-01
+
 ### Added
 - The compute surface of mach 6.9 (#48), each entry a bodyless `#[op]` declaration:
   - `shader.sync`: the `SCOPE_*` and `SEMANTICS_*` operand constants, `control_barrier`, `memory_barrier`, and the wrappers `workgroup_barrier`, `storage_barrier`, `image_barrier` and `subgroup_barrier`, whose constant operands reach the instruction at O0 and O2.
@@ -16,7 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Conformance shaders for each group (`conform_atomic_comp`, `conform_image_comp`, `conform_sample_frag`, `conform_sync_comp`, `conform_subgroup_comp`), built at O0 and O2 and validated against `vulkan1.3` as well as plain SPIR-V. `tools/opcheck.py` requires every declared instruction to be called and emitted.
 
 ### Changed
-- **Requires mach 6.9** (#48). Both manifests declare `mach = "^6.9"`, and CI seeds mach v6.9.0. Every `image` handle takes the 7th operand, its format, `FORMAT_UNKNOWN` for the sampled images, since mach 6.9 no longer accepts the 6-operand form.
+- **Breaking: requires mach 6.9** (#48). Both manifests declare `mach = "^6.9"`, and CI seeds mach v6.9.0. Every `image` handle takes the 7th operand, its format, `FORMAT_UNKNOWN` for the sampled images, since mach 6.9 no longer accepts the 6-operand form.
+- readme: The dependency stanza declares `version = "^0.5.0"`.
 
 ## [0.4.0] - 2026-09-26
 
