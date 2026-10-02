@@ -24,8 +24,12 @@ var signed:        tex.IStorageImage2D;
 var ids:           tex.UStorageImage2D;
 #[storage(0, 6)]
 var heat:          tex.StorageImage2DR32f;
+#[storage(0, 7)]
+var delta:         tex.IStorageImage2DR32i;
 #[storage(0, 8)]
 var counts:        tex.UStorageImage2DR32ui;
+#[storage(0, 9)]
+var wide_delta:    tex.IStorageImage2DR64i;
 #[storage(0, 10)]
 var wide_counts:   tex.UStorageImage2DR64ui;
 #[storage(0, 11)]
@@ -65,10 +69,12 @@ fun read_write() {
     tex.image_write_2d(plane, p, tex.image_read_2d(plane, p) + tex.image_read_2d_r32f(heat, p));
     tex.image_write_3d(volume, p3, tex.image_read_3d(volume, p3));
     tex.image_write_2d_array(layers, p3, tex.image_read_2d_array(layers, p3));
-    tex.image_write_2d_i(signed, p, tex.image_read_2d_i(signed, p));
+    tex.image_write_2d_i(signed, p, tex.image_read_2d_i(signed, p) + tex.image_read_2d_r32i(delta, p));
     tex.image_write_2d_u(ids, p, tex.image_read_2d_u(ids, p) + tex.image_read_2d_r32ui(counts, p));
     tex.image_write_2d_r32f(heat, p, tex.image_read_2d(plane, p));
+    tex.image_write_2d_r32i(delta, p, tex.image_read_2d_i(signed, p));
     tex.image_write_2d_r32ui(counts, p, tex.image_read_2d_u(ids, p));
+    tex.image_write_2d_r64i(wide_delta, p, tex.image_read_2d_r64i(wide_delta, p));
     tex.image_write_2d_r64ui(wide_counts, p, tex.image_read_2d_r64ui(wide_counts, p));
     tex.image_write_buffer(texels, x, tex.image_read_buffer(texels, x));
     tex.image_write_buffer_i(signed_texels, x, tex.image_read_buffer_i(signed_texels, x) + tex.fetch_buffer_i(signed_lut, x));
@@ -79,7 +85,8 @@ fun read_write() {
 #[workgroup(1, 1, 1)]
 fun query() {
     val s2: i32x2 = tex.image_size_2d(plane) + tex.image_size_2d_i(signed) + tex.image_size_2d_u(ids)
-        + tex.image_size_2d_r32f(heat) + tex.image_size_2d_r32ui(counts) + tex.image_size_2d_r64ui(wide_counts);
+        + tex.image_size_2d_r32f(heat) + tex.image_size_2d_r32i(delta) + tex.image_size_2d_r32ui(counts)
+        + tex.image_size_2d_r64i(wide_delta) + tex.image_size_2d_r64ui(wide_counts);
     val s3: i32x3 = tex.image_size_3d(volume) + tex.image_size_2d_array(layers);
     val n:  i32   = tex.image_size_1d(line) + tex.image_size_buffer(lut) + tex.image_size_buffer_i(signed_lut)
         + tex.image_size_buffer_u(id_lut) + tex.image_size_storage_buffer(texels)
@@ -92,7 +99,9 @@ fun query() {
 fun texel_atomics() {
     val p: i32x2 = i32x2{gid[0]::i32, gid[1]::i32};
     val c: u32   = at.atomic_add_u32(tex.image_texel_2d_r32ui(?counts, p, 0), sy.SCOPE_DEVICE, IMG, 1);
+    val d: i32   = at.atomic_min_i32(tex.image_texel_2d_r32i(?delta, p, 0), sy.SCOPE_DEVICE, IMG, -1);
     val h: f32   = at.atomic_add_f32(tex.image_texel_2d_r32f(?heat, p, 0), sy.SCOPE_DEVICE, IMG, 0.5);
     val w: u64   = at.atomic_or_u64(tex.image_texel_2d_r64ui(?wide_counts, p, 0), sy.SCOPE_DEVICE, IMG, c::u64);
-    sizes.n[1] = i32x4{c::i32, h::i32, w::i32, 0};
+    val v: i64   = at.atomic_max_i64(tex.image_texel_2d_r64i(?wide_delta, p, 0), sy.SCOPE_DEVICE, IMG, d::i64);
+    sizes.n[1] = i32x4{c::i32, d, h::i32, (w::i64 + v)::i32};
 }

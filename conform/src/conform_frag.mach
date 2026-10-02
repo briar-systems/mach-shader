@@ -23,7 +23,7 @@ var a4: f32x4;
 #[input(5)]
 var b4: f32x4;
 #[input(6)]
-var s: f32;
+var s:  f32;
 
 #[output(0)]
 var out_colour: f32x4;
@@ -54,6 +54,36 @@ fun frag_main() {
     val g4: f32 = sh.dot_4(sh.normalize_4(v4), sh.face_forward_4(v4, a4, b4))
         + sh.length_4(sh.min_4(a4, b4)) + sh.distance_4(a4, b4);
 
-    val total: f32 = u + g2 + g3 + g4;
+    # The split entries at every width, each storing its second part through a local.
+    var whole:  f32;
+    var e:      i32;
+    var whole2: f32x2;
+    var e2:     i32x2;
+    var whole3: f32x3;
+    var e3:     i32x3;
+    var whole4: f32x4;
+    var e4:     i32x4;
+    val m:      f32   = sh.modf(s, ?whole) + sh.frexp(s, ?e) + whole + e::f32;
+    val m2:     f32x2 = sh.modf_2(a2, ?whole2) + sh.frexp_2(b2, ?e2) + whole2;
+    val m3:     f32x3 = sh.modf_3(a3, ?whole3) + sh.frexp_3(b3, ?e3) + whole3;
+    val m4:     f32x4 = sh.modf_4(a4, ?whole4) + sh.frexp_4(b4, ?e4) + whole4;
+    val split:  f32   = m + m2[1] + m3[2] + m4[3] + (e2[1] + e3[2] + e4[3])::f32;
+
+    # The integer rows, signed and unsigned, scalar and vector.
+    val k:  i32 = s::i32;
+    val q:  u32 = s::u32;
+    val ki: i32 = sh.abs_i32(k) + sh.sign_i32(k) + sh.min_i32(k, 3) + sh.max_i32(k, -3)
+        + sh.clamp_i32(k, -1, 1) + sh.find_lsb_i32(k) + sh.find_msb_i32(k);
+    val qu: u32 = sh.min_u32(q, 3) + sh.max_u32(q, 1) + sh.clamp_u32(q, 1, 4)
+        + sh.find_lsb_u32(q) + sh.find_msb_u32(q);
+    val k2:   i32x2 = sh.clamp_i32_2(sh.abs_i32_2(i32x2{k, ki}), i32x2{0, 0}, i32x2{9, 9});
+    val k3:   i32x3 = sh.find_msb_i32_3(sh.min_i32_3(sh.sign_i32_3(i32x3{k, ki, k}), i32x3{k, k, k}));
+    val k4:   i32x4 = sh.max_i32_4(sh.find_lsb_i32_4(i32x4{k, ki, k, ki}), i32x4{k, k, k, k});
+    val q2:   u32x2 = sh.find_msb_u32_2(sh.max_u32_2(u32x2{q, qu}, u32x2{1, 1}));
+    val q3:   u32x3 = sh.clamp_u32_3(sh.find_lsb_u32_3(u32x3{q, qu, q}), u32x3{0, 0, 0}, u32x3{q, q, q});
+    val q4:   u32x4 = sh.min_u32_4(u32x4{q, qu, q, qu}, u32x4{qu, q, qu, q});
+    val ints: f32   = (ki + k2[1] + k3[2] + k4[3])::f32 + (qu + q2[1] + q3[2] + q4[3])::f32;
+
+    val total: f32 = u + g2 + g3 + g4 + split + ints;
     out_colour = f32x4{total, total, total, total};
 }
