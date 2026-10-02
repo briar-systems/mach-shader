@@ -84,6 +84,21 @@ fun frag_main() {
     val q4:   u32x4 = sh.min_u32_4(u32x4{q, qu, q, qu}, u32x4{qu, q, qu, q});
     val ints: f32   = (ki + k2[1] + k3[2] + k4[3])::f32 + (qu + q2[1] + q3[2] + q4[3])::f32;
 
-    val total: f32 = u + g2 + g3 + g4 + split + ints;
+    # The any-width integer rows at 16 and 64 bits, scalar and vector.
+    val h:    i16   = s::i16;
+    val hu:   u16   = s::u16;
+    val l:    i64   = s::i64;
+    val lu:   u64   = s::u64;
+    val hi:   i16   = sh.abs_i16(h) + sh.sign_i16(h) + sh.min_i16(h, 3) + sh.max_i16(h, -3) + sh.clamp_i16(h, -1, 1);
+    val hq:   u16   = sh.min_u16(hu, 3) + sh.max_u16(hu, 1) + sh.clamp_u16(hu, 1, 4);
+    val li:   i64   = sh.abs_i64(l) + sh.sign_i64(l) + sh.min_i64(l, 3) + sh.max_i64(l, -3) + sh.clamp_i64(l, -1, 1);
+    val lq:   u64   = sh.min_u64(lu, 3) + sh.max_u64(lu, 1) + sh.clamp_u64(lu, 1, 4);
+    val h2:   i16x2 = sh.max_i16_2(sh.abs_i16_2(i16x2{h, hi}), i16x2{h, h});
+    val hq4:  u16x4 = sh.clamp_u16_4(u16x4{hu, hq, hu, hq}, u16x4{1, 1, 1, 1}, u16x4{hq, hq, hq, hq});
+    val l3:   i64x3 = sh.min_i64_3(sh.sign_i64_3(i64x3{l, li, l}), i64x3{l, l, l});
+    val lq2:  u64x2 = sh.max_u64_2(u64x2{lu, lq}, u64x2{lq, lu});
+    val wide: f32   = (hi + h2[1])::f32 + (hq + hq4[3])::f32 + (li + l3[2])::f32 + (lq + lq2[1])::f32;
+
+    val total: f32 = u + g2 + g3 + g4 + split + ints + wide;
     out_colour = f32x4{total, total, total, total};
 }
