@@ -1,4 +1,4 @@
-# A shader that calls one entry from every family at every width.
+# The conformance shaders, one of them calling every entry in `shader.math`.
 #
 # The library itself cannot be built into anything: it is nothing but bodyless
 # declarations, so `mach build` on it emits nothing and proves nothing. This
