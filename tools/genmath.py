@@ -3,7 +3,7 @@
 
 The library is a naming rule applied to a table of SPIR-V instructions, so it is
 generated rather than hand-maintained: adding a vector width or an instruction
-is an edit to the table, not 130 edits to the file.
+is an edit to the table, not to every entry in the file.
 """
 
 import re
@@ -392,8 +392,9 @@ def lanes(ty):
 
 def conform(library):
     """A fragment shader calling every declaration in `library` once."""
-    # the float inputs alternate between operands so no two arguments of a call are one value
-    values = {"f32": ["s"]}
+    # every type alternates between two values, so no two arguments of a call are one
+    # value, and an integer vector takes each lane from a different float input
+    values = {"f32": ["s", "b2[0]"]}
     for n in (2, 3, 4):
         values[f"f32x{n}"] = [f"a{n}", f"b{n}"]
     prelude = []
@@ -401,11 +402,14 @@ def conform(library):
     def value(ty, i):
         if ty not in values:
             scalar, n = lanes(ty)
-            if n == 1:
-                prelude.append(f"    val x_{ty}: {ty} = s::{ty};")
-            else:
-                prelude.append(f"    val x_{ty}: {ty} = {ty}{{{', '.join([value(scalar, 0)] * n)}}};")
-            values[ty] = [f"x_{ty}"]
+            values[ty] = []
+            for name, source in (("x", "a4"), ("y", "b4")):
+                if n == 1:
+                    init = f"{values['f32'][len(values[ty])]}::{ty}"
+                else:
+                    init = f"{ty}{{{', '.join(f'{source}[{k}]::{scalar}' for k in range(n))}}}"
+                prelude.append(f"    val {name}_{ty}: {ty} = {init};")
+                values[ty].append(f"{name}_{ty}")
         options = values[ty]
         return options[i % len(options)]
 
