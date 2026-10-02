@@ -39,6 +39,12 @@ Checks that the conformance shaders call every `#[op]` a module declares and tha
 each instruction reaches a disassembled conformance module. `conform/verify.sh`
 runs it over `shader.math`, `shader.texture`, `shader.sync`, `shader.atomic` and `shader.subgroup`.
 
+## mathcheck.py
+
+Checks that the release `conform_frag` module holds one instruction for each
+`shader.math` declaration, keyed by instruction, result type and operand types, so a
+call dropped or folded away at one width fails. `conform/verify.sh` runs it.
+
 ## texcheck.py
 
 Checks that every plain sampled image shape `src/texture.mach` declares is sampled

@@ -299,7 +299,9 @@ and `conform_subgroup_comp` every subgroup operation.
 over each both as SPIR-V and against `vulkan1.3`, and checks the disassembly for
 what validation alone would not catch: `tools/opcheck.py` requires every `#[op]`
 declared in `shader.math`, `shader.texture`, `shader.sync`, `shader.atomic` and
-`shader.subgroup` to be called by a conformance shader and to reach its module.
+`shader.subgroup` to be called by a conformance shader and to reach its module, and
+`tools/mathcheck.py` requires each `shader.math` entry to leave its own instruction,
+at its own types, in `conform_frag`.
 
 ## Releasing
 
