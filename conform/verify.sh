@@ -32,7 +32,8 @@ done
 spirv-dis conform/out/release/conform_frag.spv > "$scratch/conform.spvasm"
 for op in Cross Refract Reflect FaceForward Normalize Length Distance \
           FAbs Sqrt InverseSqrt Fract Floor Ceil Degrees Sin Pow \
-          Exp2 Log2 Atan2 FMin FMax FClamp FMix Step SmoothStep Fma; do
+          Exp2 Log2 Atan2 FMin FMax FClamp FMix Step SmoothStep Fma Modf Frexp \
+          SAbs SSign SMin SMax SClamp UMin UMax UClamp FindILsb FindSMsb FindUMsb; do
   grep -q "OpExtInst .* $op " "$scratch/conform.spvasm" \
     || { echo "error: missing GLSL.std.450 $op"; exit 1; }
 done
