@@ -59,13 +59,13 @@
 # `exp2` and `exp_2` apart, and because they differ in operand type as well as in
 # name, confusing one for the other is a type error rather than a wrong result.
 #
-# TYPES. `f32`, `f32x2`, `f32x3` and `f32x4`, and the integer rows over `i32` and
-# `u32` at the same widths. GLSL.std.450 defines the float entries over 16-, 32- and
-# 64-bit floats; this module carries the 32-bit family, which is what a mach shader
-# spells today, and it is the one family whose names carry no type. Every other
-# family carries its component type, as the integer rows at the end of the file do,
-# so a future f16 or f64 family is an additional set of names under the same rule,
-# not a change to these.
+# TYPES. `f32`, `f32x2`, `f32x3` and `f32x4`, and the integer rows over 16-, 32-
+# and 64-bit integers at the same widths. GLSL.std.450 defines the float entries
+# over 16-, 32- and 64-bit floats; this module carries the 32-bit family, which is
+# what a mach shader spells today, and it is the one family whose names carry no
+# type. Every other family carries its component type, as the integer rows at the
+# end of the file do, so a future f16 or f64 family is an additional set of names
+# under the same rule, not a change to these.
 #
 # This file is generated. See tools/genmath.py.
 
@@ -1174,12 +1174,289 @@ pub fun refract_4(i: f32x4, n: f32x4, eta: f32) f32x4;
 
 # ---------- integers ----------
 #
-# The integer rows, over `i32` and `u32`. Each entry carries its component type after
-# an underscore, and a vector entry its lane count after that: `min_i32`, `min_u32_3`.
-# The float family above is the one unsuffixed type. The instruction follows the
-# signedness of the type, so `min_i32` is `SMin` and `min_u32` is `UMin`, and `abs` and
-# `sign` exist only signed. `find_msb_i32` finds the most significant bit that differs
-# from the sign bit, so it scans for a 0 in a negative value.
+# The integer rows, over `i16`, `u16`, `i32`, `u32`, `i64` and `u64`. Each entry
+# carries its component type after an underscore, and a vector entry its lane count
+# after that: `min_i32`, `min_u64_3`. The float family above is the one unsuffixed
+# type. The instruction follows the signedness of the type, so `min_i32` is `SMin` and
+# `min_u32` is `UMin`, and `abs` and `sign` exist only signed. `find_msb_i32` finds the
+# most significant bit that differs from the sign bit, so it scans for a 0 in a
+# negative value.
+#
+# A 16-bit entry needs the target's `int16` and a 64-bit one its `int64`, where the
+# target names an `env`. The bit scans are 32-bit only: GLSL.std.450 defines `FindILsb`,
+# `FindSMsb` and `FindUMsb` on 32-bit integers alone.
+
+# ----- i16 -----
+
+# Absolute value.
+# ---
+# x:   The value.
+# ret: |x|
+#[op("spirv", "GLSL.std.450", "SAbs")]
+pub fun abs_i16(x: i16) i16;
+
+# Sign as -1, 0 or +1.
+# ---
+# x:   The value.
+# ret: -1 below zero, 0 at zero, 1 above
+#[op("spirv", "GLSL.std.450", "SSign")]
+pub fun sign_i16(x: i16) i16;
+
+# Smaller of two values.
+# ---
+# a:   The first value.
+# b:   The second value.
+# ret: a where a < b, else b
+#[op("spirv", "GLSL.std.450", "SMin")]
+pub fun min_i16(a: i16, b: i16) i16;
+
+# Larger of two values.
+# ---
+# a:   The first value.
+# b:   The second value.
+# ret: a where a > b, else b
+#[op("spirv", "GLSL.std.450", "SMax")]
+pub fun max_i16(a: i16, b: i16) i16;
+
+# Constrain a value to a range.
+# ---
+# x:   The value.
+# lo:  The lower bound.
+# hi:  The upper bound.
+# ret: min(max(x, lo), hi)
+#[op("spirv", "GLSL.std.450", "SClamp")]
+pub fun clamp_i16(x: i16, lo: i16, hi: i16) i16;
+
+# ----- i16x2 -----
+
+# Absolute value, per lane.
+# ---
+# x:   The values, one per lane.
+# ret: |x| per lane
+#[op("spirv", "GLSL.std.450", "SAbs")]
+pub fun abs_i16_2(x: i16x2) i16x2;
+
+# Sign as -1, 0 or +1, per lane.
+# ---
+# x:   The values, one per lane.
+# ret: -1 below zero, 0 at zero, 1 above per lane
+#[op("spirv", "GLSL.std.450", "SSign")]
+pub fun sign_i16_2(x: i16x2) i16x2;
+
+# Smaller of two values, per lane.
+# ---
+# a:   The first values, one per lane.
+# b:   The second values, one per lane.
+# ret: a where a < b, else b per lane
+#[op("spirv", "GLSL.std.450", "SMin")]
+pub fun min_i16_2(a: i16x2, b: i16x2) i16x2;
+
+# Larger of two values, per lane.
+# ---
+# a:   The first values, one per lane.
+# b:   The second values, one per lane.
+# ret: a where a > b, else b per lane
+#[op("spirv", "GLSL.std.450", "SMax")]
+pub fun max_i16_2(a: i16x2, b: i16x2) i16x2;
+
+# Constrain a value to a range, per lane.
+# ---
+# x:   The values, one per lane.
+# lo:  The lower bounds, one per lane.
+# hi:  The upper bounds, one per lane.
+# ret: min(max(x, lo), hi) per lane
+#[op("spirv", "GLSL.std.450", "SClamp")]
+pub fun clamp_i16_2(x: i16x2, lo: i16x2, hi: i16x2) i16x2;
+
+# ----- i16x3 -----
+
+# Absolute value, per lane.
+# ---
+# x:   The values, one per lane.
+# ret: |x| per lane
+#[op("spirv", "GLSL.std.450", "SAbs")]
+pub fun abs_i16_3(x: i16x3) i16x3;
+
+# Sign as -1, 0 or +1, per lane.
+# ---
+# x:   The values, one per lane.
+# ret: -1 below zero, 0 at zero, 1 above per lane
+#[op("spirv", "GLSL.std.450", "SSign")]
+pub fun sign_i16_3(x: i16x3) i16x3;
+
+# Smaller of two values, per lane.
+# ---
+# a:   The first values, one per lane.
+# b:   The second values, one per lane.
+# ret: a where a < b, else b per lane
+#[op("spirv", "GLSL.std.450", "SMin")]
+pub fun min_i16_3(a: i16x3, b: i16x3) i16x3;
+
+# Larger of two values, per lane.
+# ---
+# a:   The first values, one per lane.
+# b:   The second values, one per lane.
+# ret: a where a > b, else b per lane
+#[op("spirv", "GLSL.std.450", "SMax")]
+pub fun max_i16_3(a: i16x3, b: i16x3) i16x3;
+
+# Constrain a value to a range, per lane.
+# ---
+# x:   The values, one per lane.
+# lo:  The lower bounds, one per lane.
+# hi:  The upper bounds, one per lane.
+# ret: min(max(x, lo), hi) per lane
+#[op("spirv", "GLSL.std.450", "SClamp")]
+pub fun clamp_i16_3(x: i16x3, lo: i16x3, hi: i16x3) i16x3;
+
+# ----- i16x4 -----
+
+# Absolute value, per lane.
+# ---
+# x:   The values, one per lane.
+# ret: |x| per lane
+#[op("spirv", "GLSL.std.450", "SAbs")]
+pub fun abs_i16_4(x: i16x4) i16x4;
+
+# Sign as -1, 0 or +1, per lane.
+# ---
+# x:   The values, one per lane.
+# ret: -1 below zero, 0 at zero, 1 above per lane
+#[op("spirv", "GLSL.std.450", "SSign")]
+pub fun sign_i16_4(x: i16x4) i16x4;
+
+# Smaller of two values, per lane.
+# ---
+# a:   The first values, one per lane.
+# b:   The second values, one per lane.
+# ret: a where a < b, else b per lane
+#[op("spirv", "GLSL.std.450", "SMin")]
+pub fun min_i16_4(a: i16x4, b: i16x4) i16x4;
+
+# Larger of two values, per lane.
+# ---
+# a:   The first values, one per lane.
+# b:   The second values, one per lane.
+# ret: a where a > b, else b per lane
+#[op("spirv", "GLSL.std.450", "SMax")]
+pub fun max_i16_4(a: i16x4, b: i16x4) i16x4;
+
+# Constrain a value to a range, per lane.
+# ---
+# x:   The values, one per lane.
+# lo:  The lower bounds, one per lane.
+# hi:  The upper bounds, one per lane.
+# ret: min(max(x, lo), hi) per lane
+#[op("spirv", "GLSL.std.450", "SClamp")]
+pub fun clamp_i16_4(x: i16x4, lo: i16x4, hi: i16x4) i16x4;
+
+# ----- u16 -----
+
+# Smaller of two values.
+# ---
+# a:   The first value.
+# b:   The second value.
+# ret: a where a < b, else b
+#[op("spirv", "GLSL.std.450", "UMin")]
+pub fun min_u16(a: u16, b: u16) u16;
+
+# Larger of two values.
+# ---
+# a:   The first value.
+# b:   The second value.
+# ret: a where a > b, else b
+#[op("spirv", "GLSL.std.450", "UMax")]
+pub fun max_u16(a: u16, b: u16) u16;
+
+# Constrain a value to a range.
+# ---
+# x:   The value.
+# lo:  The lower bound.
+# hi:  The upper bound.
+# ret: min(max(x, lo), hi)
+#[op("spirv", "GLSL.std.450", "UClamp")]
+pub fun clamp_u16(x: u16, lo: u16, hi: u16) u16;
+
+# ----- u16x2 -----
+
+# Smaller of two values, per lane.
+# ---
+# a:   The first values, one per lane.
+# b:   The second values, one per lane.
+# ret: a where a < b, else b per lane
+#[op("spirv", "GLSL.std.450", "UMin")]
+pub fun min_u16_2(a: u16x2, b: u16x2) u16x2;
+
+# Larger of two values, per lane.
+# ---
+# a:   The first values, one per lane.
+# b:   The second values, one per lane.
+# ret: a where a > b, else b per lane
+#[op("spirv", "GLSL.std.450", "UMax")]
+pub fun max_u16_2(a: u16x2, b: u16x2) u16x2;
+
+# Constrain a value to a range, per lane.
+# ---
+# x:   The values, one per lane.
+# lo:  The lower bounds, one per lane.
+# hi:  The upper bounds, one per lane.
+# ret: min(max(x, lo), hi) per lane
+#[op("spirv", "GLSL.std.450", "UClamp")]
+pub fun clamp_u16_2(x: u16x2, lo: u16x2, hi: u16x2) u16x2;
+
+# ----- u16x3 -----
+
+# Smaller of two values, per lane.
+# ---
+# a:   The first values, one per lane.
+# b:   The second values, one per lane.
+# ret: a where a < b, else b per lane
+#[op("spirv", "GLSL.std.450", "UMin")]
+pub fun min_u16_3(a: u16x3, b: u16x3) u16x3;
+
+# Larger of two values, per lane.
+# ---
+# a:   The first values, one per lane.
+# b:   The second values, one per lane.
+# ret: a where a > b, else b per lane
+#[op("spirv", "GLSL.std.450", "UMax")]
+pub fun max_u16_3(a: u16x3, b: u16x3) u16x3;
+
+# Constrain a value to a range, per lane.
+# ---
+# x:   The values, one per lane.
+# lo:  The lower bounds, one per lane.
+# hi:  The upper bounds, one per lane.
+# ret: min(max(x, lo), hi) per lane
+#[op("spirv", "GLSL.std.450", "UClamp")]
+pub fun clamp_u16_3(x: u16x3, lo: u16x3, hi: u16x3) u16x3;
+
+# ----- u16x4 -----
+
+# Smaller of two values, per lane.
+# ---
+# a:   The first values, one per lane.
+# b:   The second values, one per lane.
+# ret: a where a < b, else b per lane
+#[op("spirv", "GLSL.std.450", "UMin")]
+pub fun min_u16_4(a: u16x4, b: u16x4) u16x4;
+
+# Larger of two values, per lane.
+# ---
+# a:   The first values, one per lane.
+# b:   The second values, one per lane.
+# ret: a where a > b, else b per lane
+#[op("spirv", "GLSL.std.450", "UMax")]
+pub fun max_u16_4(a: u16x4, b: u16x4) u16x4;
+
+# Constrain a value to a range, per lane.
+# ---
+# x:   The values, one per lane.
+# lo:  The lower bounds, one per lane.
+# hi:  The upper bounds, one per lane.
+# ret: min(max(x, lo), hi) per lane
+#[op("spirv", "GLSL.std.450", "UClamp")]
+pub fun clamp_u16_4(x: u16x4, lo: u16x4, hi: u16x4) u16x4;
 
 # ----- i32 -----
 
@@ -1564,3 +1841,275 @@ pub fun find_lsb_u32_4(x: u32x4) u32x4;
 # ret: the bit index, or every bit set (-1) where there is none per lane
 #[op("spirv", "GLSL.std.450", "FindUMsb")]
 pub fun find_msb_u32_4(x: u32x4) u32x4;
+
+# ----- i64 -----
+
+# Absolute value.
+# ---
+# x:   The value.
+# ret: |x|
+#[op("spirv", "GLSL.std.450", "SAbs")]
+pub fun abs_i64(x: i64) i64;
+
+# Sign as -1, 0 or +1.
+# ---
+# x:   The value.
+# ret: -1 below zero, 0 at zero, 1 above
+#[op("spirv", "GLSL.std.450", "SSign")]
+pub fun sign_i64(x: i64) i64;
+
+# Smaller of two values.
+# ---
+# a:   The first value.
+# b:   The second value.
+# ret: a where a < b, else b
+#[op("spirv", "GLSL.std.450", "SMin")]
+pub fun min_i64(a: i64, b: i64) i64;
+
+# Larger of two values.
+# ---
+# a:   The first value.
+# b:   The second value.
+# ret: a where a > b, else b
+#[op("spirv", "GLSL.std.450", "SMax")]
+pub fun max_i64(a: i64, b: i64) i64;
+
+# Constrain a value to a range.
+# ---
+# x:   The value.
+# lo:  The lower bound.
+# hi:  The upper bound.
+# ret: min(max(x, lo), hi)
+#[op("spirv", "GLSL.std.450", "SClamp")]
+pub fun clamp_i64(x: i64, lo: i64, hi: i64) i64;
+
+# ----- i64x2 -----
+
+# Absolute value, per lane.
+# ---
+# x:   The values, one per lane.
+# ret: |x| per lane
+#[op("spirv", "GLSL.std.450", "SAbs")]
+pub fun abs_i64_2(x: i64x2) i64x2;
+
+# Sign as -1, 0 or +1, per lane.
+# ---
+# x:   The values, one per lane.
+# ret: -1 below zero, 0 at zero, 1 above per lane
+#[op("spirv", "GLSL.std.450", "SSign")]
+pub fun sign_i64_2(x: i64x2) i64x2;
+
+# Smaller of two values, per lane.
+# ---
+# a:   The first values, one per lane.
+# b:   The second values, one per lane.
+# ret: a where a < b, else b per lane
+#[op("spirv", "GLSL.std.450", "SMin")]
+pub fun min_i64_2(a: i64x2, b: i64x2) i64x2;
+
+# Larger of two values, per lane.
+# ---
+# a:   The first values, one per lane.
+# b:   The second values, one per lane.
+# ret: a where a > b, else b per lane
+#[op("spirv", "GLSL.std.450", "SMax")]
+pub fun max_i64_2(a: i64x2, b: i64x2) i64x2;
+
+# Constrain a value to a range, per lane.
+# ---
+# x:   The values, one per lane.
+# lo:  The lower bounds, one per lane.
+# hi:  The upper bounds, one per lane.
+# ret: min(max(x, lo), hi) per lane
+#[op("spirv", "GLSL.std.450", "SClamp")]
+pub fun clamp_i64_2(x: i64x2, lo: i64x2, hi: i64x2) i64x2;
+
+# ----- i64x3 -----
+
+# Absolute value, per lane.
+# ---
+# x:   The values, one per lane.
+# ret: |x| per lane
+#[op("spirv", "GLSL.std.450", "SAbs")]
+pub fun abs_i64_3(x: i64x3) i64x3;
+
+# Sign as -1, 0 or +1, per lane.
+# ---
+# x:   The values, one per lane.
+# ret: -1 below zero, 0 at zero, 1 above per lane
+#[op("spirv", "GLSL.std.450", "SSign")]
+pub fun sign_i64_3(x: i64x3) i64x3;
+
+# Smaller of two values, per lane.
+# ---
+# a:   The first values, one per lane.
+# b:   The second values, one per lane.
+# ret: a where a < b, else b per lane
+#[op("spirv", "GLSL.std.450", "SMin")]
+pub fun min_i64_3(a: i64x3, b: i64x3) i64x3;
+
+# Larger of two values, per lane.
+# ---
+# a:   The first values, one per lane.
+# b:   The second values, one per lane.
+# ret: a where a > b, else b per lane
+#[op("spirv", "GLSL.std.450", "SMax")]
+pub fun max_i64_3(a: i64x3, b: i64x3) i64x3;
+
+# Constrain a value to a range, per lane.
+# ---
+# x:   The values, one per lane.
+# lo:  The lower bounds, one per lane.
+# hi:  The upper bounds, one per lane.
+# ret: min(max(x, lo), hi) per lane
+#[op("spirv", "GLSL.std.450", "SClamp")]
+pub fun clamp_i64_3(x: i64x3, lo: i64x3, hi: i64x3) i64x3;
+
+# ----- i64x4 -----
+
+# Absolute value, per lane.
+# ---
+# x:   The values, one per lane.
+# ret: |x| per lane
+#[op("spirv", "GLSL.std.450", "SAbs")]
+pub fun abs_i64_4(x: i64x4) i64x4;
+
+# Sign as -1, 0 or +1, per lane.
+# ---
+# x:   The values, one per lane.
+# ret: -1 below zero, 0 at zero, 1 above per lane
+#[op("spirv", "GLSL.std.450", "SSign")]
+pub fun sign_i64_4(x: i64x4) i64x4;
+
+# Smaller of two values, per lane.
+# ---
+# a:   The first values, one per lane.
+# b:   The second values, one per lane.
+# ret: a where a < b, else b per lane
+#[op("spirv", "GLSL.std.450", "SMin")]
+pub fun min_i64_4(a: i64x4, b: i64x4) i64x4;
+
+# Larger of two values, per lane.
+# ---
+# a:   The first values, one per lane.
+# b:   The second values, one per lane.
+# ret: a where a > b, else b per lane
+#[op("spirv", "GLSL.std.450", "SMax")]
+pub fun max_i64_4(a: i64x4, b: i64x4) i64x4;
+
+# Constrain a value to a range, per lane.
+# ---
+# x:   The values, one per lane.
+# lo:  The lower bounds, one per lane.
+# hi:  The upper bounds, one per lane.
+# ret: min(max(x, lo), hi) per lane
+#[op("spirv", "GLSL.std.450", "SClamp")]
+pub fun clamp_i64_4(x: i64x4, lo: i64x4, hi: i64x4) i64x4;
+
+# ----- u64 -----
+
+# Smaller of two values.
+# ---
+# a:   The first value.
+# b:   The second value.
+# ret: a where a < b, else b
+#[op("spirv", "GLSL.std.450", "UMin")]
+pub fun min_u64(a: u64, b: u64) u64;
+
+# Larger of two values.
+# ---
+# a:   The first value.
+# b:   The second value.
+# ret: a where a > b, else b
+#[op("spirv", "GLSL.std.450", "UMax")]
+pub fun max_u64(a: u64, b: u64) u64;
+
+# Constrain a value to a range.
+# ---
+# x:   The value.
+# lo:  The lower bound.
+# hi:  The upper bound.
+# ret: min(max(x, lo), hi)
+#[op("spirv", "GLSL.std.450", "UClamp")]
+pub fun clamp_u64(x: u64, lo: u64, hi: u64) u64;
+
+# ----- u64x2 -----
+
+# Smaller of two values, per lane.
+# ---
+# a:   The first values, one per lane.
+# b:   The second values, one per lane.
+# ret: a where a < b, else b per lane
+#[op("spirv", "GLSL.std.450", "UMin")]
+pub fun min_u64_2(a: u64x2, b: u64x2) u64x2;
+
+# Larger of two values, per lane.
+# ---
+# a:   The first values, one per lane.
+# b:   The second values, one per lane.
+# ret: a where a > b, else b per lane
+#[op("spirv", "GLSL.std.450", "UMax")]
+pub fun max_u64_2(a: u64x2, b: u64x2) u64x2;
+
+# Constrain a value to a range, per lane.
+# ---
+# x:   The values, one per lane.
+# lo:  The lower bounds, one per lane.
+# hi:  The upper bounds, one per lane.
+# ret: min(max(x, lo), hi) per lane
+#[op("spirv", "GLSL.std.450", "UClamp")]
+pub fun clamp_u64_2(x: u64x2, lo: u64x2, hi: u64x2) u64x2;
+
+# ----- u64x3 -----
+
+# Smaller of two values, per lane.
+# ---
+# a:   The first values, one per lane.
+# b:   The second values, one per lane.
+# ret: a where a < b, else b per lane
+#[op("spirv", "GLSL.std.450", "UMin")]
+pub fun min_u64_3(a: u64x3, b: u64x3) u64x3;
+
+# Larger of two values, per lane.
+# ---
+# a:   The first values, one per lane.
+# b:   The second values, one per lane.
+# ret: a where a > b, else b per lane
+#[op("spirv", "GLSL.std.450", "UMax")]
+pub fun max_u64_3(a: u64x3, b: u64x3) u64x3;
+
+# Constrain a value to a range, per lane.
+# ---
+# x:   The values, one per lane.
+# lo:  The lower bounds, one per lane.
+# hi:  The upper bounds, one per lane.
+# ret: min(max(x, lo), hi) per lane
+#[op("spirv", "GLSL.std.450", "UClamp")]
+pub fun clamp_u64_3(x: u64x3, lo: u64x3, hi: u64x3) u64x3;
+
+# ----- u64x4 -----
+
+# Smaller of two values, per lane.
+# ---
+# a:   The first values, one per lane.
+# b:   The second values, one per lane.
+# ret: a where a < b, else b per lane
+#[op("spirv", "GLSL.std.450", "UMin")]
+pub fun min_u64_4(a: u64x4, b: u64x4) u64x4;
+
+# Larger of two values, per lane.
+# ---
+# a:   The first values, one per lane.
+# b:   The second values, one per lane.
+# ret: a where a > b, else b per lane
+#[op("spirv", "GLSL.std.450", "UMax")]
+pub fun max_u64_4(a: u64x4, b: u64x4) u64x4;
+
+# Constrain a value to a range, per lane.
+# ---
+# x:   The values, one per lane.
+# lo:  The lower bounds, one per lane.
+# hi:  The upper bounds, one per lane.
+# ret: min(max(x, lo), hi) per lane
+#[op("spirv", "GLSL.std.450", "UClamp")]
+pub fun clamp_u64_4(x: u64x4, lo: u64x4, hi: u64x4) u64x4;

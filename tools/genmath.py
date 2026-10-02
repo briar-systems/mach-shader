@@ -75,13 +75,13 @@ HEADER = '''# Shader-side maths: the functions that ARE SPIR-V instructions.
 # `exp2` and `exp_2` apart, and because they differ in operand type as well as in
 # name, confusing one for the other is a type error rather than a wrong result.
 #
-# TYPES. `f32`, `f32x2`, `f32x3` and `f32x4`, and the integer rows over `i32` and
-# `u32` at the same widths. GLSL.std.450 defines the float entries over 16-, 32- and
-# 64-bit floats; this module carries the 32-bit family, which is what a mach shader
-# spells today, and it is the one family whose names carry no type. Every other
-# family carries its component type, as the integer rows at the end of the file do,
-# so a future f16 or f64 family is an additional set of names under the same rule,
-# not a change to these.
+# TYPES. `f32`, `f32x2`, `f32x3` and `f32x4`, and the integer rows over 16-, 32-
+# and 64-bit integers at the same widths. GLSL.std.450 defines the float entries
+# over 16-, 32- and 64-bit floats; this module carries the 32-bit family, which is
+# what a mach shader spells today, and it is the one family whose names carry no
+# type. Every other family carries its component type, as the integer rows at the
+# end of the file do, so a future f16 or f64 family is an additional set of names
+# under the same rule, not a change to these.
 #
 # This file is generated. See tools/genmath.py.
 '''
@@ -308,35 +308,44 @@ for suffix, ty, label in widths():
 out.append('''
 # ---------- integers ----------
 #
-# The integer rows, over `i32` and `u32`. Each entry carries its component type after
-# an underscore, and a vector entry its lane count after that: `min_i32`, `min_u32_3`.
-# The float family above is the one unsuffixed type. The instruction follows the
-# signedness of the type, so `min_i32` is `SMin` and `min_u32` is `UMin`, and `abs` and
-# `sign` exist only signed. `find_msb_i32` finds the most significant bit that differs
-# from the sign bit, so it scans for a 0 in a negative value.
+# The integer rows, over `i16`, `u16`, `i32`, `u32`, `i64` and `u64`. Each entry
+# carries its component type after an underscore, and a vector entry its lane count
+# after that: `min_i32`, `min_u64_3`. The float family above is the one unsuffixed
+# type. The instruction follows the signedness of the type, so `min_i32` is `SMin` and
+# `min_u32` is `UMin`, and `abs` and `sign` exist only signed. `find_msb_i32` finds the
+# most significant bit that differs from the sign bit, so it scans for a 0 in a
+# negative value.
+#
+# A 16-bit entry needs the target's `int16` and a 64-bit one its `int64`, where the
+# target names an `env`. The bit scans are 32-bit only: GLSL.std.450 defines `FindILsb`,
+# `FindSMsb` and `FindUMsb` on 32-bit integers alone.
 ''')
 
-# name, instruction per type (None where the type has no form), parameter names, doc
-# summary, return description
+# name, instruction for a signed and an unsigned type (absent where the signedness has
+# no form), parameter names, doc summary, return description, the widths it takes.
+# the bit scans take 32 bits alone, since GLSL.std.450 defines them on no other width
+ANY_WIDTH = (16, 32, 64)
 INTEGER = [
-    ("abs",      {"i32": "SAbs"},                       ["x"],             "Absolute value.",                "|x|"),
-    ("sign",     {"i32": "SSign"},                      ["x"],             "Sign as -1, 0 or +1.",           "-1 below zero, 0 at zero, 1 above"),
-    ("min",      {"i32": "SMin",    "u32": "UMin"},     ["a", "b"],        "Smaller of two values.",         "a where a < b, else b"),
-    ("max",      {"i32": "SMax",    "u32": "UMax"},     ["a", "b"],        "Larger of two values.",          "a where a > b, else b"),
-    ("clamp",    {"i32": "SClamp",  "u32": "UClamp"},   ["x", "lo", "hi"], "Constrain a value to a range.",  "min(max(x, lo), hi)"),
-    ("find_lsb", {"i32": "FindILsb", "u32": "FindILsb"}, ["x"],            "Index of the least significant set bit.", "the bit index, or every bit set (-1) at zero"),
-    ("find_msb", {"i32": "FindSMsb", "u32": "FindUMsb"}, ["x"],            "Index of the most significant bit that differs from the sign.", "the bit index, or every bit set (-1) where there is none"),
+    ("abs",      {"i": "SAbs"},                       ["x"],             "Absolute value.",                "|x|", ANY_WIDTH),
+    ("sign",     {"i": "SSign"},                      ["x"],             "Sign as -1, 0 or +1.",           "-1 below zero, 0 at zero, 1 above", ANY_WIDTH),
+    ("min",      {"i": "SMin",     "u": "UMin"},      ["a", "b"],        "Smaller of two values.",         "a where a < b, else b", ANY_WIDTH),
+    ("max",      {"i": "SMax",     "u": "UMax"},      ["a", "b"],        "Larger of two values.",          "a where a > b, else b", ANY_WIDTH),
+    ("clamp",    {"i": "SClamp",   "u": "UClamp"},    ["x", "lo", "hi"], "Constrain a value to a range.",  "min(max(x, lo), hi)", ANY_WIDTH),
+    ("find_lsb", {"i": "FindILsb", "u": "FindILsb"},  ["x"],             "Index of the least significant set bit.", "the bit index, or every bit set (-1) at zero", (32,)),
+    ("find_msb", {"i": "FindSMsb", "u": "FindUMsb"},  ["x"],             "Index of the most significant bit that differs from the sign.", "the bit index, or every bit set (-1) where there is none", (32,)),
 ]
 
-for ity in ("i32", "u32"):
-    for suffix, fty, label in widths():
-        ty = ity + fty[len("f32"):]
-        out.append(f"\n# ----- {ty} -----\n")
-        per_lane = label != "scalar"
-        for name, glsl, params, summary, ret in INTEGER:
-            if ity in glsl:
-                out.append(decl(f"{name}_{ity}", suffix, glsl[ity], params, ty, summary, ret, per_lane))
-                out.append("")
+for bits in ANY_WIDTH:
+    for sign in ("i", "u"):
+        ity = f"{sign}{bits}"
+        for suffix, fty, label in widths():
+            ty = ity + fty[len("f32"):]
+            out.append(f"\n# ----- {ty} -----\n")
+            per_lane = label != "scalar"
+            for name, glsl, params, summary, ret, takes in INTEGER:
+                if sign in glsl and bits in takes:
+                    out.append(decl(f"{name}_{ity}", suffix, glsl[sign], params, ty, summary, ret, per_lane))
+                    out.append("")
 
 text = "\n".join(out)
 
