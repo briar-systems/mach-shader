@@ -263,7 +263,7 @@ That writes this stanza to `mach.toml`:
 ```toml
 [dep.shader]
 git = "https://github.com/briar-systems/mach-shader"
-version = "^0.5.0"
+version = "^0.6.0"
 ```
 
 Requires Mach 6.10. The manifest declares `mach = "^6.10"`, the release that
