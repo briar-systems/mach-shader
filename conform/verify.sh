@@ -27,12 +27,13 @@ for module in conform/out/*/*.spv; do
 done
 
 # the maths shader is generated from the library's own declarations, so it calls
-# every one of them. OpDot is the one core instruction among them, and it must come
-# through as core rather than as an extended instruction.
+# every one of them. a decorator can still name a plausible instruction that never
+# reaches the module, so each entry must leave its own instruction there, at its own
+# types, with OpDot as core rather than as an extended instruction
 MACH="$MACH_COMPILER" python3 tools/genmath.py --conform | diff -u conform/src/conform_frag.mach -
 echo "conform/src/conform_frag.mach matches tools/genmath.py --conform"
 spirv-dis conform/out/release/conform_frag.spv > "$scratch/conform.spvasm"
-grep -q '= OpDot ' "$scratch/conform.spvasm" || { echo "error: missing core OpDot"; exit 1; }
+python3 tools/mathcheck.py src/math.mach "$scratch/conform.spvasm"
 
 # the same proof for the texture module: every image shape the library declares
 # is read by a sample and built by a combine, so a dropped call fails here
