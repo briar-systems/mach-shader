@@ -20,16 +20,16 @@ rec Outputs {
 }
 
 #[storage(0, 0, "readonly")]
-var inputs: Inputs;
+var inputs:  Inputs;
 #[storage(0, 1)]
 var outputs: Outputs;
 
 #[builtin("global_invocation")]
 var global_id: u32x3;
 #[builtin("local_invocation")]
-var local_id: u32x3;
+var local_id:  u32x3;
 #[builtin("workgroup_id")]
-var group_id: u32x3;
+var group_id:  u32x3;
 
 #[stage("compute")]
 #[workgroup(64, 1, 1)]
