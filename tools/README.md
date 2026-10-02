@@ -7,13 +7,18 @@ vector widths. Edit the table, not the generated file.
 
 ```sh
 python3 tools/genmath.py > src/math.mach
+python3 tools/genmath.py --conform > conform/src/conform_frag.mach
 ```
+
+With `--conform` it writes the conformance shader instead, a fragment stage that
+calls every declaration the library run would write, so a new entry is called
+without an edit.
 
 It pipes its output through `mach fmt -`, so it needs **mach 5.1.0 or newer**. It
 uses the `mach` on `PATH`, or the compiler the `MACH` environment variable names,
 and stops with a clear message when that compiler is older. `conform/verify.sh`
-runs the generator and diffs the result against the committed file, so the two must always be
-committed together.
+runs the generator both ways and diffs each result against its committed file, so the
+table and both files must always be committed together.
 
 ## genatomic.py, gensubgroup.py
 
@@ -32,7 +37,13 @@ python3 tools/gensubgroup.py > src/subgroup.mach
 
 Checks that the conformance shaders call every `#[op]` a module declares and that
 each instruction reaches a disassembled conformance module. `conform/verify.sh`
-runs it over `shader.texture`, `shader.sync`, `shader.atomic` and `shader.subgroup`.
+runs it over `shader.math`, `shader.texture`, `shader.sync`, `shader.atomic` and `shader.subgroup`.
+
+## mathcheck.py
+
+Checks that the release `conform_frag` module holds one instruction for each
+`shader.math` declaration, keyed by instruction, result type and operand types, so a
+call dropped or folded away at one width fails. `conform/verify.sh` runs it.
 
 ## texcheck.py
 

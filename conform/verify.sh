@@ -26,19 +26,14 @@ for module in conform/out/*/*.spv; do
   echo "$module: valid"
 done
 
-# a decorator can name a plausible instruction that never reaches the module.
-# disassembling and counting proves the calls lowered rather than being dropped,
-# and that OpDot came through as core rather than as an extended instruction.
+# the maths shader is generated from the library's own declarations, so it calls
+# every one of them. a decorator can still name a plausible instruction that never
+# reaches the module, so each entry must leave its own instruction there, at its own
+# types, with OpDot as core rather than as an extended instruction
+MACH="$MACH_COMPILER" python3 tools/genmath.py --conform | diff -u conform/src/conform_frag.mach -
+echo "conform/src/conform_frag.mach matches tools/genmath.py --conform"
 spirv-dis conform/out/release/conform_frag.spv > "$scratch/conform.spvasm"
-for op in Cross Refract Reflect FaceForward Normalize Length Distance \
-          FAbs Sqrt InverseSqrt Fract Floor Ceil Degrees Sin Pow \
-          Exp2 Log2 Atan2 FMin FMax FClamp FMix Step SmoothStep Fma Modf Frexp \
-          SAbs SSign SMin SMax SClamp UMin UMax UClamp FindILsb FindSMsb FindUMsb; do
-  grep -q "OpExtInst .* $op " "$scratch/conform.spvasm" \
-    || { echo "error: missing GLSL.std.450 $op"; exit 1; }
-done
-grep -q 'OpDot' "$scratch/conform.spvasm" || { echo "error: missing core OpDot"; exit 1; }
-echo "every checked instruction is present"
+python3 tools/mathcheck.py src/math.mach "$scratch/conform.spvasm"
 
 # the same proof for the texture module: every image shape the library declares
 # is read by a sample and built by a combine, so a dropped call fails here
@@ -62,5 +57,5 @@ echo "the compute stage carries its workgroup size, built-ins and buffers"
 for module in conform/out/release/*.spv; do
   spirv-dis "$module" > "$scratch/$(basename "$module" .spv).spvasm"
 done
-python3 tools/opcheck.py src/texture.mach src/sync.mach src/atomic.mach src/subgroup.mach \
+python3 tools/opcheck.py src/math.mach src/texture.mach src/sync.mach src/atomic.mach src/subgroup.mach \
   -- conform/src/*.mach "$scratch"/*.spvasm

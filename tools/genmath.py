@@ -3,16 +3,14 @@
 
 The library is a naming rule applied to a table of SPIR-V instructions, so it is
 generated rather than hand-maintained: adding a vector width or an instruction
-is an edit to the table, not 130 edits to the file.
+is an edit to the table, not to every entry in the file.
 """
 
-import os
 import re
-import subprocess
 import sys
 
-# `mach fmt -` (stdin) first shipped in mach 5.1.0
-MIN_MACH = (5, 1, 0)
+sys.dont_write_bytecode = True
+import machfmt
 
 HEADER = '''# Shader-side maths: the functions that ARE SPIR-V instructions.
 #
@@ -349,29 +347,89 @@ for bits in ANY_WIDTH:
 
 text = "\n".join(out)
 
+CONFORM_HEADER = '''# Calls every entry in `shader.math`.
+#
+# This exists to be compiled, not to shade anything. Each call forces the
+# compiler to resolve an `#[op]` decorator and emit the instruction at that
+# operand width, so a wrong instruction name or a signature SPIR-V rejects turns
+# into a build failure here. The library on its own compiles to nothing and would
+# catch neither.
+#
+# Every result is added to the output so no call can be eliminated as dead.
+#
+# This file is generated from the declarations `tools/genmath.py` writes, so an
+# entry added to the table is called here without an edit. Run
+# `python3 tools/genmath.py --conform > conform/src/conform_frag.mach`.
 
-def require_mach(mach):
-    try:
-        info = subprocess.run([mach, "info"], capture_output=True, text=True).stdout
-    except OSError as err:
-        sys.exit(f"genmath: cannot run the mach compiler '{mach}': {err}")
-    found = re.match(r"mach (\d+)\.(\d+)\.(\d+)", info)
-    want = ".".join(map(str, MIN_MACH))
-    if not found:
-        sys.exit(f"genmath: could not read the version of '{mach}' from `mach info`; mach {want} or newer is required")
-    have = tuple(int(n) for n in found.groups())
-    if have < MIN_MACH:
-        sys.exit(f"genmath: '{mach}' is mach {'.'.join(map(str, have))}, but mach {want} or newer is required for `mach fmt -`; "
-                 "install a newer compiler or point MACH at one")
+use sh: shader.math;
+
+#[input(0)]
+var a2: f32x2;
+#[input(1)]
+var b2: f32x2;
+#[input(2)]
+var a3: f32x3;
+#[input(3)]
+var b3: f32x3;
+#[input(4)]
+var a4: f32x4;
+#[input(5)]
+var b4: f32x4;
+#[input(6)]
+var s:  f32;
+
+#[output(0)]
+var out_colour: f32x4;
+'''
+
+SIGNATURE = re.compile(r"pub fun (\w+)\(([^)]*)\) (\w+);")
 
 
-mach = os.environ.get("MACH", "mach")
-require_mach(mach)
+def lanes(ty):
+    found = re.fullmatch(r"([iuf]\d+)(?:x(\d))?", ty)
+    return found.group(1), int(found.group(2) or 1)
 
-# mach fmt owns the layout, so the committed file is what it would write
-result = subprocess.run([mach, "fmt", "-"],
-                        input=text, capture_output=True, text=True)
-if result.returncode != 0:
-    sys.stderr.write("mach fmt rejected the generated file:\n" + result.stdout + result.stderr)
-    sys.exit(1)
-print(result.stdout, end="")
+
+def conform(library):
+    """A fragment shader calling every declaration in `library` once."""
+    # every type alternates between two values, so no two arguments of a call are one
+    # value, and an integer vector takes each lane from a different float input
+    values = {"f32": ["s", "b2[0]"]}
+    for n in (2, 3, 4):
+        values[f"f32x{n}"] = [f"a{n}", f"b{n}"]
+    prelude = []
+
+    def value(ty, i):
+        if ty not in values:
+            scalar, n = lanes(ty)
+            values[ty] = []
+            for name, source in (("x", "a4"), ("y", "b4")):
+                if n == 1:
+                    init = f"{values['f32'][len(values[ty])]}::{ty}"
+                else:
+                    init = f"{ty}{{{', '.join(f'{source}[{k}]::{scalar}' for k in range(n))}}}"
+                prelude.append(f"    val {name}_{ty}: {ty} = {init};")
+                values[ty].append(f"{name}_{ty}")
+        options = values[ty]
+        return options[i % len(options)]
+
+    body = []
+    for n, (fun, params, ret) in enumerate(SIGNATURE.findall(library)):
+        args = []
+        for i, param in enumerate(params.split(", ")):
+            ty = param.split(": ")[1]
+            if ty.startswith("*"):
+                body.append(f"    var p{n}: {ty[1:]};")
+                args.append(f"?p{n}")
+            else:
+                args.append(value(ty, i))
+        body.append(f"    val r{n}: {ret} = sh.{fun}({', '.join(args)});")
+        scalar, width = lanes(ret)
+        lane = f"r{n}" if width == 1 else f"r{n}[0]"
+        body.append(f"    total = total + {lane if scalar == 'f32' else lane + '::f32'};")
+    return "\n".join([CONFORM_HEADER, "#[stage(\"fragment\")]", "fun frag_main() {",
+                      *prelude, "    var total: f32 = 0.0;", *body,
+                      "    out_colour = f32x4{total, total, total, total};", "}", ""])
+
+
+machfmt.emit("genmath", conform(text) if sys.argv[1:] == ["--conform"] else text)
