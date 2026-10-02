@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-10-02
+
+### Added
+- `shader.texture`: the signed-format storage images `IStorageImage2DR32i` and `IStorageImage2DR64i`, with `image_read_*`, `image_write_*`, `image_size_*` and `image_texel_*`, which mach 6.10 declares over a signed sampled type (#50).
+- `shader.math`: `modf` and `frexp` at every float width, `frexp` storing its exponent through an `i32` of the value's lane count, and the integer GLSL.std.450 rows, scalar and 2, 3 and 4 lanes, each lowering to the instruction of its signedness. `abs`, `sign` (signed only), `min`, `max` and `clamp` cover 16-, 32- and 64-bit integers, and `find_lsb` and `find_msb` 32-bit only, the one width GLSL.std.450 defines the bit scans on. An integer entry names its type, `min_i32` or `min_u64_3`. `shader.math` has 254 entries (#50).
+- `conform_frag` is generated from the `shader.math` declarations by `tools/genmath.py --conform`, so it calls every entry with distinct operands, and `tools/mathcheck.py` requires the built module to hold one instruction per entry, keyed by instruction set, name and types (#51).
+
+### Changed
+- **Breaking: requires mach 6.10** (#50). Both manifests declare `mach = "^6.10"`, and CI and CD seed mach v6.10.0.
+- readme: The dependency stanza declares `version = "^0.6.0"`.
+
 ## [0.5.0] - 2026-10-01
 
 ### Added
