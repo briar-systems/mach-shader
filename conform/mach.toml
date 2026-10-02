@@ -1,6 +1,6 @@
-# A shader that calls one entry from every family at every width.
+# The conformance shaders, one of them calling every entry in `shader.math`.
 #
-# The library itself cannot be built into anything: it is 134 bodyless
+# The library itself cannot be built into anything: it is nothing but bodyless
 # declarations, so `mach build` on it emits nothing and proves nothing. This
 # project is the actual check. A decorator naming an instruction that does not
 # exist, or a signature SPIR-V will not accept at that width, fails here and
@@ -9,7 +9,7 @@
 [project]
 id      = "conform"
 version = "0.1.0"
-mach    = "^6.9"
+mach    = "^6.10"
 src     = "src"
 out     = "out/{profile.name}"
 

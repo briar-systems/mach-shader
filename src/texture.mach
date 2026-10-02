@@ -65,9 +65,7 @@ pub val STORAGE: u32 = 2;
 # no device feature, and one of `FORMAT_UNKNOWN` under the `storage_read_without_format`
 # and `storage_write_without_format` extensions, which `vulkan1.3` selects. a format
 # names its texel scalar: a float or normalized format is read as `f32`, a signed
-# integer format as `i32` and an unsigned one as `u32`. a storage image of a signed
-# integer format is not yet one Vulkan accepts from mach 6.9 (mach#4377), so declare
-# a signed storage image `FORMAT_UNKNOWN`
+# integer format as `i32` and an unsigned one as `u32`
 pub val FORMAT_UNKNOWN:        u32 = 0;
 pub val FORMAT_RGBA32F:        u32 = 1;
 pub val FORMAT_RGBA16F:        u32 = 2;
@@ -514,14 +512,16 @@ pub def UStorageImage2D;
 
 # the storage images an atomic reaches a texel of. Vulkan defines an image atomic only
 # on the `R32f`, `R32i`, `R32ui`, `R64i` and `R64ui` formats, so each carries its
-# format, and the name says which. the 64-bit image needs the `image_int64_atomics`
-# extension wherever it is used. the signed `R32i` and `R64i` images are not declared:
-# mach 6.9 gives a signed-format image a sign-less texel type, which Vulkan rejects
-# (mach#4377)
+# format, and the name says which. the 64-bit images need the `image_int64_atomics`
+# extension wherever they are used
 #[handle("spirv", "image", TEXEL_F32, DIM_2D, NO_DEPTH, NONARRAYED, SINGLE_SAMPLED, STORAGE, FORMAT_R32F)]
 pub def StorageImage2DR32f;
+#[handle("spirv", "image", TEXEL_I32, DIM_2D, NO_DEPTH, NONARRAYED, SINGLE_SAMPLED, STORAGE, FORMAT_R32I)]
+pub def IStorageImage2DR32i;
 #[handle("spirv", "image", TEXEL_U32, DIM_2D, NO_DEPTH, NONARRAYED, SINGLE_SAMPLED, STORAGE, FORMAT_R32UI)]
 pub def UStorageImage2DR32ui;
+#[handle("spirv", "image", TEXEL_I64, DIM_2D, NO_DEPTH, NONARRAYED, SINGLE_SAMPLED, STORAGE, FORMAT_R64I)]
+pub def IStorageImage2DR64i;
 #[handle("spirv", "image", TEXEL_U64, DIM_2D, NO_DEPTH, NONARRAYED, SINGLE_SAMPLED, STORAGE, FORMAT_R64UI)]
 pub def UStorageImage2DR64ui;
 
@@ -577,7 +577,13 @@ pub fun image_read_2d_u(img: UStorageImage2D, at: i32x2) u32x4;
 pub fun image_read_2d_r32f(img: StorageImage2DR32f, at: i32x2) f32x4;
 
 #[op("spirv", "core", "OpImageRead")]
+pub fun image_read_2d_r32i(img: IStorageImage2DR32i, at: i32x2) i32x4;
+
+#[op("spirv", "core", "OpImageRead")]
 pub fun image_read_2d_r32ui(img: UStorageImage2DR32ui, at: i32x2) u32x4;
+
+#[op("spirv", "core", "OpImageRead")]
+pub fun image_read_2d_r64i(img: IStorageImage2DR64i, at: i32x2) i64x4;
 
 #[op("spirv", "core", "OpImageRead")]
 pub fun image_read_2d_r64ui(img: UStorageImage2DR64ui, at: i32x2) u64x4;
@@ -616,7 +622,13 @@ pub fun image_write_2d_u(img: UStorageImage2D, at: i32x2, texel: u32x4);
 pub fun image_write_2d_r32f(img: StorageImage2DR32f, at: i32x2, texel: f32x4);
 
 #[op("spirv", "core", "OpImageWrite")]
+pub fun image_write_2d_r32i(img: IStorageImage2DR32i, at: i32x2, texel: i32x4);
+
+#[op("spirv", "core", "OpImageWrite")]
 pub fun image_write_2d_r32ui(img: UStorageImage2DR32ui, at: i32x2, texel: u32x4);
+
+#[op("spirv", "core", "OpImageWrite")]
+pub fun image_write_2d_r64i(img: IStorageImage2DR64i, at: i32x2, texel: i64x4);
 
 #[op("spirv", "core", "OpImageWrite")]
 pub fun image_write_2d_r64ui(img: UStorageImage2DR64ui, at: i32x2, texel: u64x4);
@@ -654,7 +666,13 @@ pub fun image_size_2d_u(img: UStorageImage2D) i32x2;
 pub fun image_size_2d_r32f(img: StorageImage2DR32f) i32x2;
 
 #[op("spirv", "core", "OpImageQuerySize")]
+pub fun image_size_2d_r32i(img: IStorageImage2DR32i) i32x2;
+
+#[op("spirv", "core", "OpImageQuerySize")]
 pub fun image_size_2d_r32ui(img: UStorageImage2DR32ui) i32x2;
+
+#[op("spirv", "core", "OpImageQuerySize")]
+pub fun image_size_2d_r64i(img: IStorageImage2DR64i) i32x2;
 
 #[op("spirv", "core", "OpImageQuerySize")]
 pub fun image_size_2d_r64ui(img: UStorageImage2DR64ui) i32x2;
@@ -687,7 +705,13 @@ pub fun image_size_storage_buffer_u(img: UStorageTexelBuffer) i32;
 pub fun image_texel_2d_r32f(img: *StorageImage2DR32f, at: i32x2, sample: u32) *f32;
 
 #[op("spirv", "core", "OpImageTexelPointer")]
+pub fun image_texel_2d_r32i(img: *IStorageImage2DR32i, at: i32x2, sample: u32) *i32;
+
+#[op("spirv", "core", "OpImageTexelPointer")]
 pub fun image_texel_2d_r32ui(img: *UStorageImage2DR32ui, at: i32x2, sample: u32) *u32;
+
+#[op("spirv", "core", "OpImageTexelPointer")]
+pub fun image_texel_2d_r64i(img: *IStorageImage2DR64i, at: i32x2, sample: u32) *i64;
 
 #[op("spirv", "core", "OpImageTexelPointer")]
 pub fun image_texel_2d_r64ui(img: *UStorageImage2DR64ui, at: i32x2, sample: u32) *u64;

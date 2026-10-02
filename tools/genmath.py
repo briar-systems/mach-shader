@@ -3,16 +3,14 @@
 
 The library is a naming rule applied to a table of SPIR-V instructions, so it is
 generated rather than hand-maintained: adding a vector width or an instruction
-is an edit to the table, not 130 edits to the file.
+is an edit to the table, not to every entry in the file.
 """
 
-import os
 import re
-import subprocess
 import sys
 
-# `mach fmt -` (stdin) first shipped in mach 5.1.0
-MIN_MACH = (5, 1, 0)
+sys.dont_write_bytecode = True
+import machfmt
 
 HEADER = '''# Shader-side maths: the functions that ARE SPIR-V instructions.
 #
@@ -75,10 +73,13 @@ HEADER = '''# Shader-side maths: the functions that ARE SPIR-V instructions.
 # `exp2` and `exp_2` apart, and because they differ in operand type as well as in
 # name, confusing one for the other is a type error rather than a wrong result.
 #
-# TYPES. `f32`, `f32x2`, `f32x3` and `f32x4`. GLSL.std.450 defines every entry
-# here over 16-, 32- and 64-bit floats; this module carries the 32-bit family,
-# which is what a mach shader spells today. A future f16 or f64 family is an
-# additional set of names under the same rule, not a change to these.
+# TYPES. `f32`, `f32x2`, `f32x3` and `f32x4`, and the integer rows over 16-, 32-
+# and 64-bit integers at the same widths. GLSL.std.450 defines the float entries
+# over 16-, 32- and 64-bit floats; this module carries the 32-bit family, which is
+# what a mach shader spells today, and it is the one family whose names carry no
+# type. Every other family carries its component type, as the integer rows at the
+# end of the file do, so a future f16 or f64 family is an additional set of names
+# under the same rule, not a change to these.
 #
 # This file is generated. See tools/genmath.py.
 '''
@@ -120,6 +121,16 @@ TERNARY = [
     ("mix",         "FMix",       ["a", "b", "t"],   "Linear interpolation.",                     "a * (1 - t) + b * t"),
     ("smooth_step", "SmoothStep", ["lo", "hi", "x"], "A smooth Hermite step between two edges.",  "0.0 at or below lo, 1.0 at or above hi, a smooth ramp between"),
     ("fma",         "Fma",        ["a", "b", "c"],   "Fused multiply-add.",                       "a * b + c"),
+]
+
+# the entries that return one part of a value and store the other through a pointer.
+# name, glsl instruction, pointer parameter, the scalar it points to (`=` for the
+# value's own type), doc summary, pointer parameter doc, return description
+SPLIT = [
+    ("modf",  "Modf",  "whole", "=",   "Split a value into its whole and fractional parts.",
+     "Where the whole part is stored, with the sign of x.", "the fractional part, with the sign of x"),
+    ("frexp", "Frexp", "exp",   "i32", "Split a value into a significand and a power of two.",
+     "Where the exponent is stored.", "the significand, in [0.5, 1) in magnitude, or zero at zero"),
 ]
 
 # Parameter wording that depends on the function rather than the parameter name.
@@ -180,6 +191,19 @@ def decl(name, suffix, glsl, params, ty, summary, ret, per_lane, sset="GLSL.std.
     return "\n".join(lines)
 
 
+def split(name, suffix, glsl, param, pty, ty, summary, pdoc, ret, per_lane):
+    lanes = ty[len("f32"):]
+    target = ty if pty == "=" else pty + lanes
+    width = max(len(param), len("ret")) + 1
+    lines = [f"# {summary[:-1]}, per lane." if per_lane else f"# {summary}", "# ---"]
+    lines.append(f"# {'x:':<{width}} {'The values, one per lane.' if per_lane else 'The value.'}")
+    lines.append(f"# {param + ':':<{width}} {pdoc}")
+    lines.append(f"# {'ret:':<{width}} {ret}" + (" per lane" if per_lane else ""))
+    lines.append(f'#[op("spirv", "GLSL.std.450", "{glsl}")]')
+    lines.append(f"pub fun {name}{suffix}(x: {ty}, {param}: *{target}) {ty};")
+    return "\n".join(lines)
+
+
 out = [HEADER]
 
 for suffix, ty, label in widths():
@@ -192,6 +216,9 @@ for suffix, ty, label in widths():
         for name, glsl, params, summary, ret in group:
             out.append(decl(name, suffix, glsl, params, ty, summary, ret, per_lane))
             out.append("")
+    for name, glsl, param, pty, summary, pdoc, ret in SPLIT:
+        out.append(split(name, suffix, glsl, param, pty, ty, summary, pdoc, ret, per_lane))
+        out.append("")
 
 out.append('''
 # ---------- geometry ----------
@@ -276,31 +303,133 @@ for suffix, ty, label in widths():
         out.append("\n".join(lines))
         out.append("")
 
+out.append('''
+# ---------- integers ----------
+#
+# The integer rows, over `i16`, `u16`, `i32`, `u32`, `i64` and `u64`. Each entry
+# carries its component type after an underscore, and a vector entry its lane count
+# after that: `min_i32`, `min_u64_3`. The float family above is the one unsuffixed
+# type. The instruction follows the signedness of the type, so `min_i32` is `SMin` and
+# `min_u32` is `UMin`, and `abs` and `sign` exist only signed. `find_msb_i32` finds the
+# most significant bit that differs from the sign bit, so it scans for a 0 in a
+# negative value.
+#
+# A 16-bit entry needs the target's `int16` and a 64-bit one its `int64`, where the
+# target names an `env`. The bit scans are 32-bit only: GLSL.std.450 defines `FindILsb`,
+# `FindSMsb` and `FindUMsb` on 32-bit integers alone.
+''')
+
+# name, instruction for a signed and an unsigned type (absent where the signedness has
+# no form), parameter names, doc summary, return description, the widths it takes.
+# the bit scans take 32 bits alone, since GLSL.std.450 defines them on no other width
+ANY_WIDTH = (16, 32, 64)
+INTEGER = [
+    ("abs",      {"i": "SAbs"},                       ["x"],             "Absolute value.",                "|x|", ANY_WIDTH),
+    ("sign",     {"i": "SSign"},                      ["x"],             "Sign as -1, 0 or +1.",           "-1 below zero, 0 at zero, 1 above", ANY_WIDTH),
+    ("min",      {"i": "SMin",     "u": "UMin"},      ["a", "b"],        "Smaller of two values.",         "a where a < b, else b", ANY_WIDTH),
+    ("max",      {"i": "SMax",     "u": "UMax"},      ["a", "b"],        "Larger of two values.",          "a where a > b, else b", ANY_WIDTH),
+    ("clamp",    {"i": "SClamp",   "u": "UClamp"},    ["x", "lo", "hi"], "Constrain a value to a range.",  "min(max(x, lo), hi)", ANY_WIDTH),
+    ("find_lsb", {"i": "FindILsb", "u": "FindILsb"},  ["x"],             "Index of the least significant set bit.", "the bit index, or every bit set (-1) at zero", (32,)),
+    ("find_msb", {"i": "FindSMsb", "u": "FindUMsb"},  ["x"],             "Index of the most significant bit that differs from the sign.", "the bit index, or every bit set (-1) where there is none", (32,)),
+]
+
+for bits in ANY_WIDTH:
+    for sign in ("i", "u"):
+        ity = f"{sign}{bits}"
+        for suffix, fty, label in widths():
+            ty = ity + fty[len("f32"):]
+            out.append(f"\n# ----- {ty} -----\n")
+            per_lane = label != "scalar"
+            for name, glsl, params, summary, ret, takes in INTEGER:
+                if sign in glsl and bits in takes:
+                    out.append(decl(f"{name}_{ity}", suffix, glsl[sign], params, ty, summary, ret, per_lane))
+                    out.append("")
+
 text = "\n".join(out)
 
+CONFORM_HEADER = '''# Calls every entry in `shader.math`.
+#
+# This exists to be compiled, not to shade anything. Each call forces the
+# compiler to resolve an `#[op]` decorator and emit the instruction at that
+# operand width, so a wrong instruction name or a signature SPIR-V rejects turns
+# into a build failure here. The library on its own compiles to nothing and would
+# catch neither.
+#
+# Every result is added to the output so no call can be eliminated as dead.
+#
+# This file is generated from the declarations `tools/genmath.py` writes, so an
+# entry added to the table is called here without an edit. Run
+# `python3 tools/genmath.py --conform > conform/src/conform_frag.mach`.
 
-def require_mach(mach):
-    try:
-        info = subprocess.run([mach, "info"], capture_output=True, text=True).stdout
-    except OSError as err:
-        sys.exit(f"genmath: cannot run the mach compiler '{mach}': {err}")
-    found = re.match(r"mach (\d+)\.(\d+)\.(\d+)", info)
-    want = ".".join(map(str, MIN_MACH))
-    if not found:
-        sys.exit(f"genmath: could not read the version of '{mach}' from `mach info`; mach {want} or newer is required")
-    have = tuple(int(n) for n in found.groups())
-    if have < MIN_MACH:
-        sys.exit(f"genmath: '{mach}' is mach {'.'.join(map(str, have))}, but mach {want} or newer is required for `mach fmt -`; "
-                 "install a newer compiler or point MACH at one")
+use sh: shader.math;
+
+#[input(0)]
+var a2: f32x2;
+#[input(1)]
+var b2: f32x2;
+#[input(2)]
+var a3: f32x3;
+#[input(3)]
+var b3: f32x3;
+#[input(4)]
+var a4: f32x4;
+#[input(5)]
+var b4: f32x4;
+#[input(6)]
+var s:  f32;
+
+#[output(0)]
+var out_colour: f32x4;
+'''
+
+SIGNATURE = re.compile(r"pub fun (\w+)\(([^)]*)\) (\w+);")
 
 
-mach = os.environ.get("MACH", "mach")
-require_mach(mach)
+def lanes(ty):
+    found = re.fullmatch(r"([iuf]\d+)(?:x(\d))?", ty)
+    return found.group(1), int(found.group(2) or 1)
 
-# mach fmt owns the layout, so the committed file is what it would write
-result = subprocess.run([mach, "fmt", "-"],
-                        input=text, capture_output=True, text=True)
-if result.returncode != 0:
-    sys.stderr.write("mach fmt rejected the generated file:\n" + result.stdout + result.stderr)
-    sys.exit(1)
-print(result.stdout, end="")
+
+def conform(library):
+    """A fragment shader calling every declaration in `library` once."""
+    # every type alternates between two values, so no two arguments of a call are one
+    # value, and an integer vector takes each lane from a different float input
+    values = {"f32": ["s", "b2[0]"]}
+    for n in (2, 3, 4):
+        values[f"f32x{n}"] = [f"a{n}", f"b{n}"]
+    prelude = []
+
+    def value(ty, i):
+        if ty not in values:
+            scalar, n = lanes(ty)
+            values[ty] = []
+            for name, source in (("x", "a4"), ("y", "b4")):
+                if n == 1:
+                    init = f"{values['f32'][len(values[ty])]}::{ty}"
+                else:
+                    init = f"{ty}{{{', '.join(f'{source}[{k}]::{scalar}' for k in range(n))}}}"
+                prelude.append(f"    val {name}_{ty}: {ty} = {init};")
+                values[ty].append(f"{name}_{ty}")
+        options = values[ty]
+        return options[i % len(options)]
+
+    body = []
+    for n, (fun, params, ret) in enumerate(SIGNATURE.findall(library)):
+        args = []
+        for i, param in enumerate(params.split(", ")):
+            ty = param.split(": ")[1]
+            if ty.startswith("*"):
+                body.append(f"    var p{n}: {ty[1:]};")
+                args.append(f"?p{n}")
+            else:
+                args.append(value(ty, i))
+        body.append(f"    val r{n}: {ret} = sh.{fun}({', '.join(args)});")
+        scalar, width = lanes(ret)
+        lane = f"r{n}" if width == 1 else f"r{n}[0]"
+        body.append(f"    total = total + {lane if scalar == 'f32' else lane + '::f32'};")
+    return "\n".join([CONFORM_HEADER, "#[stage(\"fragment\")]", "fun frag_main() {",
+                      *prelude, "    var total: f32 = 0.0;", *body,
+                      "    out_colour = f32x4{total, total, total, total};", "}", ""])
+
+
+machfmt.emit("genmath", conform(text) if sys.argv[1:] == ["--conform"] else text)
