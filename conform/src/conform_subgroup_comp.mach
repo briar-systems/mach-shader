@@ -15,18 +15,18 @@ rec Results {
     b: [64]u32x4;
 }
 
-#[storage(0, 0)]
+#[gpu.storage(0, 0)]
 var results: Results;
 
-#[builtin("subgroup_invocation")]
+#[gpu.builtin("subgroup_invocation")]
 var lane: u32;
-#[builtin("local_invocation_index")]
+#[gpu.builtin("local_invocation_index")]
 var lid:  u32;
 
 val S: u32 = sy.SCOPE_SUBGROUP;
 
-#[stage("compute")]
-#[workgroup(64, 1, 1)]
+#[gpu.stage("compute")]
+#[gpu.workgroup(64, 1, 1)]
 fun ballots() {
     val i:      u32   = lid;
     val odd:    u32   = lane & 1;
@@ -45,8 +45,8 @@ fun ballots() {
         + sg.subgroup_clustered_logical_xor(S, sg.GROUP_CLUSTERED_REDUCE, odd, 4);
 }
 
-#[stage("compute")]
-#[workgroup(64, 1, 1)]
+#[gpu.stage("compute")]
+#[gpu.workgroup(64, 1, 1)]
 fun values_u32() {
     val i: u32 = lid;
     val v: u32 = results.u[i];
@@ -66,8 +66,8 @@ fun values_u32() {
     results.u[i]      = sg.subgroup_all_equal_u32(S, v);
 }
 
-#[stage("compute")]
-#[workgroup(64, 1, 1)]
+#[gpu.stage("compute")]
+#[gpu.workgroup(64, 1, 1)]
 fun values_i32() {
     val i: u32 = lid;
     val v: i32 = results.i[i];
@@ -87,8 +87,8 @@ fun values_i32() {
     results.u[i]      = sg.subgroup_all_equal_i32(S, v);
 }
 
-#[stage("compute")]
-#[workgroup(64, 1, 1)]
+#[gpu.stage("compute")]
+#[gpu.workgroup(64, 1, 1)]
 fun values_f32() {
     val i: u32 = lid;
     val v: f32 = results.f[i];

@@ -1,6 +1,6 @@
 # Shader-side maths: the functions that ARE SPIR-V instructions.
 #
-# Every declaration here is one SPIR-V instruction, named by an `#[op(target, set,
+# Every declaration here is one SPIR-V instruction, named by an `#[intrinsic(target, set,
 # name)]` decorator the compiler reads at the call site. A call to `normalize3`
 # in a shader does not become a call at all: it becomes the instruction, inline,
 # in the calling function's body.
@@ -75,133 +75,133 @@
 # ---
 # x:   The value.
 # ret: |x|
-#[op("spirv", "GLSL.std.450", "FAbs")]
+#[intrinsic("spirv", "GLSL.std.450", "FAbs")]
 pub fun abs(x: f32) f32;
 
 # Sign as -1, 0 or +1.
 # ---
 # x:   The value.
 # ret: -1.0 below zero, 0.0 at zero, 1.0 above
-#[op("spirv", "GLSL.std.450", "FSign")]
+#[intrinsic("spirv", "GLSL.std.450", "FSign")]
 pub fun sign(x: f32) f32;
 
 # Largest integer not greater than x.
 # ---
 # x:   The value.
 # ret: floor(x)
-#[op("spirv", "GLSL.std.450", "Floor")]
+#[intrinsic("spirv", "GLSL.std.450", "Floor")]
 pub fun floor(x: f32) f32;
 
 # Smallest integer not less than x.
 # ---
 # x:   The value.
 # ret: ceil(x)
-#[op("spirv", "GLSL.std.450", "Ceil")]
+#[intrinsic("spirv", "GLSL.std.450", "Ceil")]
 pub fun ceil(x: f32) f32;
 
 # Fractional part.
 # ---
 # x:   The value.
 # ret: x - floor(x), always in [0, 1)
-#[op("spirv", "GLSL.std.450", "Fract")]
+#[intrinsic("spirv", "GLSL.std.450", "Fract")]
 pub fun fract(x: f32) f32;
 
 # Degrees to radians.
 # ---
 # x:   An angle in degrees.
 # ret: the same angle in radians
-#[op("spirv", "GLSL.std.450", "Radians")]
+#[intrinsic("spirv", "GLSL.std.450", "Radians")]
 pub fun radians(x: f32) f32;
 
 # Radians to degrees.
 # ---
 # x:   An angle in radians.
 # ret: the same angle in degrees
-#[op("spirv", "GLSL.std.450", "Degrees")]
+#[intrinsic("spirv", "GLSL.std.450", "Degrees")]
 pub fun degrees(x: f32) f32;
 
 # Sine of an angle in radians.
 # ---
 # x:   The angle in radians.
 # ret: sin(x)
-#[op("spirv", "GLSL.std.450", "Sin")]
+#[intrinsic("spirv", "GLSL.std.450", "Sin")]
 pub fun sin(x: f32) f32;
 
 # Cosine of an angle in radians.
 # ---
 # x:   The angle in radians.
 # ret: cos(x)
-#[op("spirv", "GLSL.std.450", "Cos")]
+#[intrinsic("spirv", "GLSL.std.450", "Cos")]
 pub fun cos(x: f32) f32;
 
 # Tangent of an angle in radians.
 # ---
 # x:   The angle in radians.
 # ret: tan(x)
-#[op("spirv", "GLSL.std.450", "Tan")]
+#[intrinsic("spirv", "GLSL.std.450", "Tan")]
 pub fun tan(x: f32) f32;
 
 # Arcsine.
 # ---
 # x:   A value in [-1, 1].
 # ret: asin(x) in [-pi/2, pi/2]
-#[op("spirv", "GLSL.std.450", "Asin")]
+#[intrinsic("spirv", "GLSL.std.450", "Asin")]
 pub fun asin(x: f32) f32;
 
 # Arccosine.
 # ---
 # x:   A value in [-1, 1].
 # ret: acos(x) in [0, pi]
-#[op("spirv", "GLSL.std.450", "Acos")]
+#[intrinsic("spirv", "GLSL.std.450", "Acos")]
 pub fun acos(x: f32) f32;
 
 # Arctangent of a single ratio.
 # ---
 # x:   The ratio.
 # ret: atan(x) in [-pi/2, pi/2]
-#[op("spirv", "GLSL.std.450", "Atan")]
+#[intrinsic("spirv", "GLSL.std.450", "Atan")]
 pub fun atan(x: f32) f32;
 
 # e raised to x.
 # ---
 # x:   The value.
 # ret: e ** x
-#[op("spirv", "GLSL.std.450", "Exp")]
+#[intrinsic("spirv", "GLSL.std.450", "Exp")]
 pub fun exp(x: f32) f32;
 
 # Natural logarithm.
 # ---
 # x:   A positive value.
 # ret: ln(x)
-#[op("spirv", "GLSL.std.450", "Log")]
+#[intrinsic("spirv", "GLSL.std.450", "Log")]
 pub fun log(x: f32) f32;
 
 # 2 raised to x.
 # ---
 # x:   The value.
 # ret: 2 ** x
-#[op("spirv", "GLSL.std.450", "Exp2")]
+#[intrinsic("spirv", "GLSL.std.450", "Exp2")]
 pub fun exp2(x: f32) f32;
 
 # Base-2 logarithm.
 # ---
 # x:   A positive value.
 # ret: log2(x)
-#[op("spirv", "GLSL.std.450", "Log2")]
+#[intrinsic("spirv", "GLSL.std.450", "Log2")]
 pub fun log2(x: f32) f32;
 
 # Square root.
 # ---
 # x:   A non-negative value.
 # ret: sqrt(x)
-#[op("spirv", "GLSL.std.450", "Sqrt")]
+#[intrinsic("spirv", "GLSL.std.450", "Sqrt")]
 pub fun sqrt(x: f32) f32;
 
 # Reciprocal square root, which is what a normalization actually wants.
 # ---
 # x:   A positive value.
 # ret: 1 / sqrt(x)
-#[op("spirv", "GLSL.std.450", "InverseSqrt")]
+#[intrinsic("spirv", "GLSL.std.450", "InverseSqrt")]
 pub fun inverse_sqrt(x: f32) f32;
 
 # Arctangent of y/x, quadrant-correct.
@@ -209,7 +209,7 @@ pub fun inverse_sqrt(x: f32) f32;
 # y:   The numerator.
 # x:   The denominator.
 # ret: atan2(y, x) in [-pi, pi]
-#[op("spirv", "GLSL.std.450", "Atan2")]
+#[intrinsic("spirv", "GLSL.std.450", "Atan2")]
 pub fun atan2(y: f32, x: f32) f32;
 
 # x raised to e.
@@ -217,7 +217,7 @@ pub fun atan2(y: f32, x: f32) f32;
 # x:   The base, which must not be negative.
 # e:   The exponent.
 # ret: x ** e
-#[op("spirv", "GLSL.std.450", "Pow")]
+#[intrinsic("spirv", "GLSL.std.450", "Pow")]
 pub fun pow(x: f32, e: f32) f32;
 
 # Smaller of two values.
@@ -225,7 +225,7 @@ pub fun pow(x: f32, e: f32) f32;
 # a:   The first value.
 # b:   The second value.
 # ret: a where a < b, else b
-#[op("spirv", "GLSL.std.450", "FMin")]
+#[intrinsic("spirv", "GLSL.std.450", "FMin")]
 pub fun min(a: f32, b: f32) f32;
 
 # Larger of two values.
@@ -233,7 +233,7 @@ pub fun min(a: f32, b: f32) f32;
 # a:   The first value.
 # b:   The second value.
 # ret: a where a > b, else b
-#[op("spirv", "GLSL.std.450", "FMax")]
+#[intrinsic("spirv", "GLSL.std.450", "FMax")]
 pub fun max(a: f32, b: f32) f32;
 
 # A step from 0 to 1 at an edge.
@@ -241,7 +241,7 @@ pub fun max(a: f32, b: f32) f32;
 # edge:Where the step happens.
 # x:   The value.
 # ret: 0.0 below edge, else 1.0
-#[op("spirv", "GLSL.std.450", "Step")]
+#[intrinsic("spirv", "GLSL.std.450", "Step")]
 pub fun step(edge: f32, x: f32) f32;
 
 # Constrain a value to a range.
@@ -250,7 +250,7 @@ pub fun step(edge: f32, x: f32) f32;
 # lo:  The lower bound.
 # hi:  The upper bound.
 # ret: min(max(x, lo), hi)
-#[op("spirv", "GLSL.std.450", "FClamp")]
+#[intrinsic("spirv", "GLSL.std.450", "FClamp")]
 pub fun clamp(x: f32, lo: f32, hi: f32) f32;
 
 # Linear interpolation.
@@ -259,7 +259,7 @@ pub fun clamp(x: f32, lo: f32, hi: f32) f32;
 # b:   The value at t == 1.
 # t:   The interpolant.
 # ret: a * (1 - t) + b * t
-#[op("spirv", "GLSL.std.450", "FMix")]
+#[intrinsic("spirv", "GLSL.std.450", "FMix")]
 pub fun mix(a: f32, b: f32, t: f32) f32;
 
 # A smooth Hermite step between two edges.
@@ -268,7 +268,7 @@ pub fun mix(a: f32, b: f32, t: f32) f32;
 # hi:  The upper edge.
 # x:   The value.
 # ret: 0.0 at or below lo, 1.0 at or above hi, a smooth ramp between
-#[op("spirv", "GLSL.std.450", "SmoothStep")]
+#[intrinsic("spirv", "GLSL.std.450", "SmoothStep")]
 pub fun smooth_step(lo: f32, hi: f32, x: f32) f32;
 
 # Fused multiply-add.
@@ -277,7 +277,7 @@ pub fun smooth_step(lo: f32, hi: f32, x: f32) f32;
 # b:   The second factor.
 # c:   The addend.
 # ret: a * b + c
-#[op("spirv", "GLSL.std.450", "Fma")]
+#[intrinsic("spirv", "GLSL.std.450", "Fma")]
 pub fun fma(a: f32, b: f32, c: f32) f32;
 
 # Split a value into its whole and fractional parts.
@@ -285,7 +285,7 @@ pub fun fma(a: f32, b: f32, c: f32) f32;
 # x:     The value.
 # whole: Where the whole part is stored, with the sign of x.
 # ret:   the fractional part, with the sign of x
-#[op("spirv", "GLSL.std.450", "Modf")]
+#[intrinsic("spirv", "GLSL.std.450", "Modf")]
 pub fun modf(x: f32, whole: *f32) f32;
 
 # Split a value into a significand and a power of two.
@@ -293,7 +293,7 @@ pub fun modf(x: f32, whole: *f32) f32;
 # x:   The value.
 # exp: Where the exponent is stored.
 # ret: the significand, in [0.5, 1) in magnitude, or zero at zero
-#[op("spirv", "GLSL.std.450", "Frexp")]
+#[intrinsic("spirv", "GLSL.std.450", "Frexp")]
 pub fun frexp(x: f32, exp: *i32) f32;
 
 # ---------- per lane of an f32x2 ----------
@@ -302,133 +302,133 @@ pub fun frexp(x: f32, exp: *i32) f32;
 # ---
 # x:   The values, one per lane.
 # ret: |x| per lane
-#[op("spirv", "GLSL.std.450", "FAbs")]
+#[intrinsic("spirv", "GLSL.std.450", "FAbs")]
 pub fun abs_2(x: f32x2) f32x2;
 
 # Sign as -1, 0 or +1, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: -1.0 below zero, 0.0 at zero, 1.0 above per lane
-#[op("spirv", "GLSL.std.450", "FSign")]
+#[intrinsic("spirv", "GLSL.std.450", "FSign")]
 pub fun sign_2(x: f32x2) f32x2;
 
 # Largest integer not greater than x, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: floor(x) per lane
-#[op("spirv", "GLSL.std.450", "Floor")]
+#[intrinsic("spirv", "GLSL.std.450", "Floor")]
 pub fun floor_2(x: f32x2) f32x2;
 
 # Smallest integer not less than x, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: ceil(x) per lane
-#[op("spirv", "GLSL.std.450", "Ceil")]
+#[intrinsic("spirv", "GLSL.std.450", "Ceil")]
 pub fun ceil_2(x: f32x2) f32x2;
 
 # Fractional part, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: x - floor(x), always in [0, 1) per lane
-#[op("spirv", "GLSL.std.450", "Fract")]
+#[intrinsic("spirv", "GLSL.std.450", "Fract")]
 pub fun fract_2(x: f32x2) f32x2;
 
 # Degrees to radians, per lane.
 # ---
 # x:   An angle in degrees.
 # ret: the same angle in radians per lane
-#[op("spirv", "GLSL.std.450", "Radians")]
+#[intrinsic("spirv", "GLSL.std.450", "Radians")]
 pub fun radians_2(x: f32x2) f32x2;
 
 # Radians to degrees, per lane.
 # ---
 # x:   An angle in radians.
 # ret: the same angle in degrees per lane
-#[op("spirv", "GLSL.std.450", "Degrees")]
+#[intrinsic("spirv", "GLSL.std.450", "Degrees")]
 pub fun degrees_2(x: f32x2) f32x2;
 
 # Sine of an angle in radians, per lane.
 # ---
 # x:   The angle in radians.
 # ret: sin(x) per lane
-#[op("spirv", "GLSL.std.450", "Sin")]
+#[intrinsic("spirv", "GLSL.std.450", "Sin")]
 pub fun sin_2(x: f32x2) f32x2;
 
 # Cosine of an angle in radians, per lane.
 # ---
 # x:   The angle in radians.
 # ret: cos(x) per lane
-#[op("spirv", "GLSL.std.450", "Cos")]
+#[intrinsic("spirv", "GLSL.std.450", "Cos")]
 pub fun cos_2(x: f32x2) f32x2;
 
 # Tangent of an angle in radians, per lane.
 # ---
 # x:   The angle in radians.
 # ret: tan(x) per lane
-#[op("spirv", "GLSL.std.450", "Tan")]
+#[intrinsic("spirv", "GLSL.std.450", "Tan")]
 pub fun tan_2(x: f32x2) f32x2;
 
 # Arcsine, per lane.
 # ---
 # x:   A value in [-1, 1].
 # ret: asin(x) in [-pi/2, pi/2] per lane
-#[op("spirv", "GLSL.std.450", "Asin")]
+#[intrinsic("spirv", "GLSL.std.450", "Asin")]
 pub fun asin_2(x: f32x2) f32x2;
 
 # Arccosine, per lane.
 # ---
 # x:   A value in [-1, 1].
 # ret: acos(x) in [0, pi] per lane
-#[op("spirv", "GLSL.std.450", "Acos")]
+#[intrinsic("spirv", "GLSL.std.450", "Acos")]
 pub fun acos_2(x: f32x2) f32x2;
 
 # Arctangent of a single ratio, per lane.
 # ---
 # x:   The ratios, one per lane.
 # ret: atan(x) in [-pi/2, pi/2] per lane
-#[op("spirv", "GLSL.std.450", "Atan")]
+#[intrinsic("spirv", "GLSL.std.450", "Atan")]
 pub fun atan_2(x: f32x2) f32x2;
 
 # e raised to x, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: e ** x per lane
-#[op("spirv", "GLSL.std.450", "Exp")]
+#[intrinsic("spirv", "GLSL.std.450", "Exp")]
 pub fun exp_2(x: f32x2) f32x2;
 
 # Natural logarithm, per lane.
 # ---
 # x:   A positive value.
 # ret: ln(x) per lane
-#[op("spirv", "GLSL.std.450", "Log")]
+#[intrinsic("spirv", "GLSL.std.450", "Log")]
 pub fun log_2(x: f32x2) f32x2;
 
 # 2 raised to x, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: 2 ** x per lane
-#[op("spirv", "GLSL.std.450", "Exp2")]
+#[intrinsic("spirv", "GLSL.std.450", "Exp2")]
 pub fun exp2_2(x: f32x2) f32x2;
 
 # Base-2 logarithm, per lane.
 # ---
 # x:   A positive value.
 # ret: log2(x) per lane
-#[op("spirv", "GLSL.std.450", "Log2")]
+#[intrinsic("spirv", "GLSL.std.450", "Log2")]
 pub fun log2_2(x: f32x2) f32x2;
 
 # Square root, per lane.
 # ---
 # x:   A non-negative value.
 # ret: sqrt(x) per lane
-#[op("spirv", "GLSL.std.450", "Sqrt")]
+#[intrinsic("spirv", "GLSL.std.450", "Sqrt")]
 pub fun sqrt_2(x: f32x2) f32x2;
 
 # Reciprocal square root, which is what a normalization actually wants, per lane.
 # ---
 # x:   A positive value.
 # ret: 1 / sqrt(x) per lane
-#[op("spirv", "GLSL.std.450", "InverseSqrt")]
+#[intrinsic("spirv", "GLSL.std.450", "InverseSqrt")]
 pub fun inverse_sqrt_2(x: f32x2) f32x2;
 
 # Arctangent of y/x, quadrant-correct, per lane.
@@ -436,7 +436,7 @@ pub fun inverse_sqrt_2(x: f32x2) f32x2;
 # y:   The numerators, one per lane.
 # x:   The denominators, one per lane.
 # ret: atan2(y, x) in [-pi, pi] per lane
-#[op("spirv", "GLSL.std.450", "Atan2")]
+#[intrinsic("spirv", "GLSL.std.450", "Atan2")]
 pub fun atan2_2(y: f32x2, x: f32x2) f32x2;
 
 # x raised to e, per lane.
@@ -444,7 +444,7 @@ pub fun atan2_2(y: f32x2, x: f32x2) f32x2;
 # x:   The base, which must not be negatives, one per lane.
 # e:   The exponents, one per lane.
 # ret: x ** e per lane
-#[op("spirv", "GLSL.std.450", "Pow")]
+#[intrinsic("spirv", "GLSL.std.450", "Pow")]
 pub fun pow_2(x: f32x2, e: f32x2) f32x2;
 
 # Smaller of two values, per lane.
@@ -452,7 +452,7 @@ pub fun pow_2(x: f32x2, e: f32x2) f32x2;
 # a:   The first values, one per lane.
 # b:   The second values, one per lane.
 # ret: a where a < b, else b per lane
-#[op("spirv", "GLSL.std.450", "FMin")]
+#[intrinsic("spirv", "GLSL.std.450", "FMin")]
 pub fun min_2(a: f32x2, b: f32x2) f32x2;
 
 # Larger of two values, per lane.
@@ -460,7 +460,7 @@ pub fun min_2(a: f32x2, b: f32x2) f32x2;
 # a:   The first values, one per lane.
 # b:   The second values, one per lane.
 # ret: a where a > b, else b per lane
-#[op("spirv", "GLSL.std.450", "FMax")]
+#[intrinsic("spirv", "GLSL.std.450", "FMax")]
 pub fun max_2(a: f32x2, b: f32x2) f32x2;
 
 # A step from 0 to 1 at an edge, per lane.
@@ -468,7 +468,7 @@ pub fun max_2(a: f32x2, b: f32x2) f32x2;
 # edge:Where the step happens.
 # x:   The values, one per lane.
 # ret: 0.0 below edge, else 1.0 per lane
-#[op("spirv", "GLSL.std.450", "Step")]
+#[intrinsic("spirv", "GLSL.std.450", "Step")]
 pub fun step_2(edge: f32x2, x: f32x2) f32x2;
 
 # Constrain a value to a range, per lane.
@@ -477,7 +477,7 @@ pub fun step_2(edge: f32x2, x: f32x2) f32x2;
 # lo:  The lower bounds, one per lane.
 # hi:  The upper bounds, one per lane.
 # ret: min(max(x, lo), hi) per lane
-#[op("spirv", "GLSL.std.450", "FClamp")]
+#[intrinsic("spirv", "GLSL.std.450", "FClamp")]
 pub fun clamp_2(x: f32x2, lo: f32x2, hi: f32x2) f32x2;
 
 # Linear interpolation, per lane.
@@ -486,7 +486,7 @@ pub fun clamp_2(x: f32x2, lo: f32x2, hi: f32x2) f32x2;
 # b:   The value at t == 1s, one per lane.
 # t:   The interpolants, one per lane.
 # ret: a * (1 - t) + b * t per lane
-#[op("spirv", "GLSL.std.450", "FMix")]
+#[intrinsic("spirv", "GLSL.std.450", "FMix")]
 pub fun mix_2(a: f32x2, b: f32x2, t: f32x2) f32x2;
 
 # A smooth Hermite step between two edges, per lane.
@@ -495,7 +495,7 @@ pub fun mix_2(a: f32x2, b: f32x2, t: f32x2) f32x2;
 # hi:  The upper edges, one per lane.
 # x:   The values, one per lane.
 # ret: 0.0 at or below lo, 1.0 at or above hi, a smooth ramp between per lane
-#[op("spirv", "GLSL.std.450", "SmoothStep")]
+#[intrinsic("spirv", "GLSL.std.450", "SmoothStep")]
 pub fun smooth_step_2(lo: f32x2, hi: f32x2, x: f32x2) f32x2;
 
 # Fused multiply-add, per lane.
@@ -504,7 +504,7 @@ pub fun smooth_step_2(lo: f32x2, hi: f32x2, x: f32x2) f32x2;
 # b:   The second factors, one per lane.
 # c:   The addends, one per lane.
 # ret: a * b + c per lane
-#[op("spirv", "GLSL.std.450", "Fma")]
+#[intrinsic("spirv", "GLSL.std.450", "Fma")]
 pub fun fma_2(a: f32x2, b: f32x2, c: f32x2) f32x2;
 
 # Split a value into its whole and fractional parts, per lane.
@@ -512,7 +512,7 @@ pub fun fma_2(a: f32x2, b: f32x2, c: f32x2) f32x2;
 # x:     The values, one per lane.
 # whole: Where the whole part is stored, with the sign of x.
 # ret:   the fractional part, with the sign of x per lane
-#[op("spirv", "GLSL.std.450", "Modf")]
+#[intrinsic("spirv", "GLSL.std.450", "Modf")]
 pub fun modf_2(x: f32x2, whole: *f32x2) f32x2;
 
 # Split a value into a significand and a power of two, per lane.
@@ -520,7 +520,7 @@ pub fun modf_2(x: f32x2, whole: *f32x2) f32x2;
 # x:   The values, one per lane.
 # exp: Where the exponent is stored.
 # ret: the significand, in [0.5, 1) in magnitude, or zero at zero per lane
-#[op("spirv", "GLSL.std.450", "Frexp")]
+#[intrinsic("spirv", "GLSL.std.450", "Frexp")]
 pub fun frexp_2(x: f32x2, exp: *i32x2) f32x2;
 
 # ---------- per lane of an f32x3 ----------
@@ -529,133 +529,133 @@ pub fun frexp_2(x: f32x2, exp: *i32x2) f32x2;
 # ---
 # x:   The values, one per lane.
 # ret: |x| per lane
-#[op("spirv", "GLSL.std.450", "FAbs")]
+#[intrinsic("spirv", "GLSL.std.450", "FAbs")]
 pub fun abs_3(x: f32x3) f32x3;
 
 # Sign as -1, 0 or +1, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: -1.0 below zero, 0.0 at zero, 1.0 above per lane
-#[op("spirv", "GLSL.std.450", "FSign")]
+#[intrinsic("spirv", "GLSL.std.450", "FSign")]
 pub fun sign_3(x: f32x3) f32x3;
 
 # Largest integer not greater than x, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: floor(x) per lane
-#[op("spirv", "GLSL.std.450", "Floor")]
+#[intrinsic("spirv", "GLSL.std.450", "Floor")]
 pub fun floor_3(x: f32x3) f32x3;
 
 # Smallest integer not less than x, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: ceil(x) per lane
-#[op("spirv", "GLSL.std.450", "Ceil")]
+#[intrinsic("spirv", "GLSL.std.450", "Ceil")]
 pub fun ceil_3(x: f32x3) f32x3;
 
 # Fractional part, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: x - floor(x), always in [0, 1) per lane
-#[op("spirv", "GLSL.std.450", "Fract")]
+#[intrinsic("spirv", "GLSL.std.450", "Fract")]
 pub fun fract_3(x: f32x3) f32x3;
 
 # Degrees to radians, per lane.
 # ---
 # x:   An angle in degrees.
 # ret: the same angle in radians per lane
-#[op("spirv", "GLSL.std.450", "Radians")]
+#[intrinsic("spirv", "GLSL.std.450", "Radians")]
 pub fun radians_3(x: f32x3) f32x3;
 
 # Radians to degrees, per lane.
 # ---
 # x:   An angle in radians.
 # ret: the same angle in degrees per lane
-#[op("spirv", "GLSL.std.450", "Degrees")]
+#[intrinsic("spirv", "GLSL.std.450", "Degrees")]
 pub fun degrees_3(x: f32x3) f32x3;
 
 # Sine of an angle in radians, per lane.
 # ---
 # x:   The angle in radians.
 # ret: sin(x) per lane
-#[op("spirv", "GLSL.std.450", "Sin")]
+#[intrinsic("spirv", "GLSL.std.450", "Sin")]
 pub fun sin_3(x: f32x3) f32x3;
 
 # Cosine of an angle in radians, per lane.
 # ---
 # x:   The angle in radians.
 # ret: cos(x) per lane
-#[op("spirv", "GLSL.std.450", "Cos")]
+#[intrinsic("spirv", "GLSL.std.450", "Cos")]
 pub fun cos_3(x: f32x3) f32x3;
 
 # Tangent of an angle in radians, per lane.
 # ---
 # x:   The angle in radians.
 # ret: tan(x) per lane
-#[op("spirv", "GLSL.std.450", "Tan")]
+#[intrinsic("spirv", "GLSL.std.450", "Tan")]
 pub fun tan_3(x: f32x3) f32x3;
 
 # Arcsine, per lane.
 # ---
 # x:   A value in [-1, 1].
 # ret: asin(x) in [-pi/2, pi/2] per lane
-#[op("spirv", "GLSL.std.450", "Asin")]
+#[intrinsic("spirv", "GLSL.std.450", "Asin")]
 pub fun asin_3(x: f32x3) f32x3;
 
 # Arccosine, per lane.
 # ---
 # x:   A value in [-1, 1].
 # ret: acos(x) in [0, pi] per lane
-#[op("spirv", "GLSL.std.450", "Acos")]
+#[intrinsic("spirv", "GLSL.std.450", "Acos")]
 pub fun acos_3(x: f32x3) f32x3;
 
 # Arctangent of a single ratio, per lane.
 # ---
 # x:   The ratios, one per lane.
 # ret: atan(x) in [-pi/2, pi/2] per lane
-#[op("spirv", "GLSL.std.450", "Atan")]
+#[intrinsic("spirv", "GLSL.std.450", "Atan")]
 pub fun atan_3(x: f32x3) f32x3;
 
 # e raised to x, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: e ** x per lane
-#[op("spirv", "GLSL.std.450", "Exp")]
+#[intrinsic("spirv", "GLSL.std.450", "Exp")]
 pub fun exp_3(x: f32x3) f32x3;
 
 # Natural logarithm, per lane.
 # ---
 # x:   A positive value.
 # ret: ln(x) per lane
-#[op("spirv", "GLSL.std.450", "Log")]
+#[intrinsic("spirv", "GLSL.std.450", "Log")]
 pub fun log_3(x: f32x3) f32x3;
 
 # 2 raised to x, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: 2 ** x per lane
-#[op("spirv", "GLSL.std.450", "Exp2")]
+#[intrinsic("spirv", "GLSL.std.450", "Exp2")]
 pub fun exp2_3(x: f32x3) f32x3;
 
 # Base-2 logarithm, per lane.
 # ---
 # x:   A positive value.
 # ret: log2(x) per lane
-#[op("spirv", "GLSL.std.450", "Log2")]
+#[intrinsic("spirv", "GLSL.std.450", "Log2")]
 pub fun log2_3(x: f32x3) f32x3;
 
 # Square root, per lane.
 # ---
 # x:   A non-negative value.
 # ret: sqrt(x) per lane
-#[op("spirv", "GLSL.std.450", "Sqrt")]
+#[intrinsic("spirv", "GLSL.std.450", "Sqrt")]
 pub fun sqrt_3(x: f32x3) f32x3;
 
 # Reciprocal square root, which is what a normalization actually wants, per lane.
 # ---
 # x:   A positive value.
 # ret: 1 / sqrt(x) per lane
-#[op("spirv", "GLSL.std.450", "InverseSqrt")]
+#[intrinsic("spirv", "GLSL.std.450", "InverseSqrt")]
 pub fun inverse_sqrt_3(x: f32x3) f32x3;
 
 # Arctangent of y/x, quadrant-correct, per lane.
@@ -663,7 +663,7 @@ pub fun inverse_sqrt_3(x: f32x3) f32x3;
 # y:   The numerators, one per lane.
 # x:   The denominators, one per lane.
 # ret: atan2(y, x) in [-pi, pi] per lane
-#[op("spirv", "GLSL.std.450", "Atan2")]
+#[intrinsic("spirv", "GLSL.std.450", "Atan2")]
 pub fun atan2_3(y: f32x3, x: f32x3) f32x3;
 
 # x raised to e, per lane.
@@ -671,7 +671,7 @@ pub fun atan2_3(y: f32x3, x: f32x3) f32x3;
 # x:   The base, which must not be negatives, one per lane.
 # e:   The exponents, one per lane.
 # ret: x ** e per lane
-#[op("spirv", "GLSL.std.450", "Pow")]
+#[intrinsic("spirv", "GLSL.std.450", "Pow")]
 pub fun pow_3(x: f32x3, e: f32x3) f32x3;
 
 # Smaller of two values, per lane.
@@ -679,7 +679,7 @@ pub fun pow_3(x: f32x3, e: f32x3) f32x3;
 # a:   The first values, one per lane.
 # b:   The second values, one per lane.
 # ret: a where a < b, else b per lane
-#[op("spirv", "GLSL.std.450", "FMin")]
+#[intrinsic("spirv", "GLSL.std.450", "FMin")]
 pub fun min_3(a: f32x3, b: f32x3) f32x3;
 
 # Larger of two values, per lane.
@@ -687,7 +687,7 @@ pub fun min_3(a: f32x3, b: f32x3) f32x3;
 # a:   The first values, one per lane.
 # b:   The second values, one per lane.
 # ret: a where a > b, else b per lane
-#[op("spirv", "GLSL.std.450", "FMax")]
+#[intrinsic("spirv", "GLSL.std.450", "FMax")]
 pub fun max_3(a: f32x3, b: f32x3) f32x3;
 
 # A step from 0 to 1 at an edge, per lane.
@@ -695,7 +695,7 @@ pub fun max_3(a: f32x3, b: f32x3) f32x3;
 # edge:Where the step happens.
 # x:   The values, one per lane.
 # ret: 0.0 below edge, else 1.0 per lane
-#[op("spirv", "GLSL.std.450", "Step")]
+#[intrinsic("spirv", "GLSL.std.450", "Step")]
 pub fun step_3(edge: f32x3, x: f32x3) f32x3;
 
 # Constrain a value to a range, per lane.
@@ -704,7 +704,7 @@ pub fun step_3(edge: f32x3, x: f32x3) f32x3;
 # lo:  The lower bounds, one per lane.
 # hi:  The upper bounds, one per lane.
 # ret: min(max(x, lo), hi) per lane
-#[op("spirv", "GLSL.std.450", "FClamp")]
+#[intrinsic("spirv", "GLSL.std.450", "FClamp")]
 pub fun clamp_3(x: f32x3, lo: f32x3, hi: f32x3) f32x3;
 
 # Linear interpolation, per lane.
@@ -713,7 +713,7 @@ pub fun clamp_3(x: f32x3, lo: f32x3, hi: f32x3) f32x3;
 # b:   The value at t == 1s, one per lane.
 # t:   The interpolants, one per lane.
 # ret: a * (1 - t) + b * t per lane
-#[op("spirv", "GLSL.std.450", "FMix")]
+#[intrinsic("spirv", "GLSL.std.450", "FMix")]
 pub fun mix_3(a: f32x3, b: f32x3, t: f32x3) f32x3;
 
 # A smooth Hermite step between two edges, per lane.
@@ -722,7 +722,7 @@ pub fun mix_3(a: f32x3, b: f32x3, t: f32x3) f32x3;
 # hi:  The upper edges, one per lane.
 # x:   The values, one per lane.
 # ret: 0.0 at or below lo, 1.0 at or above hi, a smooth ramp between per lane
-#[op("spirv", "GLSL.std.450", "SmoothStep")]
+#[intrinsic("spirv", "GLSL.std.450", "SmoothStep")]
 pub fun smooth_step_3(lo: f32x3, hi: f32x3, x: f32x3) f32x3;
 
 # Fused multiply-add, per lane.
@@ -731,7 +731,7 @@ pub fun smooth_step_3(lo: f32x3, hi: f32x3, x: f32x3) f32x3;
 # b:   The second factors, one per lane.
 # c:   The addends, one per lane.
 # ret: a * b + c per lane
-#[op("spirv", "GLSL.std.450", "Fma")]
+#[intrinsic("spirv", "GLSL.std.450", "Fma")]
 pub fun fma_3(a: f32x3, b: f32x3, c: f32x3) f32x3;
 
 # Split a value into its whole and fractional parts, per lane.
@@ -739,7 +739,7 @@ pub fun fma_3(a: f32x3, b: f32x3, c: f32x3) f32x3;
 # x:     The values, one per lane.
 # whole: Where the whole part is stored, with the sign of x.
 # ret:   the fractional part, with the sign of x per lane
-#[op("spirv", "GLSL.std.450", "Modf")]
+#[intrinsic("spirv", "GLSL.std.450", "Modf")]
 pub fun modf_3(x: f32x3, whole: *f32x3) f32x3;
 
 # Split a value into a significand and a power of two, per lane.
@@ -747,7 +747,7 @@ pub fun modf_3(x: f32x3, whole: *f32x3) f32x3;
 # x:   The values, one per lane.
 # exp: Where the exponent is stored.
 # ret: the significand, in [0.5, 1) in magnitude, or zero at zero per lane
-#[op("spirv", "GLSL.std.450", "Frexp")]
+#[intrinsic("spirv", "GLSL.std.450", "Frexp")]
 pub fun frexp_3(x: f32x3, exp: *i32x3) f32x3;
 
 # ---------- per lane of an f32x4 ----------
@@ -756,133 +756,133 @@ pub fun frexp_3(x: f32x3, exp: *i32x3) f32x3;
 # ---
 # x:   The values, one per lane.
 # ret: |x| per lane
-#[op("spirv", "GLSL.std.450", "FAbs")]
+#[intrinsic("spirv", "GLSL.std.450", "FAbs")]
 pub fun abs_4(x: f32x4) f32x4;
 
 # Sign as -1, 0 or +1, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: -1.0 below zero, 0.0 at zero, 1.0 above per lane
-#[op("spirv", "GLSL.std.450", "FSign")]
+#[intrinsic("spirv", "GLSL.std.450", "FSign")]
 pub fun sign_4(x: f32x4) f32x4;
 
 # Largest integer not greater than x, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: floor(x) per lane
-#[op("spirv", "GLSL.std.450", "Floor")]
+#[intrinsic("spirv", "GLSL.std.450", "Floor")]
 pub fun floor_4(x: f32x4) f32x4;
 
 # Smallest integer not less than x, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: ceil(x) per lane
-#[op("spirv", "GLSL.std.450", "Ceil")]
+#[intrinsic("spirv", "GLSL.std.450", "Ceil")]
 pub fun ceil_4(x: f32x4) f32x4;
 
 # Fractional part, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: x - floor(x), always in [0, 1) per lane
-#[op("spirv", "GLSL.std.450", "Fract")]
+#[intrinsic("spirv", "GLSL.std.450", "Fract")]
 pub fun fract_4(x: f32x4) f32x4;
 
 # Degrees to radians, per lane.
 # ---
 # x:   An angle in degrees.
 # ret: the same angle in radians per lane
-#[op("spirv", "GLSL.std.450", "Radians")]
+#[intrinsic("spirv", "GLSL.std.450", "Radians")]
 pub fun radians_4(x: f32x4) f32x4;
 
 # Radians to degrees, per lane.
 # ---
 # x:   An angle in radians.
 # ret: the same angle in degrees per lane
-#[op("spirv", "GLSL.std.450", "Degrees")]
+#[intrinsic("spirv", "GLSL.std.450", "Degrees")]
 pub fun degrees_4(x: f32x4) f32x4;
 
 # Sine of an angle in radians, per lane.
 # ---
 # x:   The angle in radians.
 # ret: sin(x) per lane
-#[op("spirv", "GLSL.std.450", "Sin")]
+#[intrinsic("spirv", "GLSL.std.450", "Sin")]
 pub fun sin_4(x: f32x4) f32x4;
 
 # Cosine of an angle in radians, per lane.
 # ---
 # x:   The angle in radians.
 # ret: cos(x) per lane
-#[op("spirv", "GLSL.std.450", "Cos")]
+#[intrinsic("spirv", "GLSL.std.450", "Cos")]
 pub fun cos_4(x: f32x4) f32x4;
 
 # Tangent of an angle in radians, per lane.
 # ---
 # x:   The angle in radians.
 # ret: tan(x) per lane
-#[op("spirv", "GLSL.std.450", "Tan")]
+#[intrinsic("spirv", "GLSL.std.450", "Tan")]
 pub fun tan_4(x: f32x4) f32x4;
 
 # Arcsine, per lane.
 # ---
 # x:   A value in [-1, 1].
 # ret: asin(x) in [-pi/2, pi/2] per lane
-#[op("spirv", "GLSL.std.450", "Asin")]
+#[intrinsic("spirv", "GLSL.std.450", "Asin")]
 pub fun asin_4(x: f32x4) f32x4;
 
 # Arccosine, per lane.
 # ---
 # x:   A value in [-1, 1].
 # ret: acos(x) in [0, pi] per lane
-#[op("spirv", "GLSL.std.450", "Acos")]
+#[intrinsic("spirv", "GLSL.std.450", "Acos")]
 pub fun acos_4(x: f32x4) f32x4;
 
 # Arctangent of a single ratio, per lane.
 # ---
 # x:   The ratios, one per lane.
 # ret: atan(x) in [-pi/2, pi/2] per lane
-#[op("spirv", "GLSL.std.450", "Atan")]
+#[intrinsic("spirv", "GLSL.std.450", "Atan")]
 pub fun atan_4(x: f32x4) f32x4;
 
 # e raised to x, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: e ** x per lane
-#[op("spirv", "GLSL.std.450", "Exp")]
+#[intrinsic("spirv", "GLSL.std.450", "Exp")]
 pub fun exp_4(x: f32x4) f32x4;
 
 # Natural logarithm, per lane.
 # ---
 # x:   A positive value.
 # ret: ln(x) per lane
-#[op("spirv", "GLSL.std.450", "Log")]
+#[intrinsic("spirv", "GLSL.std.450", "Log")]
 pub fun log_4(x: f32x4) f32x4;
 
 # 2 raised to x, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: 2 ** x per lane
-#[op("spirv", "GLSL.std.450", "Exp2")]
+#[intrinsic("spirv", "GLSL.std.450", "Exp2")]
 pub fun exp2_4(x: f32x4) f32x4;
 
 # Base-2 logarithm, per lane.
 # ---
 # x:   A positive value.
 # ret: log2(x) per lane
-#[op("spirv", "GLSL.std.450", "Log2")]
+#[intrinsic("spirv", "GLSL.std.450", "Log2")]
 pub fun log2_4(x: f32x4) f32x4;
 
 # Square root, per lane.
 # ---
 # x:   A non-negative value.
 # ret: sqrt(x) per lane
-#[op("spirv", "GLSL.std.450", "Sqrt")]
+#[intrinsic("spirv", "GLSL.std.450", "Sqrt")]
 pub fun sqrt_4(x: f32x4) f32x4;
 
 # Reciprocal square root, which is what a normalization actually wants, per lane.
 # ---
 # x:   A positive value.
 # ret: 1 / sqrt(x) per lane
-#[op("spirv", "GLSL.std.450", "InverseSqrt")]
+#[intrinsic("spirv", "GLSL.std.450", "InverseSqrt")]
 pub fun inverse_sqrt_4(x: f32x4) f32x4;
 
 # Arctangent of y/x, quadrant-correct, per lane.
@@ -890,7 +890,7 @@ pub fun inverse_sqrt_4(x: f32x4) f32x4;
 # y:   The numerators, one per lane.
 # x:   The denominators, one per lane.
 # ret: atan2(y, x) in [-pi, pi] per lane
-#[op("spirv", "GLSL.std.450", "Atan2")]
+#[intrinsic("spirv", "GLSL.std.450", "Atan2")]
 pub fun atan2_4(y: f32x4, x: f32x4) f32x4;
 
 # x raised to e, per lane.
@@ -898,7 +898,7 @@ pub fun atan2_4(y: f32x4, x: f32x4) f32x4;
 # x:   The base, which must not be negatives, one per lane.
 # e:   The exponents, one per lane.
 # ret: x ** e per lane
-#[op("spirv", "GLSL.std.450", "Pow")]
+#[intrinsic("spirv", "GLSL.std.450", "Pow")]
 pub fun pow_4(x: f32x4, e: f32x4) f32x4;
 
 # Smaller of two values, per lane.
@@ -906,7 +906,7 @@ pub fun pow_4(x: f32x4, e: f32x4) f32x4;
 # a:   The first values, one per lane.
 # b:   The second values, one per lane.
 # ret: a where a < b, else b per lane
-#[op("spirv", "GLSL.std.450", "FMin")]
+#[intrinsic("spirv", "GLSL.std.450", "FMin")]
 pub fun min_4(a: f32x4, b: f32x4) f32x4;
 
 # Larger of two values, per lane.
@@ -914,7 +914,7 @@ pub fun min_4(a: f32x4, b: f32x4) f32x4;
 # a:   The first values, one per lane.
 # b:   The second values, one per lane.
 # ret: a where a > b, else b per lane
-#[op("spirv", "GLSL.std.450", "FMax")]
+#[intrinsic("spirv", "GLSL.std.450", "FMax")]
 pub fun max_4(a: f32x4, b: f32x4) f32x4;
 
 # A step from 0 to 1 at an edge, per lane.
@@ -922,7 +922,7 @@ pub fun max_4(a: f32x4, b: f32x4) f32x4;
 # edge:Where the step happens.
 # x:   The values, one per lane.
 # ret: 0.0 below edge, else 1.0 per lane
-#[op("spirv", "GLSL.std.450", "Step")]
+#[intrinsic("spirv", "GLSL.std.450", "Step")]
 pub fun step_4(edge: f32x4, x: f32x4) f32x4;
 
 # Constrain a value to a range, per lane.
@@ -931,7 +931,7 @@ pub fun step_4(edge: f32x4, x: f32x4) f32x4;
 # lo:  The lower bounds, one per lane.
 # hi:  The upper bounds, one per lane.
 # ret: min(max(x, lo), hi) per lane
-#[op("spirv", "GLSL.std.450", "FClamp")]
+#[intrinsic("spirv", "GLSL.std.450", "FClamp")]
 pub fun clamp_4(x: f32x4, lo: f32x4, hi: f32x4) f32x4;
 
 # Linear interpolation, per lane.
@@ -940,7 +940,7 @@ pub fun clamp_4(x: f32x4, lo: f32x4, hi: f32x4) f32x4;
 # b:   The value at t == 1s, one per lane.
 # t:   The interpolants, one per lane.
 # ret: a * (1 - t) + b * t per lane
-#[op("spirv", "GLSL.std.450", "FMix")]
+#[intrinsic("spirv", "GLSL.std.450", "FMix")]
 pub fun mix_4(a: f32x4, b: f32x4, t: f32x4) f32x4;
 
 # A smooth Hermite step between two edges, per lane.
@@ -949,7 +949,7 @@ pub fun mix_4(a: f32x4, b: f32x4, t: f32x4) f32x4;
 # hi:  The upper edges, one per lane.
 # x:   The values, one per lane.
 # ret: 0.0 at or below lo, 1.0 at or above hi, a smooth ramp between per lane
-#[op("spirv", "GLSL.std.450", "SmoothStep")]
+#[intrinsic("spirv", "GLSL.std.450", "SmoothStep")]
 pub fun smooth_step_4(lo: f32x4, hi: f32x4, x: f32x4) f32x4;
 
 # Fused multiply-add, per lane.
@@ -958,7 +958,7 @@ pub fun smooth_step_4(lo: f32x4, hi: f32x4, x: f32x4) f32x4;
 # b:   The second factors, one per lane.
 # c:   The addends, one per lane.
 # ret: a * b + c per lane
-#[op("spirv", "GLSL.std.450", "Fma")]
+#[intrinsic("spirv", "GLSL.std.450", "Fma")]
 pub fun fma_4(a: f32x4, b: f32x4, c: f32x4) f32x4;
 
 # Split a value into its whole and fractional parts, per lane.
@@ -966,7 +966,7 @@ pub fun fma_4(a: f32x4, b: f32x4, c: f32x4) f32x4;
 # x:     The values, one per lane.
 # whole: Where the whole part is stored, with the sign of x.
 # ret:   the fractional part, with the sign of x per lane
-#[op("spirv", "GLSL.std.450", "Modf")]
+#[intrinsic("spirv", "GLSL.std.450", "Modf")]
 pub fun modf_4(x: f32x4, whole: *f32x4) f32x4;
 
 # Split a value into a significand and a power of two, per lane.
@@ -974,7 +974,7 @@ pub fun modf_4(x: f32x4, whole: *f32x4) f32x4;
 # x:   The values, one per lane.
 # exp: Where the exponent is stored.
 # ret: the significand, in [0.5, 1) in magnitude, or zero at zero per lane
-#[op("spirv", "GLSL.std.450", "Frexp")]
+#[intrinsic("spirv", "GLSL.std.450", "Frexp")]
 pub fun frexp_4(x: f32x4, exp: *i32x4) f32x4;
 
 # ---------- geometry ----------
@@ -994,21 +994,21 @@ pub fun frexp_4(x: f32x4, exp: *i32x4) f32x4;
 # a:   The first vector.
 # b:   The second vector.
 # ret: the sum of the per-lane products
-#[op("spirv", "core", "OpDot")]
+#[intrinsic("spirv", "core", "OpDot")]
 pub fun dot_2(a: f32x2, b: f32x2) f32;
 
 # Euclidean length.
 # ---
 # v:   The vector.
 # ret: sqrt(dot(v, v))
-#[op("spirv", "GLSL.std.450", "Length")]
+#[intrinsic("spirv", "GLSL.std.450", "Length")]
 pub fun length_2(v: f32x2) f32;
 
 # A vector of length 1 in the same direction.
 # ---
 # v:   The vector.
 # ret: v / length(v)
-#[op("spirv", "GLSL.std.450", "Normalize")]
+#[intrinsic("spirv", "GLSL.std.450", "Normalize")]
 pub fun normalize_2(v: f32x2) f32x2;
 
 # Distance between two points.
@@ -1016,7 +1016,7 @@ pub fun normalize_2(v: f32x2) f32x2;
 # a:   The first vector.
 # b:   The second vector.
 # ret: length(a - b)
-#[op("spirv", "GLSL.std.450", "Distance")]
+#[intrinsic("spirv", "GLSL.std.450", "Distance")]
 pub fun distance_2(a: f32x2, b: f32x2) f32;
 
 # Reflect an incident vector about a normal.
@@ -1024,7 +1024,7 @@ pub fun distance_2(a: f32x2, b: f32x2) f32;
 # i:   The incident vector.
 # n:   The surface normal, which must already be normalized.
 # ret: i - 2 * dot(n, i) * n
-#[op("spirv", "GLSL.std.450", "Reflect")]
+#[intrinsic("spirv", "GLSL.std.450", "Reflect")]
 pub fun reflect_2(i: f32x2, n: f32x2) f32x2;
 
 # Flip a vector to face away from a surface.
@@ -1033,7 +1033,7 @@ pub fun reflect_2(i: f32x2, n: f32x2) f32x2;
 # i:   The incident vector.
 # r:   The reference normal.
 # ret: n where dot(r, i) is below zero, else -n
-#[op("spirv", "GLSL.std.450", "FaceForward")]
+#[intrinsic("spirv", "GLSL.std.450", "FaceForward")]
 pub fun face_forward_2(n: f32x2, i: f32x2, r: f32x2) f32x2;
 
 # Refract an incident vector through a surface.
@@ -1042,7 +1042,7 @@ pub fun face_forward_2(n: f32x2, i: f32x2, r: f32x2) f32x2;
 # n:   The surface normal, which must already be normalized.
 # eta: The ratio of indices of refraction. A scalar at every width.
 # ret: the refracted vector, or the zero vector under total internal reflection
-#[op("spirv", "GLSL.std.450", "Refract")]
+#[intrinsic("spirv", "GLSL.std.450", "Refract")]
 pub fun refract_2(i: f32x2, n: f32x2, eta: f32) f32x2;
 
 # ----- f32x3 -----
@@ -1052,21 +1052,21 @@ pub fun refract_2(i: f32x2, n: f32x2, eta: f32) f32x2;
 # a:   The first vector.
 # b:   The second vector.
 # ret: the sum of the per-lane products
-#[op("spirv", "core", "OpDot")]
+#[intrinsic("spirv", "core", "OpDot")]
 pub fun dot_3(a: f32x3, b: f32x3) f32;
 
 # Euclidean length.
 # ---
 # v:   The vector.
 # ret: sqrt(dot(v, v))
-#[op("spirv", "GLSL.std.450", "Length")]
+#[intrinsic("spirv", "GLSL.std.450", "Length")]
 pub fun length_3(v: f32x3) f32;
 
 # A vector of length 1 in the same direction.
 # ---
 # v:   The vector.
 # ret: v / length(v)
-#[op("spirv", "GLSL.std.450", "Normalize")]
+#[intrinsic("spirv", "GLSL.std.450", "Normalize")]
 pub fun normalize_3(v: f32x3) f32x3;
 
 # Distance between two points.
@@ -1074,7 +1074,7 @@ pub fun normalize_3(v: f32x3) f32x3;
 # a:   The first vector.
 # b:   The second vector.
 # ret: length(a - b)
-#[op("spirv", "GLSL.std.450", "Distance")]
+#[intrinsic("spirv", "GLSL.std.450", "Distance")]
 pub fun distance_3(a: f32x3, b: f32x3) f32;
 
 # Reflect an incident vector about a normal.
@@ -1082,7 +1082,7 @@ pub fun distance_3(a: f32x3, b: f32x3) f32;
 # i:   The incident vector.
 # n:   The surface normal, which must already be normalized.
 # ret: i - 2 * dot(n, i) * n
-#[op("spirv", "GLSL.std.450", "Reflect")]
+#[intrinsic("spirv", "GLSL.std.450", "Reflect")]
 pub fun reflect_3(i: f32x3, n: f32x3) f32x3;
 
 # Flip a vector to face away from a surface.
@@ -1091,7 +1091,7 @@ pub fun reflect_3(i: f32x3, n: f32x3) f32x3;
 # i:   The incident vector.
 # r:   The reference normal.
 # ret: n where dot(r, i) is below zero, else -n
-#[op("spirv", "GLSL.std.450", "FaceForward")]
+#[intrinsic("spirv", "GLSL.std.450", "FaceForward")]
 pub fun face_forward_3(n: f32x3, i: f32x3, r: f32x3) f32x3;
 
 # Refract an incident vector through a surface.
@@ -1100,7 +1100,7 @@ pub fun face_forward_3(n: f32x3, i: f32x3, r: f32x3) f32x3;
 # n:   The surface normal, which must already be normalized.
 # eta: The ratio of indices of refraction. A scalar at every width.
 # ret: the refracted vector, or the zero vector under total internal reflection
-#[op("spirv", "GLSL.std.450", "Refract")]
+#[intrinsic("spirv", "GLSL.std.450", "Refract")]
 pub fun refract_3(i: f32x3, n: f32x3, eta: f32) f32x3;
 
 # Cross product.
@@ -1111,7 +1111,7 @@ pub fun refract_3(i: f32x3, n: f32x3, eta: f32) f32x3;
 # a:   The first vector.
 # b:   The second vector.
 # ret: the vector perpendicular to both, right-handed
-#[op("spirv", "GLSL.std.450", "Cross")]
+#[intrinsic("spirv", "GLSL.std.450", "Cross")]
 pub fun cross_3(a: f32x3, b: f32x3) f32x3;
 
 # ----- f32x4 -----
@@ -1121,21 +1121,21 @@ pub fun cross_3(a: f32x3, b: f32x3) f32x3;
 # a:   The first vector.
 # b:   The second vector.
 # ret: the sum of the per-lane products
-#[op("spirv", "core", "OpDot")]
+#[intrinsic("spirv", "core", "OpDot")]
 pub fun dot_4(a: f32x4, b: f32x4) f32;
 
 # Euclidean length.
 # ---
 # v:   The vector.
 # ret: sqrt(dot(v, v))
-#[op("spirv", "GLSL.std.450", "Length")]
+#[intrinsic("spirv", "GLSL.std.450", "Length")]
 pub fun length_4(v: f32x4) f32;
 
 # A vector of length 1 in the same direction.
 # ---
 # v:   The vector.
 # ret: v / length(v)
-#[op("spirv", "GLSL.std.450", "Normalize")]
+#[intrinsic("spirv", "GLSL.std.450", "Normalize")]
 pub fun normalize_4(v: f32x4) f32x4;
 
 # Distance between two points.
@@ -1143,7 +1143,7 @@ pub fun normalize_4(v: f32x4) f32x4;
 # a:   The first vector.
 # b:   The second vector.
 # ret: length(a - b)
-#[op("spirv", "GLSL.std.450", "Distance")]
+#[intrinsic("spirv", "GLSL.std.450", "Distance")]
 pub fun distance_4(a: f32x4, b: f32x4) f32;
 
 # Reflect an incident vector about a normal.
@@ -1151,7 +1151,7 @@ pub fun distance_4(a: f32x4, b: f32x4) f32;
 # i:   The incident vector.
 # n:   The surface normal, which must already be normalized.
 # ret: i - 2 * dot(n, i) * n
-#[op("spirv", "GLSL.std.450", "Reflect")]
+#[intrinsic("spirv", "GLSL.std.450", "Reflect")]
 pub fun reflect_4(i: f32x4, n: f32x4) f32x4;
 
 # Flip a vector to face away from a surface.
@@ -1160,7 +1160,7 @@ pub fun reflect_4(i: f32x4, n: f32x4) f32x4;
 # i:   The incident vector.
 # r:   The reference normal.
 # ret: n where dot(r, i) is below zero, else -n
-#[op("spirv", "GLSL.std.450", "FaceForward")]
+#[intrinsic("spirv", "GLSL.std.450", "FaceForward")]
 pub fun face_forward_4(n: f32x4, i: f32x4, r: f32x4) f32x4;
 
 # Refract an incident vector through a surface.
@@ -1169,7 +1169,7 @@ pub fun face_forward_4(n: f32x4, i: f32x4, r: f32x4) f32x4;
 # n:   The surface normal, which must already be normalized.
 # eta: The ratio of indices of refraction. A scalar at every width.
 # ret: the refracted vector, or the zero vector under total internal reflection
-#[op("spirv", "GLSL.std.450", "Refract")]
+#[intrinsic("spirv", "GLSL.std.450", "Refract")]
 pub fun refract_4(i: f32x4, n: f32x4, eta: f32) f32x4;
 
 # ---------- integers ----------
@@ -1182,7 +1182,7 @@ pub fun refract_4(i: f32x4, n: f32x4, eta: f32) f32x4;
 # most significant bit that differs from the sign bit, so it scans for a 0 in a
 # negative value.
 #
-# A 16-bit entry needs the target's `int16` and a 64-bit one its `int64`, where the
+# A 16-bit entry needs the target's `Int16` and a 64-bit one its `Int64`, where the
 # target names an `env`. The bit scans are 32-bit only: GLSL.std.450 defines `FindILsb`,
 # `FindSMsb` and `FindUMsb` on 32-bit integers alone.
 
@@ -1192,14 +1192,14 @@ pub fun refract_4(i: f32x4, n: f32x4, eta: f32) f32x4;
 # ---
 # x:   The value.
 # ret: |x|
-#[op("spirv", "GLSL.std.450", "SAbs")]
+#[intrinsic("spirv", "GLSL.std.450", "SAbs")]
 pub fun abs_i16(x: i16) i16;
 
 # Sign as -1, 0 or +1.
 # ---
 # x:   The value.
 # ret: -1 below zero, 0 at zero, 1 above
-#[op("spirv", "GLSL.std.450", "SSign")]
+#[intrinsic("spirv", "GLSL.std.450", "SSign")]
 pub fun sign_i16(x: i16) i16;
 
 # Smaller of two values.
@@ -1207,7 +1207,7 @@ pub fun sign_i16(x: i16) i16;
 # a:   The first value.
 # b:   The second value.
 # ret: a where a < b, else b
-#[op("spirv", "GLSL.std.450", "SMin")]
+#[intrinsic("spirv", "GLSL.std.450", "SMin")]
 pub fun min_i16(a: i16, b: i16) i16;
 
 # Larger of two values.
@@ -1215,7 +1215,7 @@ pub fun min_i16(a: i16, b: i16) i16;
 # a:   The first value.
 # b:   The second value.
 # ret: a where a > b, else b
-#[op("spirv", "GLSL.std.450", "SMax")]
+#[intrinsic("spirv", "GLSL.std.450", "SMax")]
 pub fun max_i16(a: i16, b: i16) i16;
 
 # Constrain a value to a range.
@@ -1224,7 +1224,7 @@ pub fun max_i16(a: i16, b: i16) i16;
 # lo:  The lower bound.
 # hi:  The upper bound.
 # ret: min(max(x, lo), hi)
-#[op("spirv", "GLSL.std.450", "SClamp")]
+#[intrinsic("spirv", "GLSL.std.450", "SClamp")]
 pub fun clamp_i16(x: i16, lo: i16, hi: i16) i16;
 
 # ----- i16x2 -----
@@ -1233,14 +1233,14 @@ pub fun clamp_i16(x: i16, lo: i16, hi: i16) i16;
 # ---
 # x:   The values, one per lane.
 # ret: |x| per lane
-#[op("spirv", "GLSL.std.450", "SAbs")]
+#[intrinsic("spirv", "GLSL.std.450", "SAbs")]
 pub fun abs_i16_2(x: i16x2) i16x2;
 
 # Sign as -1, 0 or +1, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: -1 below zero, 0 at zero, 1 above per lane
-#[op("spirv", "GLSL.std.450", "SSign")]
+#[intrinsic("spirv", "GLSL.std.450", "SSign")]
 pub fun sign_i16_2(x: i16x2) i16x2;
 
 # Smaller of two values, per lane.
@@ -1248,7 +1248,7 @@ pub fun sign_i16_2(x: i16x2) i16x2;
 # a:   The first values, one per lane.
 # b:   The second values, one per lane.
 # ret: a where a < b, else b per lane
-#[op("spirv", "GLSL.std.450", "SMin")]
+#[intrinsic("spirv", "GLSL.std.450", "SMin")]
 pub fun min_i16_2(a: i16x2, b: i16x2) i16x2;
 
 # Larger of two values, per lane.
@@ -1256,7 +1256,7 @@ pub fun min_i16_2(a: i16x2, b: i16x2) i16x2;
 # a:   The first values, one per lane.
 # b:   The second values, one per lane.
 # ret: a where a > b, else b per lane
-#[op("spirv", "GLSL.std.450", "SMax")]
+#[intrinsic("spirv", "GLSL.std.450", "SMax")]
 pub fun max_i16_2(a: i16x2, b: i16x2) i16x2;
 
 # Constrain a value to a range, per lane.
@@ -1265,7 +1265,7 @@ pub fun max_i16_2(a: i16x2, b: i16x2) i16x2;
 # lo:  The lower bounds, one per lane.
 # hi:  The upper bounds, one per lane.
 # ret: min(max(x, lo), hi) per lane
-#[op("spirv", "GLSL.std.450", "SClamp")]
+#[intrinsic("spirv", "GLSL.std.450", "SClamp")]
 pub fun clamp_i16_2(x: i16x2, lo: i16x2, hi: i16x2) i16x2;
 
 # ----- i16x3 -----
@@ -1274,14 +1274,14 @@ pub fun clamp_i16_2(x: i16x2, lo: i16x2, hi: i16x2) i16x2;
 # ---
 # x:   The values, one per lane.
 # ret: |x| per lane
-#[op("spirv", "GLSL.std.450", "SAbs")]
+#[intrinsic("spirv", "GLSL.std.450", "SAbs")]
 pub fun abs_i16_3(x: i16x3) i16x3;
 
 # Sign as -1, 0 or +1, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: -1 below zero, 0 at zero, 1 above per lane
-#[op("spirv", "GLSL.std.450", "SSign")]
+#[intrinsic("spirv", "GLSL.std.450", "SSign")]
 pub fun sign_i16_3(x: i16x3) i16x3;
 
 # Smaller of two values, per lane.
@@ -1289,7 +1289,7 @@ pub fun sign_i16_3(x: i16x3) i16x3;
 # a:   The first values, one per lane.
 # b:   The second values, one per lane.
 # ret: a where a < b, else b per lane
-#[op("spirv", "GLSL.std.450", "SMin")]
+#[intrinsic("spirv", "GLSL.std.450", "SMin")]
 pub fun min_i16_3(a: i16x3, b: i16x3) i16x3;
 
 # Larger of two values, per lane.
@@ -1297,7 +1297,7 @@ pub fun min_i16_3(a: i16x3, b: i16x3) i16x3;
 # a:   The first values, one per lane.
 # b:   The second values, one per lane.
 # ret: a where a > b, else b per lane
-#[op("spirv", "GLSL.std.450", "SMax")]
+#[intrinsic("spirv", "GLSL.std.450", "SMax")]
 pub fun max_i16_3(a: i16x3, b: i16x3) i16x3;
 
 # Constrain a value to a range, per lane.
@@ -1306,7 +1306,7 @@ pub fun max_i16_3(a: i16x3, b: i16x3) i16x3;
 # lo:  The lower bounds, one per lane.
 # hi:  The upper bounds, one per lane.
 # ret: min(max(x, lo), hi) per lane
-#[op("spirv", "GLSL.std.450", "SClamp")]
+#[intrinsic("spirv", "GLSL.std.450", "SClamp")]
 pub fun clamp_i16_3(x: i16x3, lo: i16x3, hi: i16x3) i16x3;
 
 # ----- i16x4 -----
@@ -1315,14 +1315,14 @@ pub fun clamp_i16_3(x: i16x3, lo: i16x3, hi: i16x3) i16x3;
 # ---
 # x:   The values, one per lane.
 # ret: |x| per lane
-#[op("spirv", "GLSL.std.450", "SAbs")]
+#[intrinsic("spirv", "GLSL.std.450", "SAbs")]
 pub fun abs_i16_4(x: i16x4) i16x4;
 
 # Sign as -1, 0 or +1, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: -1 below zero, 0 at zero, 1 above per lane
-#[op("spirv", "GLSL.std.450", "SSign")]
+#[intrinsic("spirv", "GLSL.std.450", "SSign")]
 pub fun sign_i16_4(x: i16x4) i16x4;
 
 # Smaller of two values, per lane.
@@ -1330,7 +1330,7 @@ pub fun sign_i16_4(x: i16x4) i16x4;
 # a:   The first values, one per lane.
 # b:   The second values, one per lane.
 # ret: a where a < b, else b per lane
-#[op("spirv", "GLSL.std.450", "SMin")]
+#[intrinsic("spirv", "GLSL.std.450", "SMin")]
 pub fun min_i16_4(a: i16x4, b: i16x4) i16x4;
 
 # Larger of two values, per lane.
@@ -1338,7 +1338,7 @@ pub fun min_i16_4(a: i16x4, b: i16x4) i16x4;
 # a:   The first values, one per lane.
 # b:   The second values, one per lane.
 # ret: a where a > b, else b per lane
-#[op("spirv", "GLSL.std.450", "SMax")]
+#[intrinsic("spirv", "GLSL.std.450", "SMax")]
 pub fun max_i16_4(a: i16x4, b: i16x4) i16x4;
 
 # Constrain a value to a range, per lane.
@@ -1347,7 +1347,7 @@ pub fun max_i16_4(a: i16x4, b: i16x4) i16x4;
 # lo:  The lower bounds, one per lane.
 # hi:  The upper bounds, one per lane.
 # ret: min(max(x, lo), hi) per lane
-#[op("spirv", "GLSL.std.450", "SClamp")]
+#[intrinsic("spirv", "GLSL.std.450", "SClamp")]
 pub fun clamp_i16_4(x: i16x4, lo: i16x4, hi: i16x4) i16x4;
 
 # ----- u16 -----
@@ -1357,7 +1357,7 @@ pub fun clamp_i16_4(x: i16x4, lo: i16x4, hi: i16x4) i16x4;
 # a:   The first value.
 # b:   The second value.
 # ret: a where a < b, else b
-#[op("spirv", "GLSL.std.450", "UMin")]
+#[intrinsic("spirv", "GLSL.std.450", "UMin")]
 pub fun min_u16(a: u16, b: u16) u16;
 
 # Larger of two values.
@@ -1365,7 +1365,7 @@ pub fun min_u16(a: u16, b: u16) u16;
 # a:   The first value.
 # b:   The second value.
 # ret: a where a > b, else b
-#[op("spirv", "GLSL.std.450", "UMax")]
+#[intrinsic("spirv", "GLSL.std.450", "UMax")]
 pub fun max_u16(a: u16, b: u16) u16;
 
 # Constrain a value to a range.
@@ -1374,7 +1374,7 @@ pub fun max_u16(a: u16, b: u16) u16;
 # lo:  The lower bound.
 # hi:  The upper bound.
 # ret: min(max(x, lo), hi)
-#[op("spirv", "GLSL.std.450", "UClamp")]
+#[intrinsic("spirv", "GLSL.std.450", "UClamp")]
 pub fun clamp_u16(x: u16, lo: u16, hi: u16) u16;
 
 # ----- u16x2 -----
@@ -1384,7 +1384,7 @@ pub fun clamp_u16(x: u16, lo: u16, hi: u16) u16;
 # a:   The first values, one per lane.
 # b:   The second values, one per lane.
 # ret: a where a < b, else b per lane
-#[op("spirv", "GLSL.std.450", "UMin")]
+#[intrinsic("spirv", "GLSL.std.450", "UMin")]
 pub fun min_u16_2(a: u16x2, b: u16x2) u16x2;
 
 # Larger of two values, per lane.
@@ -1392,7 +1392,7 @@ pub fun min_u16_2(a: u16x2, b: u16x2) u16x2;
 # a:   The first values, one per lane.
 # b:   The second values, one per lane.
 # ret: a where a > b, else b per lane
-#[op("spirv", "GLSL.std.450", "UMax")]
+#[intrinsic("spirv", "GLSL.std.450", "UMax")]
 pub fun max_u16_2(a: u16x2, b: u16x2) u16x2;
 
 # Constrain a value to a range, per lane.
@@ -1401,7 +1401,7 @@ pub fun max_u16_2(a: u16x2, b: u16x2) u16x2;
 # lo:  The lower bounds, one per lane.
 # hi:  The upper bounds, one per lane.
 # ret: min(max(x, lo), hi) per lane
-#[op("spirv", "GLSL.std.450", "UClamp")]
+#[intrinsic("spirv", "GLSL.std.450", "UClamp")]
 pub fun clamp_u16_2(x: u16x2, lo: u16x2, hi: u16x2) u16x2;
 
 # ----- u16x3 -----
@@ -1411,7 +1411,7 @@ pub fun clamp_u16_2(x: u16x2, lo: u16x2, hi: u16x2) u16x2;
 # a:   The first values, one per lane.
 # b:   The second values, one per lane.
 # ret: a where a < b, else b per lane
-#[op("spirv", "GLSL.std.450", "UMin")]
+#[intrinsic("spirv", "GLSL.std.450", "UMin")]
 pub fun min_u16_3(a: u16x3, b: u16x3) u16x3;
 
 # Larger of two values, per lane.
@@ -1419,7 +1419,7 @@ pub fun min_u16_3(a: u16x3, b: u16x3) u16x3;
 # a:   The first values, one per lane.
 # b:   The second values, one per lane.
 # ret: a where a > b, else b per lane
-#[op("spirv", "GLSL.std.450", "UMax")]
+#[intrinsic("spirv", "GLSL.std.450", "UMax")]
 pub fun max_u16_3(a: u16x3, b: u16x3) u16x3;
 
 # Constrain a value to a range, per lane.
@@ -1428,7 +1428,7 @@ pub fun max_u16_3(a: u16x3, b: u16x3) u16x3;
 # lo:  The lower bounds, one per lane.
 # hi:  The upper bounds, one per lane.
 # ret: min(max(x, lo), hi) per lane
-#[op("spirv", "GLSL.std.450", "UClamp")]
+#[intrinsic("spirv", "GLSL.std.450", "UClamp")]
 pub fun clamp_u16_3(x: u16x3, lo: u16x3, hi: u16x3) u16x3;
 
 # ----- u16x4 -----
@@ -1438,7 +1438,7 @@ pub fun clamp_u16_3(x: u16x3, lo: u16x3, hi: u16x3) u16x3;
 # a:   The first values, one per lane.
 # b:   The second values, one per lane.
 # ret: a where a < b, else b per lane
-#[op("spirv", "GLSL.std.450", "UMin")]
+#[intrinsic("spirv", "GLSL.std.450", "UMin")]
 pub fun min_u16_4(a: u16x4, b: u16x4) u16x4;
 
 # Larger of two values, per lane.
@@ -1446,7 +1446,7 @@ pub fun min_u16_4(a: u16x4, b: u16x4) u16x4;
 # a:   The first values, one per lane.
 # b:   The second values, one per lane.
 # ret: a where a > b, else b per lane
-#[op("spirv", "GLSL.std.450", "UMax")]
+#[intrinsic("spirv", "GLSL.std.450", "UMax")]
 pub fun max_u16_4(a: u16x4, b: u16x4) u16x4;
 
 # Constrain a value to a range, per lane.
@@ -1455,7 +1455,7 @@ pub fun max_u16_4(a: u16x4, b: u16x4) u16x4;
 # lo:  The lower bounds, one per lane.
 # hi:  The upper bounds, one per lane.
 # ret: min(max(x, lo), hi) per lane
-#[op("spirv", "GLSL.std.450", "UClamp")]
+#[intrinsic("spirv", "GLSL.std.450", "UClamp")]
 pub fun clamp_u16_4(x: u16x4, lo: u16x4, hi: u16x4) u16x4;
 
 # ----- i32 -----
@@ -1464,14 +1464,14 @@ pub fun clamp_u16_4(x: u16x4, lo: u16x4, hi: u16x4) u16x4;
 # ---
 # x:   The value.
 # ret: |x|
-#[op("spirv", "GLSL.std.450", "SAbs")]
+#[intrinsic("spirv", "GLSL.std.450", "SAbs")]
 pub fun abs_i32(x: i32) i32;
 
 # Sign as -1, 0 or +1.
 # ---
 # x:   The value.
 # ret: -1 below zero, 0 at zero, 1 above
-#[op("spirv", "GLSL.std.450", "SSign")]
+#[intrinsic("spirv", "GLSL.std.450", "SSign")]
 pub fun sign_i32(x: i32) i32;
 
 # Smaller of two values.
@@ -1479,7 +1479,7 @@ pub fun sign_i32(x: i32) i32;
 # a:   The first value.
 # b:   The second value.
 # ret: a where a < b, else b
-#[op("spirv", "GLSL.std.450", "SMin")]
+#[intrinsic("spirv", "GLSL.std.450", "SMin")]
 pub fun min_i32(a: i32, b: i32) i32;
 
 # Larger of two values.
@@ -1487,7 +1487,7 @@ pub fun min_i32(a: i32, b: i32) i32;
 # a:   The first value.
 # b:   The second value.
 # ret: a where a > b, else b
-#[op("spirv", "GLSL.std.450", "SMax")]
+#[intrinsic("spirv", "GLSL.std.450", "SMax")]
 pub fun max_i32(a: i32, b: i32) i32;
 
 # Constrain a value to a range.
@@ -1496,21 +1496,21 @@ pub fun max_i32(a: i32, b: i32) i32;
 # lo:  The lower bound.
 # hi:  The upper bound.
 # ret: min(max(x, lo), hi)
-#[op("spirv", "GLSL.std.450", "SClamp")]
+#[intrinsic("spirv", "GLSL.std.450", "SClamp")]
 pub fun clamp_i32(x: i32, lo: i32, hi: i32) i32;
 
 # Index of the least significant set bit.
 # ---
 # x:   The value.
 # ret: the bit index, or every bit set (-1) at zero
-#[op("spirv", "GLSL.std.450", "FindILsb")]
+#[intrinsic("spirv", "GLSL.std.450", "FindILsb")]
 pub fun find_lsb_i32(x: i32) i32;
 
 # Index of the most significant bit that differs from the sign.
 # ---
 # x:   The value.
 # ret: the bit index, or every bit set (-1) where there is none
-#[op("spirv", "GLSL.std.450", "FindSMsb")]
+#[intrinsic("spirv", "GLSL.std.450", "FindSMsb")]
 pub fun find_msb_i32(x: i32) i32;
 
 # ----- i32x2 -----
@@ -1519,14 +1519,14 @@ pub fun find_msb_i32(x: i32) i32;
 # ---
 # x:   The values, one per lane.
 # ret: |x| per lane
-#[op("spirv", "GLSL.std.450", "SAbs")]
+#[intrinsic("spirv", "GLSL.std.450", "SAbs")]
 pub fun abs_i32_2(x: i32x2) i32x2;
 
 # Sign as -1, 0 or +1, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: -1 below zero, 0 at zero, 1 above per lane
-#[op("spirv", "GLSL.std.450", "SSign")]
+#[intrinsic("spirv", "GLSL.std.450", "SSign")]
 pub fun sign_i32_2(x: i32x2) i32x2;
 
 # Smaller of two values, per lane.
@@ -1534,7 +1534,7 @@ pub fun sign_i32_2(x: i32x2) i32x2;
 # a:   The first values, one per lane.
 # b:   The second values, one per lane.
 # ret: a where a < b, else b per lane
-#[op("spirv", "GLSL.std.450", "SMin")]
+#[intrinsic("spirv", "GLSL.std.450", "SMin")]
 pub fun min_i32_2(a: i32x2, b: i32x2) i32x2;
 
 # Larger of two values, per lane.
@@ -1542,7 +1542,7 @@ pub fun min_i32_2(a: i32x2, b: i32x2) i32x2;
 # a:   The first values, one per lane.
 # b:   The second values, one per lane.
 # ret: a where a > b, else b per lane
-#[op("spirv", "GLSL.std.450", "SMax")]
+#[intrinsic("spirv", "GLSL.std.450", "SMax")]
 pub fun max_i32_2(a: i32x2, b: i32x2) i32x2;
 
 # Constrain a value to a range, per lane.
@@ -1551,21 +1551,21 @@ pub fun max_i32_2(a: i32x2, b: i32x2) i32x2;
 # lo:  The lower bounds, one per lane.
 # hi:  The upper bounds, one per lane.
 # ret: min(max(x, lo), hi) per lane
-#[op("spirv", "GLSL.std.450", "SClamp")]
+#[intrinsic("spirv", "GLSL.std.450", "SClamp")]
 pub fun clamp_i32_2(x: i32x2, lo: i32x2, hi: i32x2) i32x2;
 
 # Index of the least significant set bit, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: the bit index, or every bit set (-1) at zero per lane
-#[op("spirv", "GLSL.std.450", "FindILsb")]
+#[intrinsic("spirv", "GLSL.std.450", "FindILsb")]
 pub fun find_lsb_i32_2(x: i32x2) i32x2;
 
 # Index of the most significant bit that differs from the sign, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: the bit index, or every bit set (-1) where there is none per lane
-#[op("spirv", "GLSL.std.450", "FindSMsb")]
+#[intrinsic("spirv", "GLSL.std.450", "FindSMsb")]
 pub fun find_msb_i32_2(x: i32x2) i32x2;
 
 # ----- i32x3 -----
@@ -1574,14 +1574,14 @@ pub fun find_msb_i32_2(x: i32x2) i32x2;
 # ---
 # x:   The values, one per lane.
 # ret: |x| per lane
-#[op("spirv", "GLSL.std.450", "SAbs")]
+#[intrinsic("spirv", "GLSL.std.450", "SAbs")]
 pub fun abs_i32_3(x: i32x3) i32x3;
 
 # Sign as -1, 0 or +1, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: -1 below zero, 0 at zero, 1 above per lane
-#[op("spirv", "GLSL.std.450", "SSign")]
+#[intrinsic("spirv", "GLSL.std.450", "SSign")]
 pub fun sign_i32_3(x: i32x3) i32x3;
 
 # Smaller of two values, per lane.
@@ -1589,7 +1589,7 @@ pub fun sign_i32_3(x: i32x3) i32x3;
 # a:   The first values, one per lane.
 # b:   The second values, one per lane.
 # ret: a where a < b, else b per lane
-#[op("spirv", "GLSL.std.450", "SMin")]
+#[intrinsic("spirv", "GLSL.std.450", "SMin")]
 pub fun min_i32_3(a: i32x3, b: i32x3) i32x3;
 
 # Larger of two values, per lane.
@@ -1597,7 +1597,7 @@ pub fun min_i32_3(a: i32x3, b: i32x3) i32x3;
 # a:   The first values, one per lane.
 # b:   The second values, one per lane.
 # ret: a where a > b, else b per lane
-#[op("spirv", "GLSL.std.450", "SMax")]
+#[intrinsic("spirv", "GLSL.std.450", "SMax")]
 pub fun max_i32_3(a: i32x3, b: i32x3) i32x3;
 
 # Constrain a value to a range, per lane.
@@ -1606,21 +1606,21 @@ pub fun max_i32_3(a: i32x3, b: i32x3) i32x3;
 # lo:  The lower bounds, one per lane.
 # hi:  The upper bounds, one per lane.
 # ret: min(max(x, lo), hi) per lane
-#[op("spirv", "GLSL.std.450", "SClamp")]
+#[intrinsic("spirv", "GLSL.std.450", "SClamp")]
 pub fun clamp_i32_3(x: i32x3, lo: i32x3, hi: i32x3) i32x3;
 
 # Index of the least significant set bit, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: the bit index, or every bit set (-1) at zero per lane
-#[op("spirv", "GLSL.std.450", "FindILsb")]
+#[intrinsic("spirv", "GLSL.std.450", "FindILsb")]
 pub fun find_lsb_i32_3(x: i32x3) i32x3;
 
 # Index of the most significant bit that differs from the sign, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: the bit index, or every bit set (-1) where there is none per lane
-#[op("spirv", "GLSL.std.450", "FindSMsb")]
+#[intrinsic("spirv", "GLSL.std.450", "FindSMsb")]
 pub fun find_msb_i32_3(x: i32x3) i32x3;
 
 # ----- i32x4 -----
@@ -1629,14 +1629,14 @@ pub fun find_msb_i32_3(x: i32x3) i32x3;
 # ---
 # x:   The values, one per lane.
 # ret: |x| per lane
-#[op("spirv", "GLSL.std.450", "SAbs")]
+#[intrinsic("spirv", "GLSL.std.450", "SAbs")]
 pub fun abs_i32_4(x: i32x4) i32x4;
 
 # Sign as -1, 0 or +1, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: -1 below zero, 0 at zero, 1 above per lane
-#[op("spirv", "GLSL.std.450", "SSign")]
+#[intrinsic("spirv", "GLSL.std.450", "SSign")]
 pub fun sign_i32_4(x: i32x4) i32x4;
 
 # Smaller of two values, per lane.
@@ -1644,7 +1644,7 @@ pub fun sign_i32_4(x: i32x4) i32x4;
 # a:   The first values, one per lane.
 # b:   The second values, one per lane.
 # ret: a where a < b, else b per lane
-#[op("spirv", "GLSL.std.450", "SMin")]
+#[intrinsic("spirv", "GLSL.std.450", "SMin")]
 pub fun min_i32_4(a: i32x4, b: i32x4) i32x4;
 
 # Larger of two values, per lane.
@@ -1652,7 +1652,7 @@ pub fun min_i32_4(a: i32x4, b: i32x4) i32x4;
 # a:   The first values, one per lane.
 # b:   The second values, one per lane.
 # ret: a where a > b, else b per lane
-#[op("spirv", "GLSL.std.450", "SMax")]
+#[intrinsic("spirv", "GLSL.std.450", "SMax")]
 pub fun max_i32_4(a: i32x4, b: i32x4) i32x4;
 
 # Constrain a value to a range, per lane.
@@ -1661,21 +1661,21 @@ pub fun max_i32_4(a: i32x4, b: i32x4) i32x4;
 # lo:  The lower bounds, one per lane.
 # hi:  The upper bounds, one per lane.
 # ret: min(max(x, lo), hi) per lane
-#[op("spirv", "GLSL.std.450", "SClamp")]
+#[intrinsic("spirv", "GLSL.std.450", "SClamp")]
 pub fun clamp_i32_4(x: i32x4, lo: i32x4, hi: i32x4) i32x4;
 
 # Index of the least significant set bit, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: the bit index, or every bit set (-1) at zero per lane
-#[op("spirv", "GLSL.std.450", "FindILsb")]
+#[intrinsic("spirv", "GLSL.std.450", "FindILsb")]
 pub fun find_lsb_i32_4(x: i32x4) i32x4;
 
 # Index of the most significant bit that differs from the sign, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: the bit index, or every bit set (-1) where there is none per lane
-#[op("spirv", "GLSL.std.450", "FindSMsb")]
+#[intrinsic("spirv", "GLSL.std.450", "FindSMsb")]
 pub fun find_msb_i32_4(x: i32x4) i32x4;
 
 # ----- u32 -----
@@ -1685,7 +1685,7 @@ pub fun find_msb_i32_4(x: i32x4) i32x4;
 # a:   The first value.
 # b:   The second value.
 # ret: a where a < b, else b
-#[op("spirv", "GLSL.std.450", "UMin")]
+#[intrinsic("spirv", "GLSL.std.450", "UMin")]
 pub fun min_u32(a: u32, b: u32) u32;
 
 # Larger of two values.
@@ -1693,7 +1693,7 @@ pub fun min_u32(a: u32, b: u32) u32;
 # a:   The first value.
 # b:   The second value.
 # ret: a where a > b, else b
-#[op("spirv", "GLSL.std.450", "UMax")]
+#[intrinsic("spirv", "GLSL.std.450", "UMax")]
 pub fun max_u32(a: u32, b: u32) u32;
 
 # Constrain a value to a range.
@@ -1702,21 +1702,21 @@ pub fun max_u32(a: u32, b: u32) u32;
 # lo:  The lower bound.
 # hi:  The upper bound.
 # ret: min(max(x, lo), hi)
-#[op("spirv", "GLSL.std.450", "UClamp")]
+#[intrinsic("spirv", "GLSL.std.450", "UClamp")]
 pub fun clamp_u32(x: u32, lo: u32, hi: u32) u32;
 
 # Index of the least significant set bit.
 # ---
 # x:   The value.
 # ret: the bit index, or every bit set (-1) at zero
-#[op("spirv", "GLSL.std.450", "FindILsb")]
+#[intrinsic("spirv", "GLSL.std.450", "FindILsb")]
 pub fun find_lsb_u32(x: u32) u32;
 
 # Index of the most significant bit that differs from the sign.
 # ---
 # x:   The value.
 # ret: the bit index, or every bit set (-1) where there is none
-#[op("spirv", "GLSL.std.450", "FindUMsb")]
+#[intrinsic("spirv", "GLSL.std.450", "FindUMsb")]
 pub fun find_msb_u32(x: u32) u32;
 
 # ----- u32x2 -----
@@ -1726,7 +1726,7 @@ pub fun find_msb_u32(x: u32) u32;
 # a:   The first values, one per lane.
 # b:   The second values, one per lane.
 # ret: a where a < b, else b per lane
-#[op("spirv", "GLSL.std.450", "UMin")]
+#[intrinsic("spirv", "GLSL.std.450", "UMin")]
 pub fun min_u32_2(a: u32x2, b: u32x2) u32x2;
 
 # Larger of two values, per lane.
@@ -1734,7 +1734,7 @@ pub fun min_u32_2(a: u32x2, b: u32x2) u32x2;
 # a:   The first values, one per lane.
 # b:   The second values, one per lane.
 # ret: a where a > b, else b per lane
-#[op("spirv", "GLSL.std.450", "UMax")]
+#[intrinsic("spirv", "GLSL.std.450", "UMax")]
 pub fun max_u32_2(a: u32x2, b: u32x2) u32x2;
 
 # Constrain a value to a range, per lane.
@@ -1743,21 +1743,21 @@ pub fun max_u32_2(a: u32x2, b: u32x2) u32x2;
 # lo:  The lower bounds, one per lane.
 # hi:  The upper bounds, one per lane.
 # ret: min(max(x, lo), hi) per lane
-#[op("spirv", "GLSL.std.450", "UClamp")]
+#[intrinsic("spirv", "GLSL.std.450", "UClamp")]
 pub fun clamp_u32_2(x: u32x2, lo: u32x2, hi: u32x2) u32x2;
 
 # Index of the least significant set bit, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: the bit index, or every bit set (-1) at zero per lane
-#[op("spirv", "GLSL.std.450", "FindILsb")]
+#[intrinsic("spirv", "GLSL.std.450", "FindILsb")]
 pub fun find_lsb_u32_2(x: u32x2) u32x2;
 
 # Index of the most significant bit that differs from the sign, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: the bit index, or every bit set (-1) where there is none per lane
-#[op("spirv", "GLSL.std.450", "FindUMsb")]
+#[intrinsic("spirv", "GLSL.std.450", "FindUMsb")]
 pub fun find_msb_u32_2(x: u32x2) u32x2;
 
 # ----- u32x3 -----
@@ -1767,7 +1767,7 @@ pub fun find_msb_u32_2(x: u32x2) u32x2;
 # a:   The first values, one per lane.
 # b:   The second values, one per lane.
 # ret: a where a < b, else b per lane
-#[op("spirv", "GLSL.std.450", "UMin")]
+#[intrinsic("spirv", "GLSL.std.450", "UMin")]
 pub fun min_u32_3(a: u32x3, b: u32x3) u32x3;
 
 # Larger of two values, per lane.
@@ -1775,7 +1775,7 @@ pub fun min_u32_3(a: u32x3, b: u32x3) u32x3;
 # a:   The first values, one per lane.
 # b:   The second values, one per lane.
 # ret: a where a > b, else b per lane
-#[op("spirv", "GLSL.std.450", "UMax")]
+#[intrinsic("spirv", "GLSL.std.450", "UMax")]
 pub fun max_u32_3(a: u32x3, b: u32x3) u32x3;
 
 # Constrain a value to a range, per lane.
@@ -1784,21 +1784,21 @@ pub fun max_u32_3(a: u32x3, b: u32x3) u32x3;
 # lo:  The lower bounds, one per lane.
 # hi:  The upper bounds, one per lane.
 # ret: min(max(x, lo), hi) per lane
-#[op("spirv", "GLSL.std.450", "UClamp")]
+#[intrinsic("spirv", "GLSL.std.450", "UClamp")]
 pub fun clamp_u32_3(x: u32x3, lo: u32x3, hi: u32x3) u32x3;
 
 # Index of the least significant set bit, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: the bit index, or every bit set (-1) at zero per lane
-#[op("spirv", "GLSL.std.450", "FindILsb")]
+#[intrinsic("spirv", "GLSL.std.450", "FindILsb")]
 pub fun find_lsb_u32_3(x: u32x3) u32x3;
 
 # Index of the most significant bit that differs from the sign, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: the bit index, or every bit set (-1) where there is none per lane
-#[op("spirv", "GLSL.std.450", "FindUMsb")]
+#[intrinsic("spirv", "GLSL.std.450", "FindUMsb")]
 pub fun find_msb_u32_3(x: u32x3) u32x3;
 
 # ----- u32x4 -----
@@ -1808,7 +1808,7 @@ pub fun find_msb_u32_3(x: u32x3) u32x3;
 # a:   The first values, one per lane.
 # b:   The second values, one per lane.
 # ret: a where a < b, else b per lane
-#[op("spirv", "GLSL.std.450", "UMin")]
+#[intrinsic("spirv", "GLSL.std.450", "UMin")]
 pub fun min_u32_4(a: u32x4, b: u32x4) u32x4;
 
 # Larger of two values, per lane.
@@ -1816,7 +1816,7 @@ pub fun min_u32_4(a: u32x4, b: u32x4) u32x4;
 # a:   The first values, one per lane.
 # b:   The second values, one per lane.
 # ret: a where a > b, else b per lane
-#[op("spirv", "GLSL.std.450", "UMax")]
+#[intrinsic("spirv", "GLSL.std.450", "UMax")]
 pub fun max_u32_4(a: u32x4, b: u32x4) u32x4;
 
 # Constrain a value to a range, per lane.
@@ -1825,21 +1825,21 @@ pub fun max_u32_4(a: u32x4, b: u32x4) u32x4;
 # lo:  The lower bounds, one per lane.
 # hi:  The upper bounds, one per lane.
 # ret: min(max(x, lo), hi) per lane
-#[op("spirv", "GLSL.std.450", "UClamp")]
+#[intrinsic("spirv", "GLSL.std.450", "UClamp")]
 pub fun clamp_u32_4(x: u32x4, lo: u32x4, hi: u32x4) u32x4;
 
 # Index of the least significant set bit, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: the bit index, or every bit set (-1) at zero per lane
-#[op("spirv", "GLSL.std.450", "FindILsb")]
+#[intrinsic("spirv", "GLSL.std.450", "FindILsb")]
 pub fun find_lsb_u32_4(x: u32x4) u32x4;
 
 # Index of the most significant bit that differs from the sign, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: the bit index, or every bit set (-1) where there is none per lane
-#[op("spirv", "GLSL.std.450", "FindUMsb")]
+#[intrinsic("spirv", "GLSL.std.450", "FindUMsb")]
 pub fun find_msb_u32_4(x: u32x4) u32x4;
 
 # ----- i64 -----
@@ -1848,14 +1848,14 @@ pub fun find_msb_u32_4(x: u32x4) u32x4;
 # ---
 # x:   The value.
 # ret: |x|
-#[op("spirv", "GLSL.std.450", "SAbs")]
+#[intrinsic("spirv", "GLSL.std.450", "SAbs")]
 pub fun abs_i64(x: i64) i64;
 
 # Sign as -1, 0 or +1.
 # ---
 # x:   The value.
 # ret: -1 below zero, 0 at zero, 1 above
-#[op("spirv", "GLSL.std.450", "SSign")]
+#[intrinsic("spirv", "GLSL.std.450", "SSign")]
 pub fun sign_i64(x: i64) i64;
 
 # Smaller of two values.
@@ -1863,7 +1863,7 @@ pub fun sign_i64(x: i64) i64;
 # a:   The first value.
 # b:   The second value.
 # ret: a where a < b, else b
-#[op("spirv", "GLSL.std.450", "SMin")]
+#[intrinsic("spirv", "GLSL.std.450", "SMin")]
 pub fun min_i64(a: i64, b: i64) i64;
 
 # Larger of two values.
@@ -1871,7 +1871,7 @@ pub fun min_i64(a: i64, b: i64) i64;
 # a:   The first value.
 # b:   The second value.
 # ret: a where a > b, else b
-#[op("spirv", "GLSL.std.450", "SMax")]
+#[intrinsic("spirv", "GLSL.std.450", "SMax")]
 pub fun max_i64(a: i64, b: i64) i64;
 
 # Constrain a value to a range.
@@ -1880,7 +1880,7 @@ pub fun max_i64(a: i64, b: i64) i64;
 # lo:  The lower bound.
 # hi:  The upper bound.
 # ret: min(max(x, lo), hi)
-#[op("spirv", "GLSL.std.450", "SClamp")]
+#[intrinsic("spirv", "GLSL.std.450", "SClamp")]
 pub fun clamp_i64(x: i64, lo: i64, hi: i64) i64;
 
 # ----- i64x2 -----
@@ -1889,14 +1889,14 @@ pub fun clamp_i64(x: i64, lo: i64, hi: i64) i64;
 # ---
 # x:   The values, one per lane.
 # ret: |x| per lane
-#[op("spirv", "GLSL.std.450", "SAbs")]
+#[intrinsic("spirv", "GLSL.std.450", "SAbs")]
 pub fun abs_i64_2(x: i64x2) i64x2;
 
 # Sign as -1, 0 or +1, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: -1 below zero, 0 at zero, 1 above per lane
-#[op("spirv", "GLSL.std.450", "SSign")]
+#[intrinsic("spirv", "GLSL.std.450", "SSign")]
 pub fun sign_i64_2(x: i64x2) i64x2;
 
 # Smaller of two values, per lane.
@@ -1904,7 +1904,7 @@ pub fun sign_i64_2(x: i64x2) i64x2;
 # a:   The first values, one per lane.
 # b:   The second values, one per lane.
 # ret: a where a < b, else b per lane
-#[op("spirv", "GLSL.std.450", "SMin")]
+#[intrinsic("spirv", "GLSL.std.450", "SMin")]
 pub fun min_i64_2(a: i64x2, b: i64x2) i64x2;
 
 # Larger of two values, per lane.
@@ -1912,7 +1912,7 @@ pub fun min_i64_2(a: i64x2, b: i64x2) i64x2;
 # a:   The first values, one per lane.
 # b:   The second values, one per lane.
 # ret: a where a > b, else b per lane
-#[op("spirv", "GLSL.std.450", "SMax")]
+#[intrinsic("spirv", "GLSL.std.450", "SMax")]
 pub fun max_i64_2(a: i64x2, b: i64x2) i64x2;
 
 # Constrain a value to a range, per lane.
@@ -1921,7 +1921,7 @@ pub fun max_i64_2(a: i64x2, b: i64x2) i64x2;
 # lo:  The lower bounds, one per lane.
 # hi:  The upper bounds, one per lane.
 # ret: min(max(x, lo), hi) per lane
-#[op("spirv", "GLSL.std.450", "SClamp")]
+#[intrinsic("spirv", "GLSL.std.450", "SClamp")]
 pub fun clamp_i64_2(x: i64x2, lo: i64x2, hi: i64x2) i64x2;
 
 # ----- i64x3 -----
@@ -1930,14 +1930,14 @@ pub fun clamp_i64_2(x: i64x2, lo: i64x2, hi: i64x2) i64x2;
 # ---
 # x:   The values, one per lane.
 # ret: |x| per lane
-#[op("spirv", "GLSL.std.450", "SAbs")]
+#[intrinsic("spirv", "GLSL.std.450", "SAbs")]
 pub fun abs_i64_3(x: i64x3) i64x3;
 
 # Sign as -1, 0 or +1, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: -1 below zero, 0 at zero, 1 above per lane
-#[op("spirv", "GLSL.std.450", "SSign")]
+#[intrinsic("spirv", "GLSL.std.450", "SSign")]
 pub fun sign_i64_3(x: i64x3) i64x3;
 
 # Smaller of two values, per lane.
@@ -1945,7 +1945,7 @@ pub fun sign_i64_3(x: i64x3) i64x3;
 # a:   The first values, one per lane.
 # b:   The second values, one per lane.
 # ret: a where a < b, else b per lane
-#[op("spirv", "GLSL.std.450", "SMin")]
+#[intrinsic("spirv", "GLSL.std.450", "SMin")]
 pub fun min_i64_3(a: i64x3, b: i64x3) i64x3;
 
 # Larger of two values, per lane.
@@ -1953,7 +1953,7 @@ pub fun min_i64_3(a: i64x3, b: i64x3) i64x3;
 # a:   The first values, one per lane.
 # b:   The second values, one per lane.
 # ret: a where a > b, else b per lane
-#[op("spirv", "GLSL.std.450", "SMax")]
+#[intrinsic("spirv", "GLSL.std.450", "SMax")]
 pub fun max_i64_3(a: i64x3, b: i64x3) i64x3;
 
 # Constrain a value to a range, per lane.
@@ -1962,7 +1962,7 @@ pub fun max_i64_3(a: i64x3, b: i64x3) i64x3;
 # lo:  The lower bounds, one per lane.
 # hi:  The upper bounds, one per lane.
 # ret: min(max(x, lo), hi) per lane
-#[op("spirv", "GLSL.std.450", "SClamp")]
+#[intrinsic("spirv", "GLSL.std.450", "SClamp")]
 pub fun clamp_i64_3(x: i64x3, lo: i64x3, hi: i64x3) i64x3;
 
 # ----- i64x4 -----
@@ -1971,14 +1971,14 @@ pub fun clamp_i64_3(x: i64x3, lo: i64x3, hi: i64x3) i64x3;
 # ---
 # x:   The values, one per lane.
 # ret: |x| per lane
-#[op("spirv", "GLSL.std.450", "SAbs")]
+#[intrinsic("spirv", "GLSL.std.450", "SAbs")]
 pub fun abs_i64_4(x: i64x4) i64x4;
 
 # Sign as -1, 0 or +1, per lane.
 # ---
 # x:   The values, one per lane.
 # ret: -1 below zero, 0 at zero, 1 above per lane
-#[op("spirv", "GLSL.std.450", "SSign")]
+#[intrinsic("spirv", "GLSL.std.450", "SSign")]
 pub fun sign_i64_4(x: i64x4) i64x4;
 
 # Smaller of two values, per lane.
@@ -1986,7 +1986,7 @@ pub fun sign_i64_4(x: i64x4) i64x4;
 # a:   The first values, one per lane.
 # b:   The second values, one per lane.
 # ret: a where a < b, else b per lane
-#[op("spirv", "GLSL.std.450", "SMin")]
+#[intrinsic("spirv", "GLSL.std.450", "SMin")]
 pub fun min_i64_4(a: i64x4, b: i64x4) i64x4;
 
 # Larger of two values, per lane.
@@ -1994,7 +1994,7 @@ pub fun min_i64_4(a: i64x4, b: i64x4) i64x4;
 # a:   The first values, one per lane.
 # b:   The second values, one per lane.
 # ret: a where a > b, else b per lane
-#[op("spirv", "GLSL.std.450", "SMax")]
+#[intrinsic("spirv", "GLSL.std.450", "SMax")]
 pub fun max_i64_4(a: i64x4, b: i64x4) i64x4;
 
 # Constrain a value to a range, per lane.
@@ -2003,7 +2003,7 @@ pub fun max_i64_4(a: i64x4, b: i64x4) i64x4;
 # lo:  The lower bounds, one per lane.
 # hi:  The upper bounds, one per lane.
 # ret: min(max(x, lo), hi) per lane
-#[op("spirv", "GLSL.std.450", "SClamp")]
+#[intrinsic("spirv", "GLSL.std.450", "SClamp")]
 pub fun clamp_i64_4(x: i64x4, lo: i64x4, hi: i64x4) i64x4;
 
 # ----- u64 -----
@@ -2013,7 +2013,7 @@ pub fun clamp_i64_4(x: i64x4, lo: i64x4, hi: i64x4) i64x4;
 # a:   The first value.
 # b:   The second value.
 # ret: a where a < b, else b
-#[op("spirv", "GLSL.std.450", "UMin")]
+#[intrinsic("spirv", "GLSL.std.450", "UMin")]
 pub fun min_u64(a: u64, b: u64) u64;
 
 # Larger of two values.
@@ -2021,7 +2021,7 @@ pub fun min_u64(a: u64, b: u64) u64;
 # a:   The first value.
 # b:   The second value.
 # ret: a where a > b, else b
-#[op("spirv", "GLSL.std.450", "UMax")]
+#[intrinsic("spirv", "GLSL.std.450", "UMax")]
 pub fun max_u64(a: u64, b: u64) u64;
 
 # Constrain a value to a range.
@@ -2030,7 +2030,7 @@ pub fun max_u64(a: u64, b: u64) u64;
 # lo:  The lower bound.
 # hi:  The upper bound.
 # ret: min(max(x, lo), hi)
-#[op("spirv", "GLSL.std.450", "UClamp")]
+#[intrinsic("spirv", "GLSL.std.450", "UClamp")]
 pub fun clamp_u64(x: u64, lo: u64, hi: u64) u64;
 
 # ----- u64x2 -----
@@ -2040,7 +2040,7 @@ pub fun clamp_u64(x: u64, lo: u64, hi: u64) u64;
 # a:   The first values, one per lane.
 # b:   The second values, one per lane.
 # ret: a where a < b, else b per lane
-#[op("spirv", "GLSL.std.450", "UMin")]
+#[intrinsic("spirv", "GLSL.std.450", "UMin")]
 pub fun min_u64_2(a: u64x2, b: u64x2) u64x2;
 
 # Larger of two values, per lane.
@@ -2048,7 +2048,7 @@ pub fun min_u64_2(a: u64x2, b: u64x2) u64x2;
 # a:   The first values, one per lane.
 # b:   The second values, one per lane.
 # ret: a where a > b, else b per lane
-#[op("spirv", "GLSL.std.450", "UMax")]
+#[intrinsic("spirv", "GLSL.std.450", "UMax")]
 pub fun max_u64_2(a: u64x2, b: u64x2) u64x2;
 
 # Constrain a value to a range, per lane.
@@ -2057,7 +2057,7 @@ pub fun max_u64_2(a: u64x2, b: u64x2) u64x2;
 # lo:  The lower bounds, one per lane.
 # hi:  The upper bounds, one per lane.
 # ret: min(max(x, lo), hi) per lane
-#[op("spirv", "GLSL.std.450", "UClamp")]
+#[intrinsic("spirv", "GLSL.std.450", "UClamp")]
 pub fun clamp_u64_2(x: u64x2, lo: u64x2, hi: u64x2) u64x2;
 
 # ----- u64x3 -----
@@ -2067,7 +2067,7 @@ pub fun clamp_u64_2(x: u64x2, lo: u64x2, hi: u64x2) u64x2;
 # a:   The first values, one per lane.
 # b:   The second values, one per lane.
 # ret: a where a < b, else b per lane
-#[op("spirv", "GLSL.std.450", "UMin")]
+#[intrinsic("spirv", "GLSL.std.450", "UMin")]
 pub fun min_u64_3(a: u64x3, b: u64x3) u64x3;
 
 # Larger of two values, per lane.
@@ -2075,7 +2075,7 @@ pub fun min_u64_3(a: u64x3, b: u64x3) u64x3;
 # a:   The first values, one per lane.
 # b:   The second values, one per lane.
 # ret: a where a > b, else b per lane
-#[op("spirv", "GLSL.std.450", "UMax")]
+#[intrinsic("spirv", "GLSL.std.450", "UMax")]
 pub fun max_u64_3(a: u64x3, b: u64x3) u64x3;
 
 # Constrain a value to a range, per lane.
@@ -2084,7 +2084,7 @@ pub fun max_u64_3(a: u64x3, b: u64x3) u64x3;
 # lo:  The lower bounds, one per lane.
 # hi:  The upper bounds, one per lane.
 # ret: min(max(x, lo), hi) per lane
-#[op("spirv", "GLSL.std.450", "UClamp")]
+#[intrinsic("spirv", "GLSL.std.450", "UClamp")]
 pub fun clamp_u64_3(x: u64x3, lo: u64x3, hi: u64x3) u64x3;
 
 # ----- u64x4 -----
@@ -2094,7 +2094,7 @@ pub fun clamp_u64_3(x: u64x3, lo: u64x3, hi: u64x3) u64x3;
 # a:   The first values, one per lane.
 # b:   The second values, one per lane.
 # ret: a where a < b, else b per lane
-#[op("spirv", "GLSL.std.450", "UMin")]
+#[intrinsic("spirv", "GLSL.std.450", "UMin")]
 pub fun min_u64_4(a: u64x4, b: u64x4) u64x4;
 
 # Larger of two values, per lane.
@@ -2102,7 +2102,7 @@ pub fun min_u64_4(a: u64x4, b: u64x4) u64x4;
 # a:   The first values, one per lane.
 # b:   The second values, one per lane.
 # ret: a where a > b, else b per lane
-#[op("spirv", "GLSL.std.450", "UMax")]
+#[intrinsic("spirv", "GLSL.std.450", "UMax")]
 pub fun max_u64_4(a: u64x4, b: u64x4) u64x4;
 
 # Constrain a value to a range, per lane.
@@ -2111,5 +2111,5 @@ pub fun max_u64_4(a: u64x4, b: u64x4) u64x4;
 # lo:  The lower bounds, one per lane.
 # hi:  The upper bounds, one per lane.
 # ret: min(max(x, lo), hi) per lane
-#[op("spirv", "GLSL.std.450", "UClamp")]
+#[intrinsic("spirv", "GLSL.std.450", "UClamp")]
 pub fun clamp_u64_4(x: u64x4, lo: u64x4, hi: u64x4) u64x4;

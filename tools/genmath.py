@@ -14,7 +14,7 @@ import machfmt
 
 HEADER = '''# Shader-side maths: the functions that ARE SPIR-V instructions.
 #
-# Every declaration here is one SPIR-V instruction, named by an `#[op(target, set,
+# Every declaration here is one SPIR-V instruction, named by an `#[intrinsic(target, set,
 # name)]` decorator the compiler reads at the call site. A call to `normalize3`
 # in a shader does not become a call at all: it becomes the instruction, inline,
 # in the calling function's body.
@@ -186,7 +186,7 @@ def decl(name, suffix, glsl, params, ty, summary, ret, per_lane, sset="GLSL.std.
         lines.append(f"# {p}:{' ' * (4 - len(p))}{doc}")
     tail = ret + (" per lane" if per_lane else "")
     lines.append(f"# ret: {tail[0].lower()}{tail[1:]}" if tail[0].isupper() else f"# ret: {tail}")
-    lines.append(f'#[op("spirv", "{sset}", "{glsl}")]')
+    lines.append(f'#[intrinsic("spirv", "{sset}", "{glsl}")]')
     lines.append(f"pub fun {name}{suffix}({args}) {ty};")
     return "\n".join(lines)
 
@@ -199,7 +199,7 @@ def split(name, suffix, glsl, param, pty, ty, summary, pdoc, ret, per_lane):
     lines.append(f"# {'x:':<{width}} {'The values, one per lane.' if per_lane else 'The value.'}")
     lines.append(f"# {param + ':':<{width}} {pdoc}")
     lines.append(f"# {'ret:':<{width}} {ret}" + (" per lane" if per_lane else ""))
-    lines.append(f'#[op("spirv", "GLSL.std.450", "{glsl}")]')
+    lines.append(f'#[intrinsic("spirv", "GLSL.std.450", "{glsl}")]')
     lines.append(f"pub fun {name}{suffix}(x: {ty}, {param}: *{target}) {ty};")
     return "\n".join(lines)
 
@@ -261,7 +261,7 @@ def geom(name, suffix, glsl, params, ty, summary, ret, result, sset="GLSL.std.45
     for p in params:
         lines.append(f"# {p}:{' ' * (4 - len(p))}{GEOM_DOC[p]}")
     lines.append(f"# ret: {ret}")
-    lines.append(f'#[op("spirv", "{sset}", "{glsl}")]')
+    lines.append(f'#[intrinsic("spirv", "{sset}", "{glsl}")]')
     lines.append(f"pub fun {name}{suffix}({args}) {rty};")
     return "\n".join(lines)
 
@@ -284,7 +284,7 @@ for suffix, ty, label in widths():
              "# n:   The surface normal, which must already be normalized.",
              "# eta: The ratio of indices of refraction. A scalar at every width.",
              "# ret: the refracted vector, or the zero vector under total internal reflection",
-             '#[op("spirv", "GLSL.std.450", "Refract")]',
+             '#[intrinsic("spirv", "GLSL.std.450", "Refract")]',
              f"pub fun refract{suffix}(i: {ty}, n: {ty}, eta: f32) {ty};"]
     out.append("\n".join(lines))
     out.append("")
@@ -298,7 +298,7 @@ for suffix, ty, label in widths():
                  "# a:   The first vector.",
                  "# b:   The second vector.",
                  "# ret: the vector perpendicular to both, right-handed",
-                 '#[op("spirv", "GLSL.std.450", "Cross")]',
+                 '#[intrinsic("spirv", "GLSL.std.450", "Cross")]',
                  "pub fun cross_3(a: f32x3, b: f32x3) f32x3;"]
         out.append("\n".join(lines))
         out.append("")
@@ -314,7 +314,7 @@ out.append('''
 # most significant bit that differs from the sign bit, so it scans for a 0 in a
 # negative value.
 #
-# A 16-bit entry needs the target's `int16` and a 64-bit one its `int64`, where the
+# A 16-bit entry needs the target's `Int16` and a 64-bit one its `Int64`, where the
 # target names an `env`. The bit scans are 32-bit only: GLSL.std.450 defines `FindILsb`,
 # `FindSMsb` and `FindUMsb` on 32-bit integers alone.
 ''')
@@ -350,7 +350,7 @@ text = "\n".join(out)
 CONFORM_HEADER = '''# Calls every entry in `shader.math`.
 #
 # This exists to be compiled, not to shade anything. Each call forces the
-# compiler to resolve an `#[op]` decorator and emit the instruction at that
+# compiler to resolve an `#[intrinsic]` decorator and emit the instruction at that
 # operand width, so a wrong instruction name or a signature SPIR-V rejects turns
 # into a build failure here. The library on its own compiles to nothing and would
 # catch neither.
@@ -363,22 +363,22 @@ CONFORM_HEADER = '''# Calls every entry in `shader.math`.
 
 use sh: shader.math;
 
-#[input(0)]
+#[gpu.input(0)]
 var a2: f32x2;
-#[input(1)]
+#[gpu.input(1)]
 var b2: f32x2;
-#[input(2)]
+#[gpu.input(2)]
 var a3: f32x3;
-#[input(3)]
+#[gpu.input(3)]
 var b3: f32x3;
-#[input(4)]
+#[gpu.input(4)]
 var a4: f32x4;
-#[input(5)]
+#[gpu.input(5)]
 var b4: f32x4;
-#[input(6)]
+#[gpu.input(6)]
 var s:  f32;
 
-#[output(0)]
+#[gpu.output(0)]
 var out_colour: f32x4;
 '''
 
@@ -427,7 +427,7 @@ def conform(library):
         scalar, width = lanes(ret)
         lane = f"r{n}" if width == 1 else f"r{n}[0]"
         body.append(f"    total = total + {lane if scalar == 'f32' else lane + '::f32'};")
-    return "\n".join([CONFORM_HEADER, "#[stage(\"fragment\")]", "fun frag_main() {",
+    return "\n".join([CONFORM_HEADER, "#[gpu.stage(\"fragment\")]", "fun frag_main() {",
                       *prelude, "    var total: f32 = 0.0;", *body,
                       "    out_colour = f32x4{total, total, total, total};", "}", ""])
 

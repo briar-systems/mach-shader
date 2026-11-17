@@ -6,11 +6,11 @@ that lower to a single SPIR-V instruction.
 ```mach
 use sh: shader.math;
 
-#[input(0)]  var in_normal: f32x3;
-#[input(1)]  var in_light:  f32x3;
-#[output(0)] var out_colour: f32x4;
+#[gpu.input(0)]  var in_normal: f32x3;
+#[gpu.input(1)]  var in_light:  f32x3;
+#[gpu.output(0)] var out_colour: f32x4;
 
-#[stage("fragment")]
+#[gpu.stage("fragment")]
 fun frag_main() {
     val n: f32x3 = sh.normalize_3(in_normal);
     val d: f32   = sh.max(sh.dot_3(n, in_light), 0.0);
@@ -19,7 +19,7 @@ fun frag_main() {
 ```
 
 `sh.normalize_3` does not compile to a call. Each declaration in `shader.math`
-carries an `#[op(target, set, name)]` decorator naming the SPIR-V instruction it *is*,
+carries an `#[intrinsic(target, set, name)]` decorator naming the SPIR-V instruction it *is*,
 and the compiler substitutes that instruction at the call site: an `OpExtInst` into
 `GLSL.std.450` for most of them, core `OpDot` for the `dot_*` family. The extended instruction
 set is imported once per module and only when something in that module uses it.
@@ -35,11 +35,11 @@ constructor is and what each operand means.
 ```mach
 use tex: shader.texture;
 
-#[sampler(0, 0)] var albedo: tex.Sampler2D;
-#[input(0)] var in_uv: f32x2;
-#[output(0)] var out_colour: f32x4;
+#[gpu.sampler(0, 0)] var albedo: tex.Sampler2D;
+#[gpu.input(0)] var in_uv: f32x2;
+#[gpu.output(0)] var out_colour: f32x4;
 
-#[stage("fragment")]
+#[gpu.stage("fragment")]
 fun frag_main() {
     out_colour = tex.sample_2d(albedo, in_uv);
 }
@@ -66,18 +66,18 @@ operand.
 ### Storage images and texel buffers
 
 A storage image is read and written texel by texel, with no sampler, and binds
-through `#[storage]` like a buffer, `"readonly"`, `"writeonly"` and `"coherent"`
+through `#[gpu.storage]` like a buffer, `"readonly"`, `"writeonly"` and `"coherent"`
 included:
 
 ```mach
 use tex: shader.texture;
 
-#[storage(0, 0, "readonly")]  var src: tex.StorageImage2D;
-#[storage(0, 1, "writeonly")] var dst: tex.StorageImage2D;
-#[builtin("global_invocation")] var gid: u32x3;
+#[gpu.storage(0, 0, "readonly")]  var src: tex.StorageImage2D;
+#[gpu.storage(0, 1, "writeonly")] var dst: tex.StorageImage2D;
+#[gpu.builtin("global_invocation")] var gid: u32x3;
 
-#[stage("compute")]
-#[workgroup(8, 8, 1)]
+#[gpu.stage("compute")]
+#[gpu.workgroup(8, 8, 1)]
 fun blit() {
     val at: i32x2 = i32x2{gid[0]::i32, gid[1]::i32};
     tex.image_write_2d(dst, at, tex.image_read_2d(src, at));
@@ -85,18 +85,19 @@ fun blit() {
 ```
 
 The `StorageImage*` handles are `FORMAT_UNKNOWN`, so one handle binds a view of any
-format, under the `storage_read_without_format` and `storage_write_without_format`
-extensions that `vulkan1.3` selects. The `*R32f`, `*R32i`, `*R32ui`, `*R64i` and
+format, under the `StorageImageReadWithoutFormat` and `StorageImageWriteWithoutFormat`
+capabilities, which `vulkan1.3` selects and an earlier `env` needs named in the target's
+`ext`. The `*R32f`, `*R32i`, `*R32ui`, `*R64i` and
 `*R64ui` images carry the formats Vulkan defines an image atomic on, and
 `image_texel_*` gives an atomic in `shader.atomic` the address of one of their
-texels. A texel buffer is a `TexelBuffer`, fetched and bound by `#[sampler]`, or a
-`StorageTexelBuffer`, read and written and bound by `#[storage]`.
+texels. A texel buffer is a `TexelBuffer`, fetched and bound by `#[gpu.sampler]`, or a
+`StorageTexelBuffer`, read and written and bound by `#[gpu.storage]`.
 
 ## Compute
 
-A compute stage is a `#[stage("compute")]` function sized by `#[workgroup(x, y,
+A compute stage is a `#[gpu.stage("compute")]` function sized by `#[gpu.workgroup(x, y,
 z)]`, and it emits a GLCompute entry point with that `LocalSize`. It reads and
-writes `#[storage(set, binding)]` buffers rather than varyings, since Vulkan has no
+writes `#[gpu.storage(set, binding)]` buffers rather than varyings, since Vulkan has no
 `Output` class in a compute stage, and a buffer marked `"readonly"` is emitted
 `NonWritable`. Its ids are the `global_invocation`, `local_invocation` and
 `workgroup_id` built-ins, each a `u32x3`. The maths in `shader.math` works in a
@@ -107,12 +108,12 @@ use sh: shader.math;
 
 rec Field { values: [256]f32; }
 
-#[storage(0, 0, "readonly")] var src: Field;
-#[storage(0, 1)]             var dst: Field;
-#[builtin("global_invocation")] var gid: u32x3;
+#[gpu.storage(0, 0, "readonly")] var src: Field;
+#[gpu.storage(0, 1)]             var dst: Field;
+#[gpu.builtin("global_invocation")] var gid: u32x3;
 
-#[stage("compute")]
-#[workgroup(64, 1, 1)]
+#[gpu.stage("compute")]
+#[gpu.workgroup(64, 1, 1)]
 fun step() {
     val i: u32 = gid[0];
     dst.values[i] = sh.sqrt(src.values[i]);
@@ -120,7 +121,7 @@ fun step() {
 ```
 
 All of that is the compiler's. What a compute body calls is this library's, each
-one a bodyless `#[op]` declaration like the maths:
+one a bodyless `#[intrinsic]` declaration like the maths:
 
 - `shader.sync`: the `SCOPE_*` and `SEMANTICS_*` operand constants,
   `control_barrier` and `memory_barrier`, and the wrappers `workgroup_barrier`,
@@ -137,12 +138,12 @@ use sy: shader.sync;
 
 rec Histogram { bins: [64]u32; }
 
-#[storage(0, 0)] var histogram: Histogram;
-#[shared]        var local_bins: [64]u32;
-#[builtin("local_invocation_index")] var lid: u32;
+#[gpu.storage(0, 0)] var histogram: Histogram;
+#[gpu.shared]        var local_bins: [64]u32;
+#[gpu.builtin("local_invocation_index")] var lid: u32;
 
-#[stage("compute")]
-#[workgroup(64, 1, 1)]
+#[gpu.stage("compute")]
+#[gpu.workgroup(64, 1, 1)]
 fun count() {
     at.atomic_add_u32(?local_bins[lid & 63], sy.SCOPE_WORKGROUP, sy.SEMANTICS_RELAXED, 1);
     sy.workgroup_barrier();
@@ -162,8 +163,8 @@ levels. A wrapper that took a scope or semantics as a parameter would compile at
 where inlining folds it, and be refused at O0, so none is shipped.
 
 Every type other than a 32-bit integer atomic, and every subgroup family but
-`Elect`, needs a Vulkan device feature that the target names in its `extensions`
-(`buffer_float32_atomic_add`, `subgroup_arithmetic`, and so on). The module headers
+`Elect`, needs a Vulkan device feature, which the target names in its `ext` by the SPIR-V
+capability it enables (`AtomicFloat32AddEXT`, `GroupNonUniformArithmetic`, and so on). The module headers
 list them, and a call whose feature the target does not select is refused with its
 name.
 
@@ -222,7 +223,7 @@ also differ in operand type, reaching for the wrong one is a type error rather
 than a wrong result.
 
 `modf` and `frexp` return one part of a value and store the other through a
-pointer, which may address a local, a `#[shared]` variable or a storage buffer:
+pointer, which may address a local, a `#[gpu.shared]` variable or a storage buffer:
 `sh.modf(x, ?whole)`. `frexp` stores its exponent as an `i32` with as many lanes as
 the value.
 
@@ -231,7 +232,7 @@ rows carry their component type after an underscore and then the lane count:
 `min_i32`, `min_u64_3`, `find_msb_i32_4`. The instruction follows the signedness,
 so `min_i32` is `SMin` and `min_u32` is `UMin`, and `abs_*` and `sign_*` exist only
 signed. `abs`, `sign`, `min`, `max` and `clamp` take 16-, 32- and 64-bit integers, and
-a 16- or 64-bit entry needs the target's `int16` or `int64` where it names an `env`.
+a 16- or 64-bit entry needs the target's `Int16` or `Int64` where it names an `env`.
 The bit scans `find_lsb` and `find_msb` are 32-bit only, the one width GLSL.std.450
 defines them on.
 
@@ -266,9 +267,8 @@ git = "https://github.com/briar-systems/mach-shader"
 version = "^0.6.0"
 ```
 
-Requires Mach 6.10. The manifest declares `mach = "^6.10"`, the release that
-declares a signed-format image over a signed texel type and carries the `Modf`,
-`Frexp` and integer GLSL.std.450 rows.
+Requires a Mach compiler with `#[intrinsic]`, the `#[gpu.*]` shader decorators and
+handle operands written as literals.
 
 ## How it is checked
 
@@ -297,7 +297,7 @@ and `conform_subgroup_comp` every subgroup operation.
 
 `conform/verify.sh` (needs spirv-tools) builds them at O0 and O2, runs `spirv-val`
 over each both as SPIR-V and against `vulkan1.3`, and checks the disassembly for
-what validation alone would not catch: `tools/opcheck.py` requires every `#[op]`
+what validation alone would not catch: `tools/opcheck.py` requires every `#[intrinsic]`
 declared in `shader.math`, `shader.texture`, `shader.sync`, `shader.atomic` and
 `shader.subgroup` to be called by a conformance shader and to reach its module, and
 `tools/mathcheck.py` requires each `shader.math` entry to leave its own instruction,

@@ -19,20 +19,20 @@ rec Outputs {
     ids:    [256]u32;
 }
 
-#[storage(0, 0, "readonly")]
+#[gpu.storage(0, 0, "readonly")]
 var inputs:  Inputs;
-#[storage(0, 1)]
+#[gpu.storage(0, 1)]
 var outputs: Outputs;
 
-#[builtin("global_invocation")]
+#[gpu.builtin("global_invocation")]
 var global_id: u32x3;
-#[builtin("local_invocation")]
+#[gpu.builtin("local_invocation")]
 var local_id:  u32x3;
-#[builtin("workgroup_id")]
+#[gpu.builtin("workgroup_id")]
 var group_id:  u32x3;
 
-#[stage("compute")]
-#[workgroup(64, 1, 1)]
+#[gpu.stage("compute")]
+#[gpu.workgroup(64, 1, 1)]
 fun comp_main() {
     val i: u32 = global_id[0];
     outputs.values[i] = sh.fma(sh.sqrt(inputs.values[i]), 2.0, 1.0);

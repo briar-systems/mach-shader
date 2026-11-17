@@ -1,7 +1,7 @@
 # Shader-side synchronization: the operand constants every barrier and atomic takes,
 # and the barriers themselves.
 #
-# Every bodyless declaration here is one SPIR-V instruction, named by `#[op]`, as in
+# Every bodyless declaration here is one SPIR-V instruction, named by `#[intrinsic]`, as in
 # `shader.math`. A barrier is never inlined away or reordered: the compiler treats
 # it as reading and writing all memory, at every optimization level.
 #
@@ -59,14 +59,14 @@ pub val SEMANTICS_VOLATILE:       u32 = 0x8000;
 # execution: The `SCOPE_*` whose invocations wait: workgroup or subgroup.
 # memory:    The `SCOPE_*` the memory ordering is visible across.
 # semantics: The `SEMANTICS_*` ordering and storage classes.
-#[op("spirv", "core", "OpControlBarrier")]
+#[intrinsic("spirv", "core", "OpControlBarrier")]
 pub fun control_barrier(execution: u32, memory: u32, semantics: u32);
 
 # Order memory as the semantics say, without waiting for any other invocation.
 # ---
 # memory:    The `SCOPE_*` the ordering is visible across.
 # semantics: The `SEMANTICS_*` ordering and storage classes.
-#[op("spirv", "core", "OpMemoryBarrier")]
+#[intrinsic("spirv", "core", "OpMemoryBarrier")]
 pub fun memory_barrier(memory: u32, semantics: u32);
 
 # Wait for the whole workgroup, with its workgroup memory written before the barrier

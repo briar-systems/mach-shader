@@ -35,7 +35,7 @@ python3 tools/gensubgroup.py > src/subgroup.mach
 
 ## opcheck.py
 
-Checks that the conformance shaders call every `#[op]` a module declares and that
+Checks that the conformance shaders call every `#[intrinsic]` a module declares and that
 each instruction reaches a disassembled conformance module. `conform/verify.sh`
 runs it over `shader.math`, `shader.texture`, `shader.sync`, `shader.atomic` and `shader.subgroup`.
 

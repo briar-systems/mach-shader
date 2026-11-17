@@ -14,13 +14,13 @@ import machfmt
 HEADER = '''# Shader-side atomics: read-modify-write operations on one value, indivisible across
 # every invocation that reaches the same memory.
 #
-# Every declaration here is one SPIR-V instruction, named by `#[op]`, as in
+# Every declaration here is one SPIR-V instruction, named by `#[intrinsic]`, as in
 # `shader.math`. Like a barrier, an atomic is never inlined away or reordered: the
 # compiler treats it as reading and writing all memory, at every optimization level.
 #
 # THE POINTER TAKES ITS STORAGE CLASS FROM THE CALL. An atomic has no body, so its
 # pointer parameter is whatever the argument points into: an element or member of a
-# `#[storage]` buffer, of a `#[shared]` variable, or a storage image texel from
+# `#[gpu.storage]` buffer, of a `#[gpu.shared]` variable, or a storage image texel from
 # `shader.texture`'s `image_texel_*`. `atomic_add_u32(?counts.n[i], ...)` and
 # `atomic_add_u32(?tile[i], ...)` are the same declaration. A `"readonly"` binding
 # admits only an atomic load and a `"writeonly"` one only an atomic store.
@@ -30,14 +30,16 @@ HEADER = '''# Shader-side atomics: read-modify-write operations on one value, in
 # constants written at the call. A relaxed atomic passes `SEMANTICS_RELAXED`.
 #
 # THE TYPE DECIDES THE FEATURE. A 32-bit integer atomic is core in every storage
-# class. Every other type needs the Vulkan device feature of its storage class, named
-# in the target's `extensions`: `buffer_*` on buffer memory, `shared_*` on workgroup
-# memory and `image_*` on an image texel, where Vulkan defines only a 64-bit integer
-# and an `f32`. A 64-bit integer needs `*_int64_atomics`; an `f16`, `f32` or `f64`
-# load, store or exchange `*_float{16,32,64}_atomics`; an add `*_float{16,32,64}_atomic_add`;
-# a min or max `*_float{16,32,64}_atomic_min_max`. An `f16` atomic also needs `float16`,
-# and an `f16` storage buffer `storage_buffer_16bit_access`. A call whose feature the
-# target does not select is refused there, naming it.
+# class. Every other type needs the capability of the Vulkan device feature that
+# provides it, named in the target's `ext` once the consumer enables that feature for
+# the storage class the atomic reaches. A 64-bit integer needs `Int64Atomics`, and on an
+# image texel `Int64ImageEXT` too; an `f16`, `f32` or `f64` add `AtomicFloat16AddEXT`,
+# `AtomicFloat32AddEXT` or `AtomicFloat64AddEXT`; a min or max `AtomicFloat16MinMaxEXT`,
+# `AtomicFloat32MinMaxEXT` or `AtomicFloat64MinMaxEXT`. A float load, store or exchange
+# declares no capability. An image texel atomic exists only on the formats Vulkan
+# defines one on, a 32- or 64-bit integer and an `f32`. An `f16` atomic also needs
+# `Float16`, and an `f16` storage buffer `StorageBuffer16BitAccess`. A call whose
+# capability the target does not select is refused there, naming it.
 #
 # THE NAMING RULE. Every entry carries the type it operates on after an underscore:
 # `atomic_add_u32`, `atomic_add_i64`, `atomic_add_f32`. There is no unsuffixed entry,
@@ -120,7 +122,7 @@ def decl(op, suffix, ty):
         lines.append(f"# {n + ':':<{width}} {d}")
     if ret is not None:
         lines.append(f"# {'ret:':<{width}} {ret}")
-    lines.append(f'#[op("spirv", "core", "{glsl}")]')
+    lines.append(f'#[intrinsic("spirv", "core", "{glsl}")]')
     args = ", ".join(f"{n}: {t}" for n, t, _ in params)
     tail = f" {ty}" if ret is not None else ""
     lines.append(f"pub fun atomic_{op}_{suffix}({args}){tail};")

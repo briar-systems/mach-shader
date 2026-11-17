@@ -4,7 +4,7 @@
 usage: mathcheck.py <math.mach> <module.spvasm>
 
 `tools/opcheck.py` proves each instruction name reaches some module, which a single
-surviving width satisfies. This check keys every `#[op]` declaration by its
+surviving width satisfies. This check keys every `#[intrinsic]` declaration by its
 instruction, result type and operand types, and requires the module to hold exactly
 as many of each as are declared, so a call that was dropped or folded away at one
 width fails here. `OpDot` is keyed as core, so it cannot pass as an extended
@@ -18,7 +18,7 @@ import collections
 import re
 import sys
 
-OP = re.compile(r'#\[op\("spirv",\s*"([^"]+)",\s*"(\w+)"\)\]\s*\npub fun (\w+)\(([^)]*)\) (\w+);')
+OP = re.compile(r'#\[intrinsic\("spirv",\s*"([^"]+)",\s*"(\w+)"\)\]\s*\npub fun (\w+)\(([^)]*)\) (\w+);')
 
 
 def signless(ty):
@@ -45,6 +45,9 @@ def emitted(path):
     types, values = {}, {}
     have = collections.Counter()
     glsl = None
+    # a float cast to an integer saturates, through an NMax and an NMin the compiler emits
+    # ahead of the conversion: those are no maths entry's, so they are not counted
+    keys, converted, clamps = {}, set(), set()
     for line in open(path).read().splitlines():
         m = re.match(r"\s*(%\S+) = (Op\w+)(.*)", line)
         if not m:
@@ -63,9 +66,17 @@ def emitted(path):
         elif rest and rest[0] in types:
             values[rid] = types[rest[0]]
             if op == "OpExtInst" and rest[1] == glsl:
-                have[("GLSL.std.450", rest[2], types[rest[0]], tuple(values.get(a, "?") for a in rest[3:]))] += 1
+                keys[rid] = (("GLSL.std.450", rest[2], types[rest[0]], tuple(values.get(a, "?") for a in rest[3:])), rest[3:])
+            elif op in ("OpConvertFToS", "OpConvertFToU"):
+                converted.add(rest[1])
             elif op == "OpDot":
                 have[("core", "OpDot", types[rest[0]], tuple(values.get(a, "?") for a in rest[1:]))] += 1
+    for rid, (key, operands) in keys.items():
+        if key[1] == "NMin" and rid in converted and operands and operands[0] in keys and keys[operands[0]][0][1] == "NMax":
+            clamps.update((rid, operands[0]))
+    for rid, (key, _) in keys.items():
+        if rid not in clamps:
+            have[key] += 1
     return have
 
 
@@ -75,7 +86,7 @@ def main():
     want, names = declared(sys.argv[1])
     have = emitted(sys.argv[2])
     if not want:
-        sys.exit(f"mathcheck: no #[op] declarations found in {sys.argv[1]}")
+        sys.exit(f"mathcheck: no #[intrinsic] declarations found in {sys.argv[1]}")
     failed = False
     for key in sorted(set(want) | set(have)):
         if want[key] != have[key]:

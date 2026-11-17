@@ -1,7 +1,7 @@
 # Calls every entry in `shader.math`.
 #
 # This exists to be compiled, not to shade anything. Each call forces the
-# compiler to resolve an `#[op]` decorator and emit the instruction at that
+# compiler to resolve an `#[intrinsic]` decorator and emit the instruction at that
 # operand width, so a wrong instruction name or a signature SPIR-V rejects turns
 # into a build failure here. The library on its own compiles to nothing and would
 # catch neither.
@@ -14,25 +14,25 @@
 
 use sh: shader.math;
 
-#[input(0)]
+#[gpu.input(0)]
 var a2: f32x2;
-#[input(1)]
+#[gpu.input(1)]
 var b2: f32x2;
-#[input(2)]
+#[gpu.input(2)]
 var a3: f32x3;
-#[input(3)]
+#[gpu.input(3)]
 var b3: f32x3;
-#[input(4)]
+#[gpu.input(4)]
 var a4: f32x4;
-#[input(5)]
+#[gpu.input(5)]
 var b4: f32x4;
-#[input(6)]
+#[gpu.input(6)]
 var s:  f32;
 
-#[output(0)]
+#[gpu.output(0)]
 var out_colour: f32x4;
 
-#[stage("fragment")]
+#[gpu.stage("fragment")]
 fun frag_main() {
     val x_i16:   i16   = s::i16;
     val y_i16:   i16   = b2[0]::i16;

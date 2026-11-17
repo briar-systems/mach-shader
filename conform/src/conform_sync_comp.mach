@@ -13,16 +13,16 @@ rec Field {
     values: [64]f32;
 }
 
-#[storage(0, 0)]
+#[gpu.storage(0, 0)]
 var field: Field;
-#[shared]
+#[gpu.shared]
 var tile:  [64]f32;
 
-#[builtin("local_invocation_index")]
+#[gpu.builtin("local_invocation_index")]
 var lid: u32;
 
-#[stage("compute")]
-#[workgroup(64, 1, 1)]
+#[gpu.stage("compute")]
+#[gpu.workgroup(64, 1, 1)]
 fun comp_main() {
     val i: u32 = lid;
     tile[i] = field.values[i];

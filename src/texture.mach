@@ -7,10 +7,13 @@
 # this file, not a compiler release.
 #
 # THE OPERANDS ARE THIS TARGET'S OWN, and they are the seven `OpTypeImage` operands
-# one for one: the texel scalar, `Dim`, `Depth`, `Arrayed`, `MS`, `Sampled` and the
-# `Image Format`. They are named here so a declaration reads as a shape rather than
-# as seven digits, and so a value outside the set the target emits is refused
-# against a name.
+# one for one, in its order: the texel scalar written as the type itself (`f32`,
+# `i32`, `u32`, and `i64` or `u64` for the `R64i` and `R64ui` storage formats), `Dim`
+# and the `Image Format` as the names SPIR-V's grammar gives them (`"2D"`,
+# `"Unknown"`), and `Depth`, `Arrayed`, `MS` and `Sampled` as numbers. A sampled image
+# is `Sampled` 1 and of format `"Unknown"`, its format the view's, and a storage image
+# is `Sampled` 2. A value outside the set the target emits is refused against the
+# operand it is written for.
 #
 # COMPOSITION IS BY NAMING. A `Sampler2D` is an `OpTypeSampledImage` over an
 # `OpTypeImage`, and it NAMES the image it wraps rather than restating that image's
@@ -19,95 +22,7 @@
 #
 # WHAT IS NOT DECLARED, and why. A multisampled image is never sampled, so it has no
 # place among these handles, and the target refuses a `Rect` or `SubpassData`
-# dimensionality by naming the operand. The projective `OpImageSampleProj*` forms
-# have no row in the target: divide the coordinate by its last component and call
-# the plain form.
-
-# the scalar an image's texels are read as. `TEXEL_I32` and `TEXEL_U32` differ in
-# the mach type a program declares and agree on the descriptor: this target's
-# integers are sign-less, because SPIR-V puts signedness on the operation. the
-# 64-bit texels are only the `R64ui` and `R64i` storage formats'
-pub val TEXEL_F32: u32 = 0;
-pub val TEXEL_I32: u32 = 1;
-pub val TEXEL_U32: u32 = 2;
-pub val TEXEL_I64: u32 = 3;
-pub val TEXEL_U64: u32 = 4;
-
-# the dimensionality an image is addressed in. `DIM_BUFFER` is a texel buffer: one
-# run of texels in a buffer view, addressed by a single integer
-pub val DIM_1D:     u32 = 0;
-pub val DIM_2D:     u32 = 1;
-pub val DIM_3D:     u32 = 2;
-pub val DIM_CUBE:   u32 = 3;
-pub val DIM_BUFFER: u32 = 5;
-
-# the `Depth` operand. a depth image is the one a depth comparison samples, and it
-# is read without one like any other image
-pub val NO_DEPTH: u32 = 0;
-pub val DEPTH:    u32 = 1;
-
-# the `Arrayed` operand: whether the image carries array layers
-pub val NONARRAYED: u32 = 0;
-pub val ARRAYED:    u32 = 1;
-
-# the `MS` operand. a multisampled image is a `2D` one, read per sample rather than
-# sampled
-pub val SINGLE_SAMPLED: u32 = 0;
-pub val MULTISAMPLED:   u32 = 1;
-
-# the `Sampled` operand. a sampled image is read through a sampler and bound by
-# `#[sampler]`, a storage image is read and written directly and bound by `#[storage]`
-pub val SAMPLED: u32 = 1;
-pub val STORAGE: u32 = 2;
-
-# the `Image Format` operand, by its SPIR-V word. a sampled image is `FORMAT_UNKNOWN`,
-# its format the view's. a storage image of a known format is read and written with
-# no device feature, and one of `FORMAT_UNKNOWN` under the `storage_read_without_format`
-# and `storage_write_without_format` extensions, which `vulkan1.3` selects. a format
-# names its texel scalar: a float or normalized format is read as `f32`, a signed
-# integer format as `i32` and an unsigned one as `u32`
-pub val FORMAT_UNKNOWN:        u32 = 0;
-pub val FORMAT_RGBA32F:        u32 = 1;
-pub val FORMAT_RGBA16F:        u32 = 2;
-pub val FORMAT_R32F:           u32 = 3;
-pub val FORMAT_RGBA8:          u32 = 4;
-pub val FORMAT_RGBA8_SNORM:    u32 = 5;
-pub val FORMAT_RG32F:          u32 = 6;
-pub val FORMAT_RG16F:          u32 = 7;
-pub val FORMAT_R11F_G11F_B10F: u32 = 8;
-pub val FORMAT_R16F:           u32 = 9;
-pub val FORMAT_RGBA16:         u32 = 10;
-pub val FORMAT_RGB10_A2:       u32 = 11;
-pub val FORMAT_RG16:           u32 = 12;
-pub val FORMAT_RG8:            u32 = 13;
-pub val FORMAT_R16:            u32 = 14;
-pub val FORMAT_R8:             u32 = 15;
-pub val FORMAT_RGBA16_SNORM:   u32 = 16;
-pub val FORMAT_RG16_SNORM:     u32 = 17;
-pub val FORMAT_RG8_SNORM:      u32 = 18;
-pub val FORMAT_R16_SNORM:      u32 = 19;
-pub val FORMAT_R8_SNORM:       u32 = 20;
-pub val FORMAT_RGBA32I:        u32 = 21;
-pub val FORMAT_RGBA16I:        u32 = 22;
-pub val FORMAT_RGBA8I:         u32 = 23;
-pub val FORMAT_R32I:           u32 = 24;
-pub val FORMAT_RG32I:          u32 = 25;
-pub val FORMAT_RG16I:          u32 = 26;
-pub val FORMAT_RG8I:           u32 = 27;
-pub val FORMAT_R16I:           u32 = 28;
-pub val FORMAT_R8I:            u32 = 29;
-pub val FORMAT_RGBA32UI:       u32 = 30;
-pub val FORMAT_RGBA16UI:       u32 = 31;
-pub val FORMAT_RGBA8UI:        u32 = 32;
-pub val FORMAT_R32UI:          u32 = 33;
-pub val FORMAT_RGB10_A2UI:     u32 = 34;
-pub val FORMAT_RG32UI:         u32 = 35;
-pub val FORMAT_RG16UI:         u32 = 36;
-pub val FORMAT_RG8UI:          u32 = 37;
-pub val FORMAT_R16UI:          u32 = 38;
-pub val FORMAT_R8UI:           u32 = 39;
-pub val FORMAT_R64UI:          u32 = 40;
-pub val FORMAT_R64I:           u32 = 41;
+# dimensionality by naming the operand.
 
 # the `Image Operands` mask bits. a declaration that takes the mask passes it as a
 # literal, followed by the operands its set bits bring in ascending bit order: `LOD`
@@ -125,22 +40,22 @@ pub val IMAGE_OPERANDS_MIN_LOD:       u32 = 0x80;
 
 # the images, one per dimensionality and one per texel scalar. each is the
 # separately-bound form: an image with no sampler attached
-#[handle("spirv", "image", TEXEL_F32, DIM_1D, NO_DEPTH, NONARRAYED, SINGLE_SAMPLED, SAMPLED, FORMAT_UNKNOWN)]
+#[handle("spirv", "image", f32, "1D", 0, 0, 0, 1, "Unknown")]
 pub def Texture1D;
-#[handle("spirv", "image", TEXEL_F32, DIM_2D, NO_DEPTH, NONARRAYED, SINGLE_SAMPLED, SAMPLED, FORMAT_UNKNOWN)]
+#[handle("spirv", "image", f32, "2D", 0, 0, 0, 1, "Unknown")]
 pub def Texture2D;
-#[handle("spirv", "image", TEXEL_F32, DIM_3D, NO_DEPTH, NONARRAYED, SINGLE_SAMPLED, SAMPLED, FORMAT_UNKNOWN)]
+#[handle("spirv", "image", f32, "3D", 0, 0, 0, 1, "Unknown")]
 pub def Texture3D;
-#[handle("spirv", "image", TEXEL_F32, DIM_CUBE, NO_DEPTH, NONARRAYED, SINGLE_SAMPLED, SAMPLED, FORMAT_UNKNOWN)]
+#[handle("spirv", "image", f32, "Cube", 0, 0, 0, 1, "Unknown")]
 pub def TextureCube;
-#[handle("spirv", "image", TEXEL_F32, DIM_2D, NO_DEPTH, ARRAYED, SINGLE_SAMPLED, SAMPLED, FORMAT_UNKNOWN)]
+#[handle("spirv", "image", f32, "2D", 0, 1, 0, 1, "Unknown")]
 pub def Texture2DArray;
-#[handle("spirv", "image", TEXEL_F32, DIM_CUBE, NO_DEPTH, ARRAYED, SINGLE_SAMPLED, SAMPLED, FORMAT_UNKNOWN)]
+#[handle("spirv", "image", f32, "Cube", 0, 1, 0, 1, "Unknown")]
 pub def TextureCubeArray;
 
-#[handle("spirv", "image", TEXEL_I32, DIM_2D, NO_DEPTH, NONARRAYED, SINGLE_SAMPLED, SAMPLED, FORMAT_UNKNOWN)]
+#[handle("spirv", "image", i32, "2D", 0, 0, 0, 1, "Unknown")]
 pub def ITexture2D;
-#[handle("spirv", "image", TEXEL_U32, DIM_2D, NO_DEPTH, NONARRAYED, SINGLE_SAMPLED, SAMPLED, FORMAT_UNKNOWN)]
+#[handle("spirv", "image", u32, "2D", 0, 0, 0, 1, "Unknown")]
 pub def UTexture2D;
 
 # a sampler: filtering and addressing state with no image attached, which is what
@@ -168,13 +83,13 @@ pub def USampler2D;
 
 # the depth images a depth comparison samples, the shadow maps, one per shape a
 # comparison reads. Vulkan compares no `3D` image, so there is none
-#[handle("spirv", "image", TEXEL_F32, DIM_2D, DEPTH, NONARRAYED, SINGLE_SAMPLED, SAMPLED, FORMAT_UNKNOWN)]
+#[handle("spirv", "image", f32, "2D", 1, 0, 0, 1, "Unknown")]
 pub def DepthTexture2D;
-#[handle("spirv", "image", TEXEL_F32, DIM_2D, DEPTH, ARRAYED, SINGLE_SAMPLED, SAMPLED, FORMAT_UNKNOWN)]
+#[handle("spirv", "image", f32, "2D", 1, 1, 0, 1, "Unknown")]
 pub def DepthTexture2DArray;
-#[handle("spirv", "image", TEXEL_F32, DIM_CUBE, DEPTH, NONARRAYED, SINGLE_SAMPLED, SAMPLED, FORMAT_UNKNOWN)]
+#[handle("spirv", "image", f32, "Cube", 1, 0, 0, 1, "Unknown")]
 pub def DepthTextureCube;
-#[handle("spirv", "image", TEXEL_F32, DIM_CUBE, DEPTH, ARRAYED, SINGLE_SAMPLED, SAMPLED, FORMAT_UNKNOWN)]
+#[handle("spirv", "image", f32, "Cube", 1, 1, 0, 1, "Unknown")]
 pub def DepthTextureCubeArray;
 
 #[handle("spirv", "sampled_image", DepthTexture2D)]
@@ -191,40 +106,40 @@ pub def DepthSamplerCubeArray;
 # SPIR-V requires the result be consumed in the block that produced it, which is the
 # same rule that makes a handle unnameable as a local: hand the result straight to
 # the sample.
-#[op("spirv", "core", "OpSampledImage")]
+#[intrinsic("spirv", "core", "OpSampledImage")]
 pub fun combine_2d(t: Texture2D, s: Sampler) Sampler2D;
 
-#[op("spirv", "core", "OpSampledImage")]
+#[intrinsic("spirv", "core", "OpSampledImage")]
 pub fun combine_1d(t: Texture1D, s: Sampler) Sampler1D;
 
-#[op("spirv", "core", "OpSampledImage")]
+#[intrinsic("spirv", "core", "OpSampledImage")]
 pub fun combine_3d(t: Texture3D, s: Sampler) Sampler3D;
 
-#[op("spirv", "core", "OpSampledImage")]
+#[intrinsic("spirv", "core", "OpSampledImage")]
 pub fun combine_cube(t: TextureCube, s: Sampler) SamplerCube;
 
-#[op("spirv", "core", "OpSampledImage")]
+#[intrinsic("spirv", "core", "OpSampledImage")]
 pub fun combine_2d_array(t: Texture2DArray, s: Sampler) Sampler2DArray;
 
-#[op("spirv", "core", "OpSampledImage")]
+#[intrinsic("spirv", "core", "OpSampledImage")]
 pub fun combine_cube_array(t: TextureCubeArray, s: Sampler) SamplerCubeArray;
 
-#[op("spirv", "core", "OpSampledImage")]
+#[intrinsic("spirv", "core", "OpSampledImage")]
 pub fun combine_2d_i(t: ITexture2D, s: Sampler) ISampler2D;
 
-#[op("spirv", "core", "OpSampledImage")]
+#[intrinsic("spirv", "core", "OpSampledImage")]
 pub fun combine_2d_u(t: UTexture2D, s: Sampler) USampler2D;
 
-#[op("spirv", "core", "OpSampledImage")]
+#[intrinsic("spirv", "core", "OpSampledImage")]
 pub fun combine_depth_2d(t: DepthTexture2D, s: Sampler) DepthSampler2D;
 
-#[op("spirv", "core", "OpSampledImage")]
+#[intrinsic("spirv", "core", "OpSampledImage")]
 pub fun combine_depth_2d_array(t: DepthTexture2DArray, s: Sampler) DepthSampler2DArray;
 
-#[op("spirv", "core", "OpSampledImage")]
+#[intrinsic("spirv", "core", "OpSampledImage")]
 pub fun combine_depth_cube(t: DepthTextureCube, s: Sampler) DepthSamplerCube;
 
-#[op("spirv", "core", "OpSampledImage")]
+#[intrinsic("spirv", "core", "OpSampledImage")]
 pub fun combine_depth_cube_array(t: DepthTextureCubeArray, s: Sampler) DepthSamplerCubeArray;
 
 # sample a combined handle at a coordinate, with the level of detail derived from
@@ -235,29 +150,29 @@ pub fun combine_depth_cube_array(t: DepthTextureCubeArray, s: Sampler) DepthSamp
 # three. An arrayed image takes one more component than its non-arrayed twin, the
 # layer, which is why `sample_2d_array` takes an `f32x4` where `sample_2d` takes an
 # `f32x2`.
-#[op("spirv", "core", "OpImageSampleImplicitLod")]
+#[intrinsic("spirv", "core", "OpImageSampleImplicitLod")]
 pub fun sample_1d(s: Sampler1D, u: f32) f32x4;
 
-#[op("spirv", "core", "OpImageSampleImplicitLod")]
+#[intrinsic("spirv", "core", "OpImageSampleImplicitLod")]
 pub fun sample_2d(s: Sampler2D, uv: f32x2) f32x4;
 
-#[op("spirv", "core", "OpImageSampleImplicitLod")]
+#[intrinsic("spirv", "core", "OpImageSampleImplicitLod")]
 pub fun sample_3d(s: Sampler3D, uvw: f32x4) f32x4;
 
-#[op("spirv", "core", "OpImageSampleImplicitLod")]
+#[intrinsic("spirv", "core", "OpImageSampleImplicitLod")]
 pub fun sample_cube(s: SamplerCube, dir: f32x4) f32x4;
 
-#[op("spirv", "core", "OpImageSampleImplicitLod")]
+#[intrinsic("spirv", "core", "OpImageSampleImplicitLod")]
 pub fun sample_2d_array(s: Sampler2DArray, uvl: f32x4) f32x4;
 
-#[op("spirv", "core", "OpImageSampleImplicitLod")]
+#[intrinsic("spirv", "core", "OpImageSampleImplicitLod")]
 pub fun sample_cube_array(s: SamplerCubeArray, dirl: f32x4) f32x4;
 
 # the integer paths, whose result type shares the image's component type
-#[op("spirv", "core", "OpImageSampleImplicitLod")]
+#[intrinsic("spirv", "core", "OpImageSampleImplicitLod")]
 pub fun sample_2d_i(s: ISampler2D, uv: f32x2) i32x4;
 
-#[op("spirv", "core", "OpImageSampleImplicitLod")]
+#[intrinsic("spirv", "core", "OpImageSampleImplicitLod")]
 pub fun sample_2d_u(s: USampler2D, uv: f32x2) u32x4;
 
 # sample a combined handle at a level of detail the call names, which any stage may
@@ -266,28 +181,28 @@ pub fun sample_2d_u(s: USampler2D, uv: f32x2) u32x4;
 # SPIR-V gives this instruction a required `Image Operands` mask, so it is a
 # parameter: pass `IMAGE_OPERANDS_LOD`, the one mask whose operands this form takes,
 # and the level after it.
-#[op("spirv", "core", "OpImageSampleExplicitLod")]
+#[intrinsic("spirv", "core", "OpImageSampleExplicitLod")]
 pub fun sample_lod_1d(s: Sampler1D, u: f32, mask: u32, lod: f32) f32x4;
 
-#[op("spirv", "core", "OpImageSampleExplicitLod")]
+#[intrinsic("spirv", "core", "OpImageSampleExplicitLod")]
 pub fun sample_lod_2d(s: Sampler2D, uv: f32x2, mask: u32, lod: f32) f32x4;
 
-#[op("spirv", "core", "OpImageSampleExplicitLod")]
+#[intrinsic("spirv", "core", "OpImageSampleExplicitLod")]
 pub fun sample_lod_3d(s: Sampler3D, uvw: f32x3, mask: u32, lod: f32) f32x4;
 
-#[op("spirv", "core", "OpImageSampleExplicitLod")]
+#[intrinsic("spirv", "core", "OpImageSampleExplicitLod")]
 pub fun sample_lod_cube(s: SamplerCube, dir: f32x3, mask: u32, lod: f32) f32x4;
 
-#[op("spirv", "core", "OpImageSampleExplicitLod")]
+#[intrinsic("spirv", "core", "OpImageSampleExplicitLod")]
 pub fun sample_lod_2d_array(s: Sampler2DArray, uvl: f32x3, mask: u32, lod: f32) f32x4;
 
-#[op("spirv", "core", "OpImageSampleExplicitLod")]
+#[intrinsic("spirv", "core", "OpImageSampleExplicitLod")]
 pub fun sample_lod_cube_array(s: SamplerCubeArray, dirl: f32x4, mask: u32, lod: f32) f32x4;
 
-#[op("spirv", "core", "OpImageSampleExplicitLod")]
+#[intrinsic("spirv", "core", "OpImageSampleExplicitLod")]
 pub fun sample_lod_2d_i(s: ISampler2D, uv: f32x2, mask: u32, lod: f32) i32x4;
 
-#[op("spirv", "core", "OpImageSampleExplicitLod")]
+#[intrinsic("spirv", "core", "OpImageSampleExplicitLod")]
 pub fun sample_lod_2d_u(s: USampler2D, uv: f32x2, mask: u32, lod: f32) u32x4;
 
 # sample a combined handle at the level of detail the coordinate's derivatives along x
@@ -295,28 +210,28 @@ pub fun sample_lod_2d_u(s: USampler2D, uv: f32x2, mask: u32, lod: f32) u32x4;
 #
 # Pass `IMAGE_OPERANDS_GRAD` as the mask. Each derivative has one component per
 # dimension of the coordinate, the array layer aside.
-#[op("spirv", "core", "OpImageSampleExplicitLod")]
+#[intrinsic("spirv", "core", "OpImageSampleExplicitLod")]
 pub fun sample_grad_1d(s: Sampler1D, u: f32, mask: u32, dx: f32, dy: f32) f32x4;
 
-#[op("spirv", "core", "OpImageSampleExplicitLod")]
+#[intrinsic("spirv", "core", "OpImageSampleExplicitLod")]
 pub fun sample_grad_2d(s: Sampler2D, uv: f32x2, mask: u32, dx: f32x2, dy: f32x2) f32x4;
 
-#[op("spirv", "core", "OpImageSampleExplicitLod")]
+#[intrinsic("spirv", "core", "OpImageSampleExplicitLod")]
 pub fun sample_grad_3d(s: Sampler3D, uvw: f32x3, mask: u32, dx: f32x3, dy: f32x3) f32x4;
 
-#[op("spirv", "core", "OpImageSampleExplicitLod")]
+#[intrinsic("spirv", "core", "OpImageSampleExplicitLod")]
 pub fun sample_grad_cube(s: SamplerCube, dir: f32x3, mask: u32, dx: f32x3, dy: f32x3) f32x4;
 
-#[op("spirv", "core", "OpImageSampleExplicitLod")]
+#[intrinsic("spirv", "core", "OpImageSampleExplicitLod")]
 pub fun sample_grad_2d_array(s: Sampler2DArray, uvl: f32x3, mask: u32, dx: f32x2, dy: f32x2) f32x4;
 
-#[op("spirv", "core", "OpImageSampleExplicitLod")]
+#[intrinsic("spirv", "core", "OpImageSampleExplicitLod")]
 pub fun sample_grad_cube_array(s: SamplerCubeArray, dirl: f32x4, mask: u32, dx: f32x3, dy: f32x3) f32x4;
 
-#[op("spirv", "core", "OpImageSampleExplicitLod")]
+#[intrinsic("spirv", "core", "OpImageSampleExplicitLod")]
 pub fun sample_grad_2d_i(s: ISampler2D, uv: f32x2, mask: u32, dx: f32x2, dy: f32x2) i32x4;
 
-#[op("spirv", "core", "OpImageSampleExplicitLod")]
+#[intrinsic("spirv", "core", "OpImageSampleExplicitLod")]
 pub fun sample_grad_2d_u(s: USampler2D, uv: f32x2, mask: u32, dx: f32x2, dy: f32x2) u32x4;
 
 # gather one component of the four texels a bilinear sample at the coordinate would
@@ -324,22 +239,22 @@ pub fun sample_grad_2d_u(s: USampler2D, uv: f32x2, mask: u32, dx: f32x2, dy: f32
 #
 # Only a `2D` or `Cube` image has that footprint, so these are the shapes declared.
 # The component is a constant: `0` to `3` for red to alpha, written at the call.
-#[op("spirv", "core", "OpImageGather")]
+#[intrinsic("spirv", "core", "OpImageGather")]
 pub fun gather_2d(s: Sampler2D, uv: f32x2, component: u32) f32x4;
 
-#[op("spirv", "core", "OpImageGather")]
+#[intrinsic("spirv", "core", "OpImageGather")]
 pub fun gather_2d_array(s: Sampler2DArray, uvl: f32x3, component: u32) f32x4;
 
-#[op("spirv", "core", "OpImageGather")]
+#[intrinsic("spirv", "core", "OpImageGather")]
 pub fun gather_cube(s: SamplerCube, dir: f32x3, component: u32) f32x4;
 
-#[op("spirv", "core", "OpImageGather")]
+#[intrinsic("spirv", "core", "OpImageGather")]
 pub fun gather_cube_array(s: SamplerCubeArray, dirl: f32x4, component: u32) f32x4;
 
-#[op("spirv", "core", "OpImageGather")]
+#[intrinsic("spirv", "core", "OpImageGather")]
 pub fun gather_2d_i(s: ISampler2D, uv: f32x2, component: u32) i32x4;
 
-#[op("spirv", "core", "OpImageGather")]
+#[intrinsic("spirv", "core", "OpImageGather")]
 pub fun gather_2d_u(s: USampler2D, uv: f32x2, component: u32) u32x4;
 
 # compare the depth texels a sample at the coordinate reads against a reference, and
@@ -348,16 +263,16 @@ pub fun gather_2d_u(s: USampler2D, uv: f32x2, component: u32) u32x4;
 #
 # The level of detail is derived from the fragment stage's own derivatives, so these
 # are reached only from a fragment stage. Every other stage uses the `_lod` form.
-#[op("spirv", "core", "OpImageSampleDrefImplicitLod")]
+#[intrinsic("spirv", "core", "OpImageSampleDrefImplicitLod")]
 pub fun sample_compare_2d(s: DepthSampler2D, uv: f32x2, depth: f32) f32;
 
-#[op("spirv", "core", "OpImageSampleDrefImplicitLod")]
+#[intrinsic("spirv", "core", "OpImageSampleDrefImplicitLod")]
 pub fun sample_compare_2d_array(s: DepthSampler2DArray, uvl: f32x3, depth: f32) f32;
 
-#[op("spirv", "core", "OpImageSampleDrefImplicitLod")]
+#[intrinsic("spirv", "core", "OpImageSampleDrefImplicitLod")]
 pub fun sample_compare_cube(s: DepthSamplerCube, dir: f32x3, depth: f32) f32;
 
-#[op("spirv", "core", "OpImageSampleDrefImplicitLod")]
+#[intrinsic("spirv", "core", "OpImageSampleDrefImplicitLod")]
 pub fun sample_compare_cube_array(s: DepthSamplerCubeArray, dirl: f32x4, depth: f32) f32;
 
 # the same comparison at a level of detail the call names, which any stage may make.
@@ -365,30 +280,30 @@ pub fun sample_compare_cube_array(s: DepthSamplerCubeArray, dirl: f32x4, depth: 
 # SPIR-V gives this instruction a required `Image Operands` mask, so it is a
 # parameter: pass `IMAGE_OPERANDS_LOD`, the one mask whose operands this form takes,
 # and the level after it.
-#[op("spirv", "core", "OpImageSampleDrefExplicitLod")]
+#[intrinsic("spirv", "core", "OpImageSampleDrefExplicitLod")]
 pub fun sample_compare_lod_2d(s: DepthSampler2D, uv: f32x2, depth: f32, mask: u32, lod: f32) f32;
 
-#[op("spirv", "core", "OpImageSampleDrefExplicitLod")]
+#[intrinsic("spirv", "core", "OpImageSampleDrefExplicitLod")]
 pub fun sample_compare_lod_2d_array(s: DepthSampler2DArray, uvl: f32x3, depth: f32, mask: u32, lod: f32) f32;
 
-#[op("spirv", "core", "OpImageSampleDrefExplicitLod")]
+#[intrinsic("spirv", "core", "OpImageSampleDrefExplicitLod")]
 pub fun sample_compare_lod_cube(s: DepthSamplerCube, dir: f32x3, depth: f32, mask: u32, lod: f32) f32;
 
-#[op("spirv", "core", "OpImageSampleDrefExplicitLod")]
+#[intrinsic("spirv", "core", "OpImageSampleDrefExplicitLod")]
 pub fun sample_compare_lod_cube_array(s: DepthSamplerCubeArray, dirl: f32x4, depth: f32, mask: u32, lod: f32) f32;
 
 # compare each of the four depth texels a gather reads against a reference, one
 # comparison result per lane.
-#[op("spirv", "core", "OpImageDrefGather")]
+#[intrinsic("spirv", "core", "OpImageDrefGather")]
 pub fun gather_compare_2d(s: DepthSampler2D, uv: f32x2, depth: f32) f32x4;
 
-#[op("spirv", "core", "OpImageDrefGather")]
+#[intrinsic("spirv", "core", "OpImageDrefGather")]
 pub fun gather_compare_2d_array(s: DepthSampler2DArray, uvl: f32x3, depth: f32) f32x4;
 
-#[op("spirv", "core", "OpImageDrefGather")]
+#[intrinsic("spirv", "core", "OpImageDrefGather")]
 pub fun gather_compare_cube(s: DepthSamplerCube, dir: f32x3, depth: f32) f32x4;
 
-#[op("spirv", "core", "OpImageDrefGather")]
+#[intrinsic("spirv", "core", "OpImageDrefGather")]
 pub fun gather_compare_cube_array(s: DepthSamplerCubeArray, dirl: f32x4, depth: f32) f32x4;
 
 # read one texel of a separately-bound image by its integer coordinate, with no
@@ -396,303 +311,304 @@ pub fun gather_compare_cube_array(s: DepthSamplerCubeArray, dirl: f32x4, depth: 
 #
 # The level is passed as an `Image Operands` mask and its operand: pass
 # `IMAGE_OPERANDS_LOD` and the level. A `Cube` image is not fetched.
-#[op("spirv", "core", "OpImageFetch")]
+#[intrinsic("spirv", "core", "OpImageFetch")]
 pub fun fetch_1d(t: Texture1D, at: i32, mask: u32, lod: i32) f32x4;
 
-#[op("spirv", "core", "OpImageFetch")]
+#[intrinsic("spirv", "core", "OpImageFetch")]
 pub fun fetch_2d(t: Texture2D, at: i32x2, mask: u32, lod: i32) f32x4;
 
-#[op("spirv", "core", "OpImageFetch")]
+#[intrinsic("spirv", "core", "OpImageFetch")]
 pub fun fetch_3d(t: Texture3D, at: i32x3, mask: u32, lod: i32) f32x4;
 
-#[op("spirv", "core", "OpImageFetch")]
+#[intrinsic("spirv", "core", "OpImageFetch")]
 pub fun fetch_2d_array(t: Texture2DArray, at: i32x3, mask: u32, lod: i32) f32x4;
 
-#[op("spirv", "core", "OpImageFetch")]
+#[intrinsic("spirv", "core", "OpImageFetch")]
 pub fun fetch_2d_i(t: ITexture2D, at: i32x2, mask: u32, lod: i32) i32x4;
 
-#[op("spirv", "core", "OpImageFetch")]
+#[intrinsic("spirv", "core", "OpImageFetch")]
 pub fun fetch_2d_u(t: UTexture2D, at: i32x2, mask: u32, lod: i32) u32x4;
 
 # the extent of one mip level of a separately-bound image, in texels, with the layer
 # count last for an arrayed one. a cube's extent is one face's.
-#[op("spirv", "core", "OpImageQuerySizeLod")]
+#[intrinsic("spirv", "core", "OpImageQuerySizeLod")]
 pub fun size_1d(t: Texture1D, lod: i32) i32;
 
-#[op("spirv", "core", "OpImageQuerySizeLod")]
+#[intrinsic("spirv", "core", "OpImageQuerySizeLod")]
 pub fun size_2d(t: Texture2D, lod: i32) i32x2;
 
-#[op("spirv", "core", "OpImageQuerySizeLod")]
+#[intrinsic("spirv", "core", "OpImageQuerySizeLod")]
 pub fun size_3d(t: Texture3D, lod: i32) i32x3;
 
-#[op("spirv", "core", "OpImageQuerySizeLod")]
+#[intrinsic("spirv", "core", "OpImageQuerySizeLod")]
 pub fun size_cube(t: TextureCube, lod: i32) i32x2;
 
-#[op("spirv", "core", "OpImageQuerySizeLod")]
+#[intrinsic("spirv", "core", "OpImageQuerySizeLod")]
 pub fun size_2d_array(t: Texture2DArray, lod: i32) i32x3;
 
-#[op("spirv", "core", "OpImageQuerySizeLod")]
+#[intrinsic("spirv", "core", "OpImageQuerySizeLod")]
 pub fun size_cube_array(t: TextureCubeArray, lod: i32) i32x3;
 
-#[op("spirv", "core", "OpImageQuerySizeLod")]
+#[intrinsic("spirv", "core", "OpImageQuerySizeLod")]
 pub fun size_2d_i(t: ITexture2D, lod: i32) i32x2;
 
-#[op("spirv", "core", "OpImageQuerySizeLod")]
+#[intrinsic("spirv", "core", "OpImageQuerySizeLod")]
 pub fun size_2d_u(t: UTexture2D, lod: i32) i32x2;
 
-#[op("spirv", "core", "OpImageQuerySizeLod")]
+#[intrinsic("spirv", "core", "OpImageQuerySizeLod")]
 pub fun size_depth_2d(t: DepthTexture2D, lod: i32) i32x2;
 
-#[op("spirv", "core", "OpImageQuerySizeLod")]
+#[intrinsic("spirv", "core", "OpImageQuerySizeLod")]
 pub fun size_depth_2d_array(t: DepthTexture2DArray, lod: i32) i32x3;
 
-#[op("spirv", "core", "OpImageQuerySizeLod")]
+#[intrinsic("spirv", "core", "OpImageQuerySizeLod")]
 pub fun size_depth_cube(t: DepthTextureCube, lod: i32) i32x2;
 
-#[op("spirv", "core", "OpImageQuerySizeLod")]
+#[intrinsic("spirv", "core", "OpImageQuerySizeLod")]
 pub fun size_depth_cube_array(t: DepthTextureCubeArray, lod: i32) i32x3;
 
 # the number of mip levels a separately-bound image's view carries.
-#[op("spirv", "core", "OpImageQueryLevels")]
+#[intrinsic("spirv", "core", "OpImageQueryLevels")]
 pub fun levels_1d(t: Texture1D) i32;
 
-#[op("spirv", "core", "OpImageQueryLevels")]
+#[intrinsic("spirv", "core", "OpImageQueryLevels")]
 pub fun levels_2d(t: Texture2D) i32;
 
-#[op("spirv", "core", "OpImageQueryLevels")]
+#[intrinsic("spirv", "core", "OpImageQueryLevels")]
 pub fun levels_3d(t: Texture3D) i32;
 
-#[op("spirv", "core", "OpImageQueryLevels")]
+#[intrinsic("spirv", "core", "OpImageQueryLevels")]
 pub fun levels_cube(t: TextureCube) i32;
 
-#[op("spirv", "core", "OpImageQueryLevels")]
+#[intrinsic("spirv", "core", "OpImageQueryLevels")]
 pub fun levels_2d_array(t: Texture2DArray) i32;
 
-#[op("spirv", "core", "OpImageQueryLevels")]
+#[intrinsic("spirv", "core", "OpImageQueryLevels")]
 pub fun levels_cube_array(t: TextureCubeArray) i32;
 
-#[op("spirv", "core", "OpImageQueryLevels")]
+#[intrinsic("spirv", "core", "OpImageQueryLevels")]
 pub fun levels_2d_i(t: ITexture2D) i32;
 
-#[op("spirv", "core", "OpImageQueryLevels")]
+#[intrinsic("spirv", "core", "OpImageQueryLevels")]
 pub fun levels_2d_u(t: UTexture2D) i32;
 
-#[op("spirv", "core", "OpImageQueryLevels")]
+#[intrinsic("spirv", "core", "OpImageQueryLevels")]
 pub fun levels_depth_2d(t: DepthTexture2D) i32;
 
-#[op("spirv", "core", "OpImageQueryLevels")]
+#[intrinsic("spirv", "core", "OpImageQueryLevels")]
 pub fun levels_depth_2d_array(t: DepthTexture2DArray) i32;
 
-#[op("spirv", "core", "OpImageQueryLevels")]
+#[intrinsic("spirv", "core", "OpImageQueryLevels")]
 pub fun levels_depth_cube(t: DepthTextureCube) i32;
 
-#[op("spirv", "core", "OpImageQueryLevels")]
+#[intrinsic("spirv", "core", "OpImageQueryLevels")]
 pub fun levels_depth_cube_array(t: DepthTextureCubeArray) i32;
 
 # the storage images, read and written texel by texel with no sampler, and bound by
-# `#[storage(set, binding)]` rather than `#[sampler]`. their `"readonly"`,
+# `#[gpu.storage(set, binding)]` rather than `#[gpu.sampler]`. their `"readonly"`,
 # `"writeonly"` and `"coherent"` qualifiers apply as they do to a buffer.
 #
-# Each is `FORMAT_UNKNOWN`, so one handle binds a view of any format with the texel
-# scalar it names, under the `storage_read_without_format` and
-# `storage_write_without_format` extensions that `vulkan1.3` selects. An image of a
-# known format needs neither, and is a declaration of its own over `FORMAT_*`.
-#[handle("spirv", "image", TEXEL_F32, DIM_1D, NO_DEPTH, NONARRAYED, SINGLE_SAMPLED, STORAGE, FORMAT_UNKNOWN)]
+# Each is of format `"Unknown"`, so one handle binds a view of any format with the
+# texel scalar it names, under the `StorageImageReadWithoutFormat` and
+# `StorageImageWriteWithoutFormat` capabilities, which `vulkan1.3` selects and an earlier
+# `env` needs named in the target's `ext`. An image of a
+# known format needs neither, and is a declaration of its own naming the format.
+#[handle("spirv", "image", f32, "1D", 0, 0, 0, 2, "Unknown")]
 pub def StorageImage1D;
-#[handle("spirv", "image", TEXEL_F32, DIM_2D, NO_DEPTH, NONARRAYED, SINGLE_SAMPLED, STORAGE, FORMAT_UNKNOWN)]
+#[handle("spirv", "image", f32, "2D", 0, 0, 0, 2, "Unknown")]
 pub def StorageImage2D;
-#[handle("spirv", "image", TEXEL_F32, DIM_3D, NO_DEPTH, NONARRAYED, SINGLE_SAMPLED, STORAGE, FORMAT_UNKNOWN)]
+#[handle("spirv", "image", f32, "3D", 0, 0, 0, 2, "Unknown")]
 pub def StorageImage3D;
-#[handle("spirv", "image", TEXEL_F32, DIM_2D, NO_DEPTH, ARRAYED, SINGLE_SAMPLED, STORAGE, FORMAT_UNKNOWN)]
+#[handle("spirv", "image", f32, "2D", 0, 1, 0, 2, "Unknown")]
 pub def StorageImage2DArray;
-#[handle("spirv", "image", TEXEL_I32, DIM_2D, NO_DEPTH, NONARRAYED, SINGLE_SAMPLED, STORAGE, FORMAT_UNKNOWN)]
+#[handle("spirv", "image", i32, "2D", 0, 0, 0, 2, "Unknown")]
 pub def IStorageImage2D;
-#[handle("spirv", "image", TEXEL_U32, DIM_2D, NO_DEPTH, NONARRAYED, SINGLE_SAMPLED, STORAGE, FORMAT_UNKNOWN)]
+#[handle("spirv", "image", u32, "2D", 0, 0, 0, 2, "Unknown")]
 pub def UStorageImage2D;
 
 # the storage images an atomic reaches a texel of. Vulkan defines an image atomic only
 # on the `R32f`, `R32i`, `R32ui`, `R64i` and `R64ui` formats, so each carries its
-# format, and the name says which. the 64-bit images need the `image_int64_atomics`
-# extension wherever they are used
-#[handle("spirv", "image", TEXEL_F32, DIM_2D, NO_DEPTH, NONARRAYED, SINGLE_SAMPLED, STORAGE, FORMAT_R32F)]
+# format, and the name says which. the 64-bit images need `Int64ImageEXT`, and an atomic
+# on one `Int64Atomics`
+#[handle("spirv", "image", f32, "2D", 0, 0, 0, 2, "R32f")]
 pub def StorageImage2DR32f;
-#[handle("spirv", "image", TEXEL_I32, DIM_2D, NO_DEPTH, NONARRAYED, SINGLE_SAMPLED, STORAGE, FORMAT_R32I)]
+#[handle("spirv", "image", i32, "2D", 0, 0, 0, 2, "R32i")]
 pub def IStorageImage2DR32i;
-#[handle("spirv", "image", TEXEL_U32, DIM_2D, NO_DEPTH, NONARRAYED, SINGLE_SAMPLED, STORAGE, FORMAT_R32UI)]
+#[handle("spirv", "image", u32, "2D", 0, 0, 0, 2, "R32ui")]
 pub def UStorageImage2DR32ui;
-#[handle("spirv", "image", TEXEL_I64, DIM_2D, NO_DEPTH, NONARRAYED, SINGLE_SAMPLED, STORAGE, FORMAT_R64I)]
+#[handle("spirv", "image", i64, "2D", 0, 0, 0, 2, "R64i")]
 pub def IStorageImage2DR64i;
-#[handle("spirv", "image", TEXEL_U64, DIM_2D, NO_DEPTH, NONARRAYED, SINGLE_SAMPLED, STORAGE, FORMAT_R64UI)]
+#[handle("spirv", "image", u64, "2D", 0, 0, 0, 2, "R64ui")]
 pub def UStorageImage2DR64ui;
 
 # the texel buffers: one run of texels in a buffer view, addressed by a single
-# integer. a uniform texel buffer is fetched and bound by `#[sampler]`, a storage
-# texel buffer is read and written and bound by `#[storage]`
-#[handle("spirv", "image", TEXEL_F32, DIM_BUFFER, NO_DEPTH, NONARRAYED, SINGLE_SAMPLED, SAMPLED, FORMAT_UNKNOWN)]
+# integer. a uniform texel buffer is fetched and bound by `#[gpu.sampler]`, a storage
+# texel buffer is read and written and bound by `#[gpu.storage]`
+#[handle("spirv", "image", f32, "Buffer", 0, 0, 0, 1, "Unknown")]
 pub def TexelBuffer;
-#[handle("spirv", "image", TEXEL_I32, DIM_BUFFER, NO_DEPTH, NONARRAYED, SINGLE_SAMPLED, SAMPLED, FORMAT_UNKNOWN)]
+#[handle("spirv", "image", i32, "Buffer", 0, 0, 0, 1, "Unknown")]
 pub def ITexelBuffer;
-#[handle("spirv", "image", TEXEL_U32, DIM_BUFFER, NO_DEPTH, NONARRAYED, SINGLE_SAMPLED, SAMPLED, FORMAT_UNKNOWN)]
+#[handle("spirv", "image", u32, "Buffer", 0, 0, 0, 1, "Unknown")]
 pub def UTexelBuffer;
-#[handle("spirv", "image", TEXEL_F32, DIM_BUFFER, NO_DEPTH, NONARRAYED, SINGLE_SAMPLED, STORAGE, FORMAT_UNKNOWN)]
+#[handle("spirv", "image", f32, "Buffer", 0, 0, 0, 2, "Unknown")]
 pub def StorageTexelBuffer;
-#[handle("spirv", "image", TEXEL_I32, DIM_BUFFER, NO_DEPTH, NONARRAYED, SINGLE_SAMPLED, STORAGE, FORMAT_UNKNOWN)]
+#[handle("spirv", "image", i32, "Buffer", 0, 0, 0, 2, "Unknown")]
 pub def IStorageTexelBuffer;
-#[handle("spirv", "image", TEXEL_U32, DIM_BUFFER, NO_DEPTH, NONARRAYED, SINGLE_SAMPLED, STORAGE, FORMAT_UNKNOWN)]
+#[handle("spirv", "image", u32, "Buffer", 0, 0, 0, 2, "Unknown")]
 pub def UStorageTexelBuffer;
 
 # read one texel of a uniform texel buffer by its index.
-#[op("spirv", "core", "OpImageFetch")]
+#[intrinsic("spirv", "core", "OpImageFetch")]
 pub fun fetch_buffer(t: TexelBuffer, at: i32) f32x4;
 
-#[op("spirv", "core", "OpImageFetch")]
+#[intrinsic("spirv", "core", "OpImageFetch")]
 pub fun fetch_buffer_i(t: ITexelBuffer, at: i32) i32x4;
 
-#[op("spirv", "core", "OpImageFetch")]
+#[intrinsic("spirv", "core", "OpImageFetch")]
 pub fun fetch_buffer_u(t: UTexelBuffer, at: i32) u32x4;
 
 # read one texel of a storage image or storage texel buffer by its integer coordinate.
 #
 # The result is always four lanes, whatever the format stores: Vulkan fills the lanes
 # a format lacks with 0, and alpha with 1.
-#[op("spirv", "core", "OpImageRead")]
+#[intrinsic("spirv", "core", "OpImageRead")]
 pub fun image_read_1d(img: StorageImage1D, at: i32) f32x4;
 
-#[op("spirv", "core", "OpImageRead")]
+#[intrinsic("spirv", "core", "OpImageRead")]
 pub fun image_read_2d(img: StorageImage2D, at: i32x2) f32x4;
 
-#[op("spirv", "core", "OpImageRead")]
+#[intrinsic("spirv", "core", "OpImageRead")]
 pub fun image_read_3d(img: StorageImage3D, at: i32x3) f32x4;
 
-#[op("spirv", "core", "OpImageRead")]
+#[intrinsic("spirv", "core", "OpImageRead")]
 pub fun image_read_2d_array(img: StorageImage2DArray, at: i32x3) f32x4;
 
-#[op("spirv", "core", "OpImageRead")]
+#[intrinsic("spirv", "core", "OpImageRead")]
 pub fun image_read_2d_i(img: IStorageImage2D, at: i32x2) i32x4;
 
-#[op("spirv", "core", "OpImageRead")]
+#[intrinsic("spirv", "core", "OpImageRead")]
 pub fun image_read_2d_u(img: UStorageImage2D, at: i32x2) u32x4;
 
-#[op("spirv", "core", "OpImageRead")]
+#[intrinsic("spirv", "core", "OpImageRead")]
 pub fun image_read_2d_r32f(img: StorageImage2DR32f, at: i32x2) f32x4;
 
-#[op("spirv", "core", "OpImageRead")]
+#[intrinsic("spirv", "core", "OpImageRead")]
 pub fun image_read_2d_r32i(img: IStorageImage2DR32i, at: i32x2) i32x4;
 
-#[op("spirv", "core", "OpImageRead")]
+#[intrinsic("spirv", "core", "OpImageRead")]
 pub fun image_read_2d_r32ui(img: UStorageImage2DR32ui, at: i32x2) u32x4;
 
-#[op("spirv", "core", "OpImageRead")]
+#[intrinsic("spirv", "core", "OpImageRead")]
 pub fun image_read_2d_r64i(img: IStorageImage2DR64i, at: i32x2) i64x4;
 
-#[op("spirv", "core", "OpImageRead")]
+#[intrinsic("spirv", "core", "OpImageRead")]
 pub fun image_read_2d_r64ui(img: UStorageImage2DR64ui, at: i32x2) u64x4;
 
-#[op("spirv", "core", "OpImageRead")]
+#[intrinsic("spirv", "core", "OpImageRead")]
 pub fun image_read_buffer(img: StorageTexelBuffer, at: i32) f32x4;
 
-#[op("spirv", "core", "OpImageRead")]
+#[intrinsic("spirv", "core", "OpImageRead")]
 pub fun image_read_buffer_i(img: IStorageTexelBuffer, at: i32) i32x4;
 
-#[op("spirv", "core", "OpImageRead")]
+#[intrinsic("spirv", "core", "OpImageRead")]
 pub fun image_read_buffer_u(img: UStorageTexelBuffer, at: i32) u32x4;
 
 # write one texel of a storage image or storage texel buffer at its integer coordinate.
 #
 # The texel is four lanes, of which the image's format stores the ones it has.
-#[op("spirv", "core", "OpImageWrite")]
+#[intrinsic("spirv", "core", "OpImageWrite")]
 pub fun image_write_1d(img: StorageImage1D, at: i32, texel: f32x4);
 
-#[op("spirv", "core", "OpImageWrite")]
+#[intrinsic("spirv", "core", "OpImageWrite")]
 pub fun image_write_2d(img: StorageImage2D, at: i32x2, texel: f32x4);
 
-#[op("spirv", "core", "OpImageWrite")]
+#[intrinsic("spirv", "core", "OpImageWrite")]
 pub fun image_write_3d(img: StorageImage3D, at: i32x3, texel: f32x4);
 
-#[op("spirv", "core", "OpImageWrite")]
+#[intrinsic("spirv", "core", "OpImageWrite")]
 pub fun image_write_2d_array(img: StorageImage2DArray, at: i32x3, texel: f32x4);
 
-#[op("spirv", "core", "OpImageWrite")]
+#[intrinsic("spirv", "core", "OpImageWrite")]
 pub fun image_write_2d_i(img: IStorageImage2D, at: i32x2, texel: i32x4);
 
-#[op("spirv", "core", "OpImageWrite")]
+#[intrinsic("spirv", "core", "OpImageWrite")]
 pub fun image_write_2d_u(img: UStorageImage2D, at: i32x2, texel: u32x4);
 
-#[op("spirv", "core", "OpImageWrite")]
+#[intrinsic("spirv", "core", "OpImageWrite")]
 pub fun image_write_2d_r32f(img: StorageImage2DR32f, at: i32x2, texel: f32x4);
 
-#[op("spirv", "core", "OpImageWrite")]
+#[intrinsic("spirv", "core", "OpImageWrite")]
 pub fun image_write_2d_r32i(img: IStorageImage2DR32i, at: i32x2, texel: i32x4);
 
-#[op("spirv", "core", "OpImageWrite")]
+#[intrinsic("spirv", "core", "OpImageWrite")]
 pub fun image_write_2d_r32ui(img: UStorageImage2DR32ui, at: i32x2, texel: u32x4);
 
-#[op("spirv", "core", "OpImageWrite")]
+#[intrinsic("spirv", "core", "OpImageWrite")]
 pub fun image_write_2d_r64i(img: IStorageImage2DR64i, at: i32x2, texel: i64x4);
 
-#[op("spirv", "core", "OpImageWrite")]
+#[intrinsic("spirv", "core", "OpImageWrite")]
 pub fun image_write_2d_r64ui(img: UStorageImage2DR64ui, at: i32x2, texel: u64x4);
 
-#[op("spirv", "core", "OpImageWrite")]
+#[intrinsic("spirv", "core", "OpImageWrite")]
 pub fun image_write_buffer(img: StorageTexelBuffer, at: i32, texel: f32x4);
 
-#[op("spirv", "core", "OpImageWrite")]
+#[intrinsic("spirv", "core", "OpImageWrite")]
 pub fun image_write_buffer_i(img: IStorageTexelBuffer, at: i32, texel: i32x4);
 
-#[op("spirv", "core", "OpImageWrite")]
+#[intrinsic("spirv", "core", "OpImageWrite")]
 pub fun image_write_buffer_u(img: UStorageTexelBuffer, at: i32, texel: u32x4);
 
 # the extent of a storage image or the texel count of a texel buffer, with the layer
 # count last for an arrayed image. neither has mip levels to choose between.
-#[op("spirv", "core", "OpImageQuerySize")]
+#[intrinsic("spirv", "core", "OpImageQuerySize")]
 pub fun image_size_1d(img: StorageImage1D) i32;
 
-#[op("spirv", "core", "OpImageQuerySize")]
+#[intrinsic("spirv", "core", "OpImageQuerySize")]
 pub fun image_size_2d(img: StorageImage2D) i32x2;
 
-#[op("spirv", "core", "OpImageQuerySize")]
+#[intrinsic("spirv", "core", "OpImageQuerySize")]
 pub fun image_size_3d(img: StorageImage3D) i32x3;
 
-#[op("spirv", "core", "OpImageQuerySize")]
+#[intrinsic("spirv", "core", "OpImageQuerySize")]
 pub fun image_size_2d_array(img: StorageImage2DArray) i32x3;
 
-#[op("spirv", "core", "OpImageQuerySize")]
+#[intrinsic("spirv", "core", "OpImageQuerySize")]
 pub fun image_size_2d_i(img: IStorageImage2D) i32x2;
 
-#[op("spirv", "core", "OpImageQuerySize")]
+#[intrinsic("spirv", "core", "OpImageQuerySize")]
 pub fun image_size_2d_u(img: UStorageImage2D) i32x2;
 
-#[op("spirv", "core", "OpImageQuerySize")]
+#[intrinsic("spirv", "core", "OpImageQuerySize")]
 pub fun image_size_2d_r32f(img: StorageImage2DR32f) i32x2;
 
-#[op("spirv", "core", "OpImageQuerySize")]
+#[intrinsic("spirv", "core", "OpImageQuerySize")]
 pub fun image_size_2d_r32i(img: IStorageImage2DR32i) i32x2;
 
-#[op("spirv", "core", "OpImageQuerySize")]
+#[intrinsic("spirv", "core", "OpImageQuerySize")]
 pub fun image_size_2d_r32ui(img: UStorageImage2DR32ui) i32x2;
 
-#[op("spirv", "core", "OpImageQuerySize")]
+#[intrinsic("spirv", "core", "OpImageQuerySize")]
 pub fun image_size_2d_r64i(img: IStorageImage2DR64i) i32x2;
 
-#[op("spirv", "core", "OpImageQuerySize")]
+#[intrinsic("spirv", "core", "OpImageQuerySize")]
 pub fun image_size_2d_r64ui(img: UStorageImage2DR64ui) i32x2;
 
-#[op("spirv", "core", "OpImageQuerySize")]
+#[intrinsic("spirv", "core", "OpImageQuerySize")]
 pub fun image_size_buffer(img: TexelBuffer) i32;
 
-#[op("spirv", "core", "OpImageQuerySize")]
+#[intrinsic("spirv", "core", "OpImageQuerySize")]
 pub fun image_size_buffer_i(img: ITexelBuffer) i32;
 
-#[op("spirv", "core", "OpImageQuerySize")]
+#[intrinsic("spirv", "core", "OpImageQuerySize")]
 pub fun image_size_buffer_u(img: UTexelBuffer) i32;
 
-#[op("spirv", "core", "OpImageQuerySize")]
+#[intrinsic("spirv", "core", "OpImageQuerySize")]
 pub fun image_size_storage_buffer(img: StorageTexelBuffer) i32;
 
-#[op("spirv", "core", "OpImageQuerySize")]
+#[intrinsic("spirv", "core", "OpImageQuerySize")]
 pub fun image_size_storage_buffer_i(img: IStorageTexelBuffer) i32;
 
-#[op("spirv", "core", "OpImageQuerySize")]
+#[intrinsic("spirv", "core", "OpImageQuerySize")]
 pub fun image_size_storage_buffer_u(img: UStorageTexelBuffer) i32;
 
 # the address of one texel of an atomic-format storage image, which is what an atomic
@@ -701,17 +617,17 @@ pub fun image_size_storage_buffer_u(img: UStorageTexelBuffer) i32;
 # The pointer is consumed by the atomic it is passed to: hand it straight to one. The
 # image is passed by its binding's address, `?binding`. The sample is `0`, since
 # these images are single-sampled.
-#[op("spirv", "core", "OpImageTexelPointer")]
+#[intrinsic("spirv", "core", "OpImageTexelPointer")]
 pub fun image_texel_2d_r32f(img: *StorageImage2DR32f, at: i32x2, sample: u32) *f32;
 
-#[op("spirv", "core", "OpImageTexelPointer")]
+#[intrinsic("spirv", "core", "OpImageTexelPointer")]
 pub fun image_texel_2d_r32i(img: *IStorageImage2DR32i, at: i32x2, sample: u32) *i32;
 
-#[op("spirv", "core", "OpImageTexelPointer")]
+#[intrinsic("spirv", "core", "OpImageTexelPointer")]
 pub fun image_texel_2d_r32ui(img: *UStorageImage2DR32ui, at: i32x2, sample: u32) *u32;
 
-#[op("spirv", "core", "OpImageTexelPointer")]
+#[intrinsic("spirv", "core", "OpImageTexelPointer")]
 pub fun image_texel_2d_r64i(img: *IStorageImage2DR64i, at: i32x2, sample: u32) *i64;
 
-#[op("spirv", "core", "OpImageTexelPointer")]
+#[intrinsic("spirv", "core", "OpImageTexelPointer")]
 pub fun image_texel_2d_r64ui(img: *UStorageImage2DR64ui, at: i32x2, sample: u32) *u64;

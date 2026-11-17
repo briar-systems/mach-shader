@@ -2,8 +2,8 @@
 #
 # This exists to be compiled and validated, not to be dispatched. An atomic takes its
 # pointer's storage class from the call, so each declaration in `shader.atomic` is
-# called once with an element of a `#[storage]` buffer and once with an element of a
-# `#[shared]` variable, and each of those is a different instruction in the module.
+# called once with an element of a `#[gpu.storage]` buffer and once with an element of a
+# `#[gpu.shared]` variable, and each of those is a different instruction in the module.
 # The image-texel case is `conform_image_comp`'s.
 #
 # The target names no `env`, so it holds every atomic feature and the module declares
@@ -22,24 +22,24 @@ rec Words {
     v_f64: [64]f64;
 }
 
-#[storage(0, 0)]
+#[gpu.storage(0, 0)]
 var words: Words;
-#[shared]
+#[gpu.shared]
 var s_u32: [64]u32;
-#[shared]
+#[gpu.shared]
 var s_i32: [64]i32;
-#[shared]
+#[gpu.shared]
 var s_u64: [64]u64;
-#[shared]
+#[gpu.shared]
 var s_i64: [64]i64;
-#[shared]
+#[gpu.shared]
 var s_f16: [64]f16;
-#[shared]
+#[gpu.shared]
 var s_f32: [64]f32;
-#[shared]
+#[gpu.shared]
 var s_f64: [64]f64;
 
-#[builtin("local_invocation_index")]
+#[gpu.builtin("local_invocation_index")]
 var lid: u32;
 
 # buffer memory is atomic across the device and ordered as uniform memory, workgroup
@@ -47,8 +47,8 @@ var lid: u32;
 val BUF: u32 = sy.SEMANTICS_UNIFORM_MEMORY;
 val WG:  u32 = sy.SEMANTICS_WORKGROUP_MEMORY;
 
-#[stage("compute")]
-#[workgroup(64, 1, 1)]
+#[gpu.stage("compute")]
+#[gpu.workgroup(64, 1, 1)]
 fun atomics_u32() {
     val i:   u32 = lid;
     var acc: u32 = words.v_u32[i];
@@ -81,8 +81,8 @@ fun atomics_u32() {
     words.v_u32[63 - i] = acc;
 }
 
-#[stage("compute")]
-#[workgroup(64, 1, 1)]
+#[gpu.stage("compute")]
+#[gpu.workgroup(64, 1, 1)]
 fun atomics_i32() {
     val i:   u32 = lid;
     var acc: i32 = words.v_i32[i];
@@ -115,8 +115,8 @@ fun atomics_i32() {
     words.v_i32[63 - i] = acc;
 }
 
-#[stage("compute")]
-#[workgroup(64, 1, 1)]
+#[gpu.stage("compute")]
+#[gpu.workgroup(64, 1, 1)]
 fun atomics_u64() {
     val i:   u32 = lid;
     var acc: u64 = words.v_u64[i];
@@ -149,8 +149,8 @@ fun atomics_u64() {
     words.v_u64[63 - i] = acc;
 }
 
-#[stage("compute")]
-#[workgroup(64, 1, 1)]
+#[gpu.stage("compute")]
+#[gpu.workgroup(64, 1, 1)]
 fun atomics_i64() {
     val i:   u32 = lid;
     var acc: i64 = words.v_i64[i];
@@ -183,8 +183,8 @@ fun atomics_i64() {
     words.v_i64[63 - i] = acc;
 }
 
-#[stage("compute")]
-#[workgroup(64, 1, 1)]
+#[gpu.stage("compute")]
+#[gpu.workgroup(64, 1, 1)]
 fun atomics_f16() {
     val i:   u32 = lid;
     var acc: f16 = words.v_f16[i];
@@ -203,8 +203,8 @@ fun atomics_f16() {
     words.v_f16[63 - i] = acc;
 }
 
-#[stage("compute")]
-#[workgroup(64, 1, 1)]
+#[gpu.stage("compute")]
+#[gpu.workgroup(64, 1, 1)]
 fun atomics_f32() {
     val i:   u32 = lid;
     var acc: f32 = words.v_f32[i];
@@ -223,8 +223,8 @@ fun atomics_f32() {
     words.v_f32[63 - i] = acc;
 }
 
-#[stage("compute")]
-#[workgroup(64, 1, 1)]
+#[gpu.stage("compute")]
+#[gpu.workgroup(64, 1, 1)]
 fun atomics_f64() {
     val i:   u32 = lid;
     var acc: f64 = words.v_f64[i];

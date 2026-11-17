@@ -1,48 +1,44 @@
 [project]
 id = "shader"
 version = "0.6.0"
-mach = "^6.10"
+mach = "^6"
 src = "src"
-out = "out/{target.name}/{profile.name}"
+work = "out/{target.name}/{profile.name}"
 
 # the targets this library is meant for. `spirv` is the only one it can be BUILT
 # for meaningfully - see the README's shader-only note - and the CPU tuples are
 # here so `mach check` runs over the module on an ordinary host.
 [target.spirv]
-isa = "spirv"
-os  = "freestanding"
-abi = "spirv"
+arch = "spirv"
+sys  = "vulkan"
+abi  = "shader"
 
 [target.linux-x86_64]
-isa = "x86_64"
-os  = "linux"
-abi = "sysv64"
+arch = "x86_64"
+sys  = "linux"
+abi  = "sysv64"
 
-[target.linux-arm64]
-isa = "aarch64"
-os  = "linux"
-abi = "aapcs64"
+[target.linux-aarch64]
+arch = "aarch64"
+sys  = "linux"
+abi  = "aapcs64"
 
 [profile.debug]
 default = true
-opt = 0
+optimize = false
 debug = false
 simd = "scalarize"
-vectorize = false
-float_reassoc = false
 
 [profile.release]
-opt = 2
+optimize = true
 debug = false
 simd = "scalarize"
-vectorize = false
-float_reassoc = false
 
 [artifact.shader]
 kind = "static"
 entry = "lib/shader.mach"
-out = "lib/shader{artifact.suffix}"
-targets = ["linux-x86_64", "linux-arm64"]
+out = "{project.work}/lib/shader"
+targets = ["linux-x86_64", "linux-aarch64"]
 link = []
 need = []
 default = true
