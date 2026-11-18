@@ -1,5 +1,6 @@
-# Every texture read that is not a plain sample: depth comparisons, gathers, fetches
-# and the size and level queries, over every handle shape each one takes.
+# Every texture read that is not a plain sample: depth comparisons, gathers, fetches,
+# the size and level queries and the subpass inputs, over every handle shape each one
+# takes.
 #
 # This exists to be compiled and validated, not to shade anything. It is a fragment
 # stage because an implicit-lod comparison derives its level from a fragment stage's
@@ -63,6 +64,21 @@ var depth_layers_tex: tex.DepthTexture2DArray;
 var depth_cube_tex:   tex.DepthTextureCube;
 #[gpu.sampler(1, 12)]
 var depth_cubes_tex:  tex.DepthTextureCubeArray;
+
+# the subpass inputs, each naming the input attachment it reads. only the fragment stage
+# below reaches them, since a subpass input exists in no other
+#[gpu.storage(3, 0)]
+#[gpu.attachment(0)]
+var gbuffer_colour: tex.SubpassInput;
+#[gpu.storage(3, 1)]
+#[gpu.attachment(1)]
+var gbuffer_signed: tex.ISubpassInput;
+#[gpu.storage(3, 2)]
+#[gpu.attachment(2)]
+var gbuffer_ids:    tex.USubpassInput;
+#[gpu.storage(3, 3)]
+#[gpu.attachment(3)]
+var gbuffer_ms:     tex.SubpassInputMS;
 
 #[gpu.input(0)]
 var in_uv:    f32x2;
@@ -139,6 +155,15 @@ fun frag_query() {
         + tex.levels_depth_2d(depth_tex) + tex.levels_depth_2d_array(depth_layers_tex)
         + tex.levels_depth_cube(depth_cube_tex) + tex.levels_depth_cube_array(depth_cubes_tex);
     out_size = i32x4{s2[0] + s3[0], s2[1] + s3[1], s3[2], levels + tex.size_1d(line_tex, 0)};
+}
+
+#[gpu.stage("fragment")]
+fun frag_subpass() {
+    val here: i32x2 = i32x2{0, 0};
+    out_colour = tex.subpass_load(gbuffer_colour, here)
+        + tex.subpass_load_ms(gbuffer_ms, here, tex.IMAGE_OPERANDS_SAMPLE, 1);
+    out_signed = tex.subpass_load_i(gbuffer_signed, here);
+    out_ids    = tex.subpass_load_u(gbuffer_ids, here);
 }
 
 rec Samples {

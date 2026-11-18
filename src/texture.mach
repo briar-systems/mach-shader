@@ -21,8 +21,9 @@
 # image and the image it is built from cannot disagree about it.
 #
 # WHAT IS NOT DECLARED, and why. A multisampled image is never sampled, so it has no
-# place among these handles, and the target refuses a `Rect` or `SubpassData`
-# dimensionality by naming the operand.
+# place among these handles, and the target refuses a `Rect` dimensionality by naming
+# the operand. A `SubpassData` image is no sampled image but a subpass input, declared
+# with the storage images below.
 
 # the `Image Operands` mask bits. a declaration that takes the mask passes it as a
 # literal, followed by the operands its set bits bring in ascending bit order: `LOD`
@@ -631,3 +632,33 @@ pub fun image_texel_2d_r64i(img: *IStorageImage2DR64i, at: i32x2, sample: u32) *
 
 #[intrinsic("spirv", "core", "OpImageTexelPointer")]
 pub fun image_texel_2d_r64ui(img: *UStorageImage2DR64ui, at: i32x2, sample: u32) *u64;
+
+# the subpass inputs: the attachment a previous subpass of the render pass wrote, read
+# at the fragment's own place by a fragment stage alone. one is a storage image of `Dim`
+# `"SubpassData"`, format `"Unknown"` and `Arrayed` 0, bound by
+# `#[gpu.storage(set, binding)]` beside `#[gpu.attachment(index)]`, the input attachment
+# it reads, which the target requires. the multisampled one reads a multisampled
+# attachment, one sample at a time
+#[handle("spirv", "image", f32, "SubpassData", 0, 0, 0, 2, "Unknown")]
+pub def SubpassInput;
+#[handle("spirv", "image", i32, "SubpassData", 0, 0, 0, 2, "Unknown")]
+pub def ISubpassInput;
+#[handle("spirv", "image", u32, "SubpassData", 0, 0, 0, 2, "Unknown")]
+pub def USubpassInput;
+#[handle("spirv", "image", f32, "SubpassData", 0, 0, 1, 2, "Unknown")]
+pub def SubpassInputMS;
+
+# read a subpass input at the fragment's own place. The coordinate is relative to the
+# fragment, so it is the constant (0, 0), `i32x2{0, 0}`, and the target refuses any other.
+# The multisampled read takes `IMAGE_OPERANDS_SAMPLE` and the sample it reads.
+#[intrinsic("spirv", "core", "OpImageRead")]
+pub fun subpass_load(img: SubpassInput, at: i32x2) f32x4;
+
+#[intrinsic("spirv", "core", "OpImageRead")]
+pub fun subpass_load_i(img: ISubpassInput, at: i32x2) i32x4;
+
+#[intrinsic("spirv", "core", "OpImageRead")]
+pub fun subpass_load_u(img: USubpassInput, at: i32x2) u32x4;
+
+#[intrinsic("spirv", "core", "OpImageRead")]
+pub fun subpass_load_ms(img: SubpassInputMS, at: i32x2, mask: u32, sample: i32) f32x4;
