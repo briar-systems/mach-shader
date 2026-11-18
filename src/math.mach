@@ -296,6 +296,14 @@ pub fun modf(x: f32, whole: *f32) f32;
 #[intrinsic("spirv", "GLSL.std.450", "Frexp")]
 pub fun frexp(x: f32, exp: *i32) f32;
 
+# Build a value from a significand and a power of two.
+# ---
+# x:   The significand.
+# exp: The exponent.
+# ret: x * 2 ** exp
+#[intrinsic("spirv", "GLSL.std.450", "Ldexp")]
+pub fun ldexp(x: f32, exp: i32) f32;
+
 # ---------- per lane of an f32x2 ----------
 
 # Absolute value, per lane.
@@ -522,6 +530,14 @@ pub fun modf_2(x: f32x2, whole: *f32x2) f32x2;
 # ret: the significand, in [0.5, 1) in magnitude, or zero at zero per lane
 #[intrinsic("spirv", "GLSL.std.450", "Frexp")]
 pub fun frexp_2(x: f32x2, exp: *i32x2) f32x2;
+
+# Build a value from a significand and a power of two, per lane.
+# ---
+# x:   The significands, one per lane.
+# exp: The exponents, one per lane.
+# ret: x * 2 ** exp per lane
+#[intrinsic("spirv", "GLSL.std.450", "Ldexp")]
+pub fun ldexp_2(x: f32x2, exp: i32x2) f32x2;
 
 # ---------- per lane of an f32x3 ----------
 
@@ -750,6 +766,14 @@ pub fun modf_3(x: f32x3, whole: *f32x3) f32x3;
 #[intrinsic("spirv", "GLSL.std.450", "Frexp")]
 pub fun frexp_3(x: f32x3, exp: *i32x3) f32x3;
 
+# Build a value from a significand and a power of two, per lane.
+# ---
+# x:   The significands, one per lane.
+# exp: The exponents, one per lane.
+# ret: x * 2 ** exp per lane
+#[intrinsic("spirv", "GLSL.std.450", "Ldexp")]
+pub fun ldexp_3(x: f32x3, exp: i32x3) f32x3;
+
 # ---------- per lane of an f32x4 ----------
 
 # Absolute value, per lane.
@@ -977,6 +1001,282 @@ pub fun modf_4(x: f32x4, whole: *f32x4) f32x4;
 #[intrinsic("spirv", "GLSL.std.450", "Frexp")]
 pub fun frexp_4(x: f32x4, exp: *i32x4) f32x4;
 
+# Build a value from a significand and a power of two, per lane.
+# ---
+# x:   The significands, one per lane.
+# exp: The exponents, one per lane.
+# ret: x * 2 ** exp per lane
+#[intrinsic("spirv", "GLSL.std.450", "Ldexp")]
+pub fun ldexp_4(x: f32x4, exp: i32x4) f32x4;
+
+# ---------- derivatives ----------
+#
+# A derivative is the difference between a value in neighbouring fragments of a 2x2
+# quad, so it exists in a fragment stage only, and a call from any other stage is
+# refused where it is written. The plain forms leave the choice of neighbour to the
+# driver, the fine forms take the fragment's own, and the coarse forms one for the
+# whole quad. Each is a core instruction over 32-bit floats.
+
+# ----- f32 -----
+
+# Rate of change along the window's x axis.
+# ---
+# p:   The value.
+# ret: the difference between neighbouring fragments' values in x
+#[intrinsic("spirv", "core", "OpDPdx")]
+pub fun dpdx(p: f32) f32;
+
+# Rate of change along the window's y axis.
+# ---
+# p:   The value.
+# ret: the difference between neighbouring fragments' values in y
+#[intrinsic("spirv", "core", "OpDPdy")]
+pub fun dpdy(p: f32) f32;
+
+# Total rate of change in x and y.
+# ---
+# p:   The value.
+# ret: abs(dpdx(p)) + abs(dpdy(p))
+#[intrinsic("spirv", "core", "OpFwidth")]
+pub fun fwidth(p: f32) f32;
+
+# Rate of change along x, from the fragment's own neighbour.
+# ---
+# p:   The value.
+# ret: the difference in x within the fragment's row of its quad
+#[intrinsic("spirv", "core", "OpDPdxFine")]
+pub fun dpdx_fine(p: f32) f32;
+
+# Rate of change along y, from the fragment's own neighbour.
+# ---
+# p:   The value.
+# ret: the difference in y within the fragment's column of its quad
+#[intrinsic("spirv", "core", "OpDPdyFine")]
+pub fun dpdy_fine(p: f32) f32;
+
+# Total rate of change from the fragment's own neighbours.
+# ---
+# p:   The value.
+# ret: abs(dpdx_fine(p)) + abs(dpdy_fine(p))
+#[intrinsic("spirv", "core", "OpFwidthFine")]
+pub fun fwidth_fine(p: f32) f32;
+
+# Rate of change along x, one value for the whole quad.
+# ---
+# p:   The value.
+# ret: the difference in x the quad shares
+#[intrinsic("spirv", "core", "OpDPdxCoarse")]
+pub fun dpdx_coarse(p: f32) f32;
+
+# Rate of change along y, one value for the whole quad.
+# ---
+# p:   The value.
+# ret: the difference in y the quad shares
+#[intrinsic("spirv", "core", "OpDPdyCoarse")]
+pub fun dpdy_coarse(p: f32) f32;
+
+# Total rate of change, one value for the whole quad.
+# ---
+# p:   The value.
+# ret: abs(dpdx_coarse(p)) + abs(dpdy_coarse(p))
+#[intrinsic("spirv", "core", "OpFwidthCoarse")]
+pub fun fwidth_coarse(p: f32) f32;
+
+# ----- f32x2 -----
+
+# Rate of change along the window's x axis, per lane.
+# ---
+# p:   The values, one per lane.
+# ret: the difference between neighbouring fragments' values in x per lane
+#[intrinsic("spirv", "core", "OpDPdx")]
+pub fun dpdx_2(p: f32x2) f32x2;
+
+# Rate of change along the window's y axis, per lane.
+# ---
+# p:   The values, one per lane.
+# ret: the difference between neighbouring fragments' values in y per lane
+#[intrinsic("spirv", "core", "OpDPdy")]
+pub fun dpdy_2(p: f32x2) f32x2;
+
+# Total rate of change in x and y, per lane.
+# ---
+# p:   The values, one per lane.
+# ret: abs(dpdx(p)) + abs(dpdy(p)) per lane
+#[intrinsic("spirv", "core", "OpFwidth")]
+pub fun fwidth_2(p: f32x2) f32x2;
+
+# Rate of change along x, from the fragment's own neighbour, per lane.
+# ---
+# p:   The values, one per lane.
+# ret: the difference in x within the fragment's row of its quad per lane
+#[intrinsic("spirv", "core", "OpDPdxFine")]
+pub fun dpdx_fine_2(p: f32x2) f32x2;
+
+# Rate of change along y, from the fragment's own neighbour, per lane.
+# ---
+# p:   The values, one per lane.
+# ret: the difference in y within the fragment's column of its quad per lane
+#[intrinsic("spirv", "core", "OpDPdyFine")]
+pub fun dpdy_fine_2(p: f32x2) f32x2;
+
+# Total rate of change from the fragment's own neighbours, per lane.
+# ---
+# p:   The values, one per lane.
+# ret: abs(dpdx_fine(p)) + abs(dpdy_fine(p)) per lane
+#[intrinsic("spirv", "core", "OpFwidthFine")]
+pub fun fwidth_fine_2(p: f32x2) f32x2;
+
+# Rate of change along x, one value for the whole quad, per lane.
+# ---
+# p:   The values, one per lane.
+# ret: the difference in x the quad shares per lane
+#[intrinsic("spirv", "core", "OpDPdxCoarse")]
+pub fun dpdx_coarse_2(p: f32x2) f32x2;
+
+# Rate of change along y, one value for the whole quad, per lane.
+# ---
+# p:   The values, one per lane.
+# ret: the difference in y the quad shares per lane
+#[intrinsic("spirv", "core", "OpDPdyCoarse")]
+pub fun dpdy_coarse_2(p: f32x2) f32x2;
+
+# Total rate of change, one value for the whole quad, per lane.
+# ---
+# p:   The values, one per lane.
+# ret: abs(dpdx_coarse(p)) + abs(dpdy_coarse(p)) per lane
+#[intrinsic("spirv", "core", "OpFwidthCoarse")]
+pub fun fwidth_coarse_2(p: f32x2) f32x2;
+
+# ----- f32x3 -----
+
+# Rate of change along the window's x axis, per lane.
+# ---
+# p:   The values, one per lane.
+# ret: the difference between neighbouring fragments' values in x per lane
+#[intrinsic("spirv", "core", "OpDPdx")]
+pub fun dpdx_3(p: f32x3) f32x3;
+
+# Rate of change along the window's y axis, per lane.
+# ---
+# p:   The values, one per lane.
+# ret: the difference between neighbouring fragments' values in y per lane
+#[intrinsic("spirv", "core", "OpDPdy")]
+pub fun dpdy_3(p: f32x3) f32x3;
+
+# Total rate of change in x and y, per lane.
+# ---
+# p:   The values, one per lane.
+# ret: abs(dpdx(p)) + abs(dpdy(p)) per lane
+#[intrinsic("spirv", "core", "OpFwidth")]
+pub fun fwidth_3(p: f32x3) f32x3;
+
+# Rate of change along x, from the fragment's own neighbour, per lane.
+# ---
+# p:   The values, one per lane.
+# ret: the difference in x within the fragment's row of its quad per lane
+#[intrinsic("spirv", "core", "OpDPdxFine")]
+pub fun dpdx_fine_3(p: f32x3) f32x3;
+
+# Rate of change along y, from the fragment's own neighbour, per lane.
+# ---
+# p:   The values, one per lane.
+# ret: the difference in y within the fragment's column of its quad per lane
+#[intrinsic("spirv", "core", "OpDPdyFine")]
+pub fun dpdy_fine_3(p: f32x3) f32x3;
+
+# Total rate of change from the fragment's own neighbours, per lane.
+# ---
+# p:   The values, one per lane.
+# ret: abs(dpdx_fine(p)) + abs(dpdy_fine(p)) per lane
+#[intrinsic("spirv", "core", "OpFwidthFine")]
+pub fun fwidth_fine_3(p: f32x3) f32x3;
+
+# Rate of change along x, one value for the whole quad, per lane.
+# ---
+# p:   The values, one per lane.
+# ret: the difference in x the quad shares per lane
+#[intrinsic("spirv", "core", "OpDPdxCoarse")]
+pub fun dpdx_coarse_3(p: f32x3) f32x3;
+
+# Rate of change along y, one value for the whole quad, per lane.
+# ---
+# p:   The values, one per lane.
+# ret: the difference in y the quad shares per lane
+#[intrinsic("spirv", "core", "OpDPdyCoarse")]
+pub fun dpdy_coarse_3(p: f32x3) f32x3;
+
+# Total rate of change, one value for the whole quad, per lane.
+# ---
+# p:   The values, one per lane.
+# ret: abs(dpdx_coarse(p)) + abs(dpdy_coarse(p)) per lane
+#[intrinsic("spirv", "core", "OpFwidthCoarse")]
+pub fun fwidth_coarse_3(p: f32x3) f32x3;
+
+# ----- f32x4 -----
+
+# Rate of change along the window's x axis, per lane.
+# ---
+# p:   The values, one per lane.
+# ret: the difference between neighbouring fragments' values in x per lane
+#[intrinsic("spirv", "core", "OpDPdx")]
+pub fun dpdx_4(p: f32x4) f32x4;
+
+# Rate of change along the window's y axis, per lane.
+# ---
+# p:   The values, one per lane.
+# ret: the difference between neighbouring fragments' values in y per lane
+#[intrinsic("spirv", "core", "OpDPdy")]
+pub fun dpdy_4(p: f32x4) f32x4;
+
+# Total rate of change in x and y, per lane.
+# ---
+# p:   The values, one per lane.
+# ret: abs(dpdx(p)) + abs(dpdy(p)) per lane
+#[intrinsic("spirv", "core", "OpFwidth")]
+pub fun fwidth_4(p: f32x4) f32x4;
+
+# Rate of change along x, from the fragment's own neighbour, per lane.
+# ---
+# p:   The values, one per lane.
+# ret: the difference in x within the fragment's row of its quad per lane
+#[intrinsic("spirv", "core", "OpDPdxFine")]
+pub fun dpdx_fine_4(p: f32x4) f32x4;
+
+# Rate of change along y, from the fragment's own neighbour, per lane.
+# ---
+# p:   The values, one per lane.
+# ret: the difference in y within the fragment's column of its quad per lane
+#[intrinsic("spirv", "core", "OpDPdyFine")]
+pub fun dpdy_fine_4(p: f32x4) f32x4;
+
+# Total rate of change from the fragment's own neighbours, per lane.
+# ---
+# p:   The values, one per lane.
+# ret: abs(dpdx_fine(p)) + abs(dpdy_fine(p)) per lane
+#[intrinsic("spirv", "core", "OpFwidthFine")]
+pub fun fwidth_fine_4(p: f32x4) f32x4;
+
+# Rate of change along x, one value for the whole quad, per lane.
+# ---
+# p:   The values, one per lane.
+# ret: the difference in x the quad shares per lane
+#[intrinsic("spirv", "core", "OpDPdxCoarse")]
+pub fun dpdx_coarse_4(p: f32x4) f32x4;
+
+# Rate of change along y, one value for the whole quad, per lane.
+# ---
+# p:   The values, one per lane.
+# ret: the difference in y the quad shares per lane
+#[intrinsic("spirv", "core", "OpDPdyCoarse")]
+pub fun dpdy_coarse_4(p: f32x4) f32x4;
+
+# Total rate of change, one value for the whole quad, per lane.
+# ---
+# p:   The values, one per lane.
+# ret: abs(dpdx_coarse(p)) + abs(dpdy_coarse(p)) per lane
+#[intrinsic("spirv", "core", "OpFwidthCoarse")]
+pub fun fwidth_coarse_4(p: f32x4) f32x4;
+
 # ---------- geometry ----------
 #
 # These consume vectors and have no scalar form, but they carry their width like
@@ -1184,7 +1484,9 @@ pub fun refract_4(i: f32x4, n: f32x4, eta: f32) f32x4;
 #
 # A 16-bit entry needs the target's `Int16` and a 64-bit one its `Int64`, where the
 # target names an `env`. The bit scans are 32-bit only: GLSL.std.450 defines `FindILsb`,
-# `FindSMsb` and `FindUMsb` on 32-bit integers alone.
+# `FindSMsb` and `FindUMsb` on 32-bit integers alone. The count of set bits is the core
+# `OpBitCount`, which no operator writes, and is 32-bit only too: Vulkan holds its operand
+# to 32 bits unless the device enables `maintenance9`, which no Vulkan version guarantees.
 
 # ----- i16 -----
 
@@ -1513,6 +1815,13 @@ pub fun find_lsb_i32(x: i32) i32;
 #[intrinsic("spirv", "GLSL.std.450", "FindSMsb")]
 pub fun find_msb_i32(x: i32) i32;
 
+# Number of set bits.
+# ---
+# x:   The value.
+# ret: how many bits of x are 1
+#[intrinsic("spirv", "core", "OpBitCount")]
+pub fun count_ones_i32(x: i32) i32;
+
 # ----- i32x2 -----
 
 # Absolute value, per lane.
@@ -1567,6 +1876,13 @@ pub fun find_lsb_i32_2(x: i32x2) i32x2;
 # ret: the bit index, or every bit set (-1) where there is none per lane
 #[intrinsic("spirv", "GLSL.std.450", "FindSMsb")]
 pub fun find_msb_i32_2(x: i32x2) i32x2;
+
+# Number of set bits, per lane.
+# ---
+# x:   The values, one per lane.
+# ret: how many bits of x are 1 per lane
+#[intrinsic("spirv", "core", "OpBitCount")]
+pub fun count_ones_i32_2(x: i32x2) i32x2;
 
 # ----- i32x3 -----
 
@@ -1623,6 +1939,13 @@ pub fun find_lsb_i32_3(x: i32x3) i32x3;
 #[intrinsic("spirv", "GLSL.std.450", "FindSMsb")]
 pub fun find_msb_i32_3(x: i32x3) i32x3;
 
+# Number of set bits, per lane.
+# ---
+# x:   The values, one per lane.
+# ret: how many bits of x are 1 per lane
+#[intrinsic("spirv", "core", "OpBitCount")]
+pub fun count_ones_i32_3(x: i32x3) i32x3;
+
 # ----- i32x4 -----
 
 # Absolute value, per lane.
@@ -1678,6 +2001,13 @@ pub fun find_lsb_i32_4(x: i32x4) i32x4;
 #[intrinsic("spirv", "GLSL.std.450", "FindSMsb")]
 pub fun find_msb_i32_4(x: i32x4) i32x4;
 
+# Number of set bits, per lane.
+# ---
+# x:   The values, one per lane.
+# ret: how many bits of x are 1 per lane
+#[intrinsic("spirv", "core", "OpBitCount")]
+pub fun count_ones_i32_4(x: i32x4) i32x4;
+
 # ----- u32 -----
 
 # Smaller of two values.
@@ -1718,6 +2048,13 @@ pub fun find_lsb_u32(x: u32) u32;
 # ret: the bit index, or every bit set (-1) where there is none
 #[intrinsic("spirv", "GLSL.std.450", "FindUMsb")]
 pub fun find_msb_u32(x: u32) u32;
+
+# Number of set bits.
+# ---
+# x:   The value.
+# ret: how many bits of x are 1
+#[intrinsic("spirv", "core", "OpBitCount")]
+pub fun count_ones_u32(x: u32) u32;
 
 # ----- u32x2 -----
 
@@ -1760,6 +2097,13 @@ pub fun find_lsb_u32_2(x: u32x2) u32x2;
 #[intrinsic("spirv", "GLSL.std.450", "FindUMsb")]
 pub fun find_msb_u32_2(x: u32x2) u32x2;
 
+# Number of set bits, per lane.
+# ---
+# x:   The values, one per lane.
+# ret: how many bits of x are 1 per lane
+#[intrinsic("spirv", "core", "OpBitCount")]
+pub fun count_ones_u32_2(x: u32x2) u32x2;
+
 # ----- u32x3 -----
 
 # Smaller of two values, per lane.
@@ -1801,6 +2145,13 @@ pub fun find_lsb_u32_3(x: u32x3) u32x3;
 #[intrinsic("spirv", "GLSL.std.450", "FindUMsb")]
 pub fun find_msb_u32_3(x: u32x3) u32x3;
 
+# Number of set bits, per lane.
+# ---
+# x:   The values, one per lane.
+# ret: how many bits of x are 1 per lane
+#[intrinsic("spirv", "core", "OpBitCount")]
+pub fun count_ones_u32_3(x: u32x3) u32x3;
+
 # ----- u32x4 -----
 
 # Smaller of two values, per lane.
@@ -1841,6 +2192,13 @@ pub fun find_lsb_u32_4(x: u32x4) u32x4;
 # ret: the bit index, or every bit set (-1) where there is none per lane
 #[intrinsic("spirv", "GLSL.std.450", "FindUMsb")]
 pub fun find_msb_u32_4(x: u32x4) u32x4;
+
+# Number of set bits, per lane.
+# ---
+# x:   The values, one per lane.
+# ret: how many bits of x are 1 per lane
+#[intrinsic("spirv", "core", "OpBitCount")]
+pub fun count_ones_u32_4(x: u32x4) u32x4;
 
 # ----- i64 -----
 

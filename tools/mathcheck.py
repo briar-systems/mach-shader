@@ -7,11 +7,11 @@ usage: mathcheck.py <math.mach> <module.spvasm>
 surviving width satisfies. This check keys every `#[intrinsic]` declaration by its
 instruction, result type and operand types, and requires the module to hold exactly
 as many of each as are declared, so a call that was dropped or folded away at one
-width fails here. `OpDot` is keyed as core, so it cannot pass as an extended
-instruction. The expected entries come from the library itself, so a new entry
-is checked without editing this script. SPIR-V integers carry no sign here, so
-`i32` and `u32` are one type in the module, and an instruction both signednesses
-share, `FindILsb`, is expected twice at each width.
+width fails here. `OpDot`, `OpBitCount` and the derivatives are keyed as core, so none
+can pass as an extended instruction. The expected entries come from the library itself,
+so a new entry is checked without editing this script. SPIR-V integers carry no sign
+here, so `i32` and `u32` are one type in the module, and an instruction both
+signednesses share, `FindILsb`, is expected twice at each width.
 """
 
 import collections
@@ -19,6 +19,10 @@ import re
 import sys
 
 OP = re.compile(r'#\[intrinsic\("spirv",\s*"([^"]+)",\s*"(\w+)"\)\]\s*\npub fun (\w+)\(([^)]*)\) (\w+);')
+
+
+# the core instructions the library declares, each counted where the module holds it
+CORE = ("OpDot", "OpBitCount", "OpDPdx", "OpDPdy", "OpFwidth", "OpDPdxFine", "OpDPdyFine", "OpFwidthFine", "OpDPdxCoarse", "OpDPdyCoarse", "OpFwidthCoarse")
 
 
 def signless(ty):
@@ -69,8 +73,8 @@ def emitted(path):
                 keys[rid] = (("GLSL.std.450", rest[2], types[rest[0]], tuple(values.get(a, "?") for a in rest[3:])), rest[3:])
             elif op in ("OpConvertFToS", "OpConvertFToU"):
                 converted.add(rest[1])
-            elif op == "OpDot":
-                have[("core", "OpDot", types[rest[0]], tuple(values.get(a, "?") for a in rest[1:]))] += 1
+            elif op in CORE:
+                have[("core", op, types[rest[0]], tuple(values.get(a, "?") for a in rest[1:]))] += 1
     for rid, (key, operands) in keys.items():
         if key[1] == "NMin" and rid in converted and operands and operands[0] in keys and keys[operands[0]][0][1] == "NMax":
             clamps.update((rid, operands[0]))

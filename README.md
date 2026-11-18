@@ -231,7 +231,10 @@ early.
 ## Types and naming
 
 `f32`, `f32x2`, `f32x3` and `f32x4`, and the integer rows over 16-, 32- and 64-bit
-integers at the same widths, with 254 entries across them.
+integers at the same widths, with 302 entries across them. `ldexp` takes its exponent
+as an `i32` of the value's lane count, and the derivatives (`dpdx`, `dpdy`, `fwidth`
+and their `_fine` and `_coarse` forms) are core instructions over 32-bit floats that
+only a fragment stage may call.
 
 A scalar entry takes the plain name. A vector entry always carries its lane count
 after an underscore: `sqrt`, `sqrt_2`, `sqrt_3`, `sqrt_4`. The geometric entries

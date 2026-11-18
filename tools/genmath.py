@@ -204,6 +204,39 @@ def split(name, suffix, glsl, param, pty, ty, summary, pdoc, ret, per_lane):
     return "\n".join(lines)
 
 
+def ldexp(suffix, ty, per_lane):
+    exp = "i32" + ty[len("f32"):]
+    lines = ["# Build a value from a significand and a power of two, per lane." if per_lane else "# Build a value from a significand and a power of two.", "# ---"]
+    lines.append(f"# x:   {'The significands, one per lane.' if per_lane else 'The significand.'}")
+    lines.append(f"# exp: {'The exponents, one per lane.' if per_lane else 'The exponent.'}")
+    lines.append("# ret: x * 2 ** exp" + (" per lane" if per_lane else ""))
+    lines.append('#[intrinsic("spirv", "GLSL.std.450", "Ldexp")]')
+    lines.append(f"pub fun ldexp{suffix}(x: {ty}, exp: {exp}) {ty};")
+    return "\n".join(lines)
+
+
+DERIVATIVES = [
+    ("dpdx",          "OpDPdx",         "Rate of change along the window's x axis.", "the difference between neighbouring fragments' values in x"),
+    ("dpdy",          "OpDPdy",         "Rate of change along the window's y axis.", "the difference between neighbouring fragments' values in y"),
+    ("fwidth",        "OpFwidth",       "Total rate of change in x and y.",           "abs(dpdx(p)) + abs(dpdy(p))"),
+    ("dpdx_fine",     "OpDPdxFine",     "Rate of change along x, from the fragment's own neighbour.",  "the difference in x within the fragment's row of its quad"),
+    ("dpdy_fine",     "OpDPdyFine",     "Rate of change along y, from the fragment's own neighbour.",  "the difference in y within the fragment's column of its quad"),
+    ("fwidth_fine",   "OpFwidthFine",   "Total rate of change from the fragment's own neighbours.",    "abs(dpdx_fine(p)) + abs(dpdy_fine(p))"),
+    ("dpdx_coarse",   "OpDPdxCoarse",   "Rate of change along x, one value for the whole quad.",       "the difference in x the quad shares"),
+    ("dpdy_coarse",   "OpDPdyCoarse",   "Rate of change along y, one value for the whole quad.",       "the difference in y the quad shares"),
+    ("fwidth_coarse", "OpFwidthCoarse", "Total rate of change, one value for the whole quad.",         "abs(dpdx_coarse(p)) + abs(dpdy_coarse(p))"),
+]
+
+
+def derivative(name, suffix, op, ty, summary, ret, per_lane):
+    lines = [f"# {summary[:-1]}, per lane." if per_lane else f"# {summary}", "# ---"]
+    lines.append(f"# p:   {'The values, one per lane.' if per_lane else 'The value.'}")
+    lines.append(f"# ret: {ret}" + (" per lane" if per_lane else ""))
+    lines.append(f'#[intrinsic("spirv", "core", "{op}")]')
+    lines.append(f"pub fun {name}{suffix}(p: {ty}) {ty};")
+    return "\n".join(lines)
+
+
 out = [HEADER]
 
 for suffix, ty, label in widths():
@@ -218,6 +251,24 @@ for suffix, ty, label in widths():
             out.append("")
     for name, glsl, param, pty, summary, pdoc, ret in SPLIT:
         out.append(split(name, suffix, glsl, param, pty, ty, summary, pdoc, ret, per_lane))
+        out.append("")
+    out.append(ldexp(suffix, ty, per_lane))
+    out.append("")
+
+out.append('''
+# ---------- derivatives ----------
+#
+# A derivative is the difference between a value in neighbouring fragments of a 2x2
+# quad, so it exists in a fragment stage only, and a call from any other stage is
+# refused where it is written. The plain forms leave the choice of neighbour to the
+# driver, the fine forms take the fragment's own, and the coarse forms one for the
+# whole quad. Each is a core instruction over 32-bit floats.
+''')
+
+for suffix, ty, label in widths():
+    out.append(f"\n# ----- {ty} -----\n")
+    for name, op, summary, ret in DERIVATIVES:
+        out.append(derivative(name, suffix, op, ty, summary, ret, label != "scalar"))
         out.append("")
 
 out.append('''
@@ -316,12 +367,15 @@ out.append('''
 #
 # A 16-bit entry needs the target's `Int16` and a 64-bit one its `Int64`, where the
 # target names an `env`. The bit scans are 32-bit only: GLSL.std.450 defines `FindILsb`,
-# `FindSMsb` and `FindUMsb` on 32-bit integers alone.
+# `FindSMsb` and `FindUMsb` on 32-bit integers alone. The count of set bits is the core
+# `OpBitCount`, which no operator writes, and is 32-bit only too: Vulkan holds its operand
+# to 32 bits unless the device enables `maintenance9`, which no Vulkan version guarantees.
 ''')
 
 # name, instruction for a signed and an unsigned type (absent where the signedness has
-# no form), parameter names, doc summary, return description, the widths it takes.
-# the bit scans take 32 bits alone, since GLSL.std.450 defines them on no other width
+# no form), parameter names, doc summary, return description, the widths it takes, and
+# the instruction set. the bit scans take 32 bits alone, since GLSL.std.450 defines them
+# on no other width, and the bit count since vulkan holds OpBitCount to 32 bits
 ANY_WIDTH = (16, 32, 64)
 INTEGER = [
     ("abs",      {"i": "SAbs"},                       ["x"],             "Absolute value.",                "|x|", ANY_WIDTH),
@@ -331,6 +385,7 @@ INTEGER = [
     ("clamp",    {"i": "SClamp",   "u": "UClamp"},    ["x", "lo", "hi"], "Constrain a value to a range.",  "min(max(x, lo), hi)", ANY_WIDTH),
     ("find_lsb", {"i": "FindILsb", "u": "FindILsb"},  ["x"],             "Index of the least significant set bit.", "the bit index, or every bit set (-1) at zero", (32,)),
     ("find_msb", {"i": "FindSMsb", "u": "FindUMsb"},  ["x"],             "Index of the most significant bit that differs from the sign.", "the bit index, or every bit set (-1) where there is none", (32,)),
+    ("count_ones", {"i": "OpBitCount", "u": "OpBitCount"}, ["x"],        "Number of set bits.",            "how many bits of x are 1", (32,), "core"),
 ]
 
 for bits in ANY_WIDTH:
@@ -340,9 +395,9 @@ for bits in ANY_WIDTH:
             ty = ity + fty[len("f32"):]
             out.append(f"\n# ----- {ty} -----\n")
             per_lane = label != "scalar"
-            for name, glsl, params, summary, ret, takes in INTEGER:
+            for name, glsl, params, summary, ret, takes, *iset in INTEGER:
                 if sign in glsl and bits in takes:
-                    out.append(decl(f"{name}_{ity}", suffix, glsl[sign], params, ty, summary, ret, per_lane))
+                    out.append(decl(f"{name}_{ity}", suffix, glsl[sign], params, ty, summary, ret, per_lane, *iset))
                     out.append("")
 
 text = "\n".join(out)
