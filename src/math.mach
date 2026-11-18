@@ -238,11 +238,22 @@ pub fun max(a: f32, b: f32) f32;
 
 # A step from 0 to 1 at an edge.
 # ---
-# edge:Where the step happens.
-# x:   The value.
-# ret: 0.0 below edge, else 1.0
+# edge: Where the step happens.
+# x:    The value.
+# ret:  0.0 below edge, else 1.0
 #[intrinsic("spirv", "GLSL.std.450", "Step")]
 pub fun step(edge: f32, x: f32) f32;
+
+# Remainder of a division, as the driver computes it.
+#
+# Not the `%` operator: a float `%` is computed exactly by code the compiler
+# provides, and this is the core `OpFRem`, to whatever precision the driver gives.
+# ---
+# a:   The dividend.
+# b:   The divisor.
+# ret: a - b * trunc(a / b), with the sign of a
+#[intrinsic("spirv", "core", "OpFRem")]
+pub fun rem(a: f32, b: f32) f32;
 
 # Constrain a value to a range.
 # ---
@@ -473,11 +484,22 @@ pub fun max_2(a: f32x2, b: f32x2) f32x2;
 
 # A step from 0 to 1 at an edge, per lane.
 # ---
-# edge:Where the step happens.
-# x:   The values, one per lane.
-# ret: 0.0 below edge, else 1.0 per lane
+# edge: Where the step happens.
+# x:    The values, one per lane.
+# ret:  0.0 below edge, else 1.0 per lane
 #[intrinsic("spirv", "GLSL.std.450", "Step")]
 pub fun step_2(edge: f32x2, x: f32x2) f32x2;
+
+# Remainder of a division, as the driver computes it, per lane.
+#
+# Not the `%` operator: a float `%` is computed exactly by code the compiler
+# provides, and this is the core `OpFRem`, to whatever precision the driver gives.
+# ---
+# a:   The dividends, one per lane.
+# b:   The divisors, one per lane.
+# ret: a - b * trunc(a / b), with the sign of a per lane
+#[intrinsic("spirv", "core", "OpFRem")]
+pub fun rem_2(a: f32x2, b: f32x2) f32x2;
 
 # Constrain a value to a range, per lane.
 # ---
@@ -708,11 +730,22 @@ pub fun max_3(a: f32x3, b: f32x3) f32x3;
 
 # A step from 0 to 1 at an edge, per lane.
 # ---
-# edge:Where the step happens.
-# x:   The values, one per lane.
-# ret: 0.0 below edge, else 1.0 per lane
+# edge: Where the step happens.
+# x:    The values, one per lane.
+# ret:  0.0 below edge, else 1.0 per lane
 #[intrinsic("spirv", "GLSL.std.450", "Step")]
 pub fun step_3(edge: f32x3, x: f32x3) f32x3;
+
+# Remainder of a division, as the driver computes it, per lane.
+#
+# Not the `%` operator: a float `%` is computed exactly by code the compiler
+# provides, and this is the core `OpFRem`, to whatever precision the driver gives.
+# ---
+# a:   The dividends, one per lane.
+# b:   The divisors, one per lane.
+# ret: a - b * trunc(a / b), with the sign of a per lane
+#[intrinsic("spirv", "core", "OpFRem")]
+pub fun rem_3(a: f32x3, b: f32x3) f32x3;
 
 # Constrain a value to a range, per lane.
 # ---
@@ -943,11 +976,22 @@ pub fun max_4(a: f32x4, b: f32x4) f32x4;
 
 # A step from 0 to 1 at an edge, per lane.
 # ---
-# edge:Where the step happens.
-# x:   The values, one per lane.
-# ret: 0.0 below edge, else 1.0 per lane
+# edge: Where the step happens.
+# x:    The values, one per lane.
+# ret:  0.0 below edge, else 1.0 per lane
 #[intrinsic("spirv", "GLSL.std.450", "Step")]
 pub fun step_4(edge: f32x4, x: f32x4) f32x4;
+
+# Remainder of a division, as the driver computes it, per lane.
+#
+# Not the `%` operator: a float `%` is computed exactly by code the compiler
+# provides, and this is the core `OpFRem`, to whatever precision the driver gives.
+# ---
+# a:   The dividends, one per lane.
+# b:   The divisors, one per lane.
+# ret: a - b * trunc(a / b), with the sign of a per lane
+#[intrinsic("spirv", "core", "OpFRem")]
+pub fun rem_4(a: f32x4, b: f32x4) f32x4;
 
 # Constrain a value to a range, per lane.
 # ---
@@ -1345,6 +1389,17 @@ pub fun face_forward_2(n: f32x2, i: f32x2, r: f32x2) f32x2;
 #[intrinsic("spirv", "GLSL.std.450", "Refract")]
 pub fun refract_2(i: f32x2, n: f32x2, eta: f32) f32x2;
 
+# Scale a vector by a scalar.
+#
+# The core `OpVectorTimesScalar`. The `*` operator multiplies a vector by a vector
+# of one shape, so it scales only once the scalar is built into a vector.
+# ---
+# v:   The vector.
+# s:   The factor every lane is multiplied by. A scalar at every width.
+# ret: v with each lane multiplied by s
+#[intrinsic("spirv", "core", "OpVectorTimesScalar")]
+pub fun scale_2(v: f32x2, s: f32) f32x2;
+
 # ----- f32x3 -----
 
 # Dot product.
@@ -1402,6 +1457,17 @@ pub fun face_forward_3(n: f32x3, i: f32x3, r: f32x3) f32x3;
 # ret: the refracted vector, or the zero vector under total internal reflection
 #[intrinsic("spirv", "GLSL.std.450", "Refract")]
 pub fun refract_3(i: f32x3, n: f32x3, eta: f32) f32x3;
+
+# Scale a vector by a scalar.
+#
+# The core `OpVectorTimesScalar`. The `*` operator multiplies a vector by a vector
+# of one shape, so it scales only once the scalar is built into a vector.
+# ---
+# v:   The vector.
+# s:   The factor every lane is multiplied by. A scalar at every width.
+# ret: v with each lane multiplied by s
+#[intrinsic("spirv", "core", "OpVectorTimesScalar")]
+pub fun scale_3(v: f32x3, s: f32) f32x3;
 
 # Cross product.
 #
@@ -1472,6 +1538,17 @@ pub fun face_forward_4(n: f32x4, i: f32x4, r: f32x4) f32x4;
 #[intrinsic("spirv", "GLSL.std.450", "Refract")]
 pub fun refract_4(i: f32x4, n: f32x4, eta: f32) f32x4;
 
+# Scale a vector by a scalar.
+#
+# The core `OpVectorTimesScalar`. The `*` operator multiplies a vector by a vector
+# of one shape, so it scales only once the scalar is built into a vector.
+# ---
+# v:   The vector.
+# s:   The factor every lane is multiplied by. A scalar at every width.
+# ret: v with each lane multiplied by s
+#[intrinsic("spirv", "core", "OpVectorTimesScalar")]
+pub fun scale_4(v: f32x4, s: f32) f32x4;
+
 # ---------- integers ----------
 #
 # The integer rows, over `i16`, `u16`, `i32`, `u32`, `i64` and `u64`. Each entry
@@ -1487,6 +1564,26 @@ pub fun refract_4(i: f32x4, n: f32x4, eta: f32) f32x4;
 # `FindSMsb` and `FindUMsb` on 32-bit integers alone. The count of set bits is the core
 # `OpBitCount`, which no operator writes, and is 32-bit only too: Vulkan holds its operand
 # to 32 bits unless the device enables `maintenance9`, which no Vulkan version guarantees.
+# The same rule holds the other core bit rows, `reverse_bits`, `insert_bits` and
+# `extract_bits`, to 32 bits.
+#
+# `add_carry` and `sub_borrow` are the core `OpIAddCarry` and `OpISubBorrow`, over unsigned
+# integers only, as SPIR-V defines them. Each returns its two results as a record of two
+# members of the operands' type.
+
+# the result of an `add_carry`: the sum wrapped to the operands' width, and 1 in each lane
+# where the sum overflowed, else 0
+pub rec AddCarry[T] {
+    sum:   T;
+    carry: T;
+}
+
+# the result of a `sub_borrow`: the difference wrapped to the operands' width, and 1 in
+# each lane where b was larger than a, else 0
+pub rec SubBorrow[T] {
+    difference: T;
+    borrow:     T;
+}
 
 # ----- i16 -----
 
@@ -1679,6 +1776,26 @@ pub fun max_u16(a: u16, b: u16) u16;
 #[intrinsic("spirv", "GLSL.std.450", "UClamp")]
 pub fun clamp_u16(x: u16, lo: u16, hi: u16) u16;
 
+# Add two values, keeping the carry.
+#
+# The core `OpIAddCarry`: `+` wraps and gives no carry.
+# ---
+# a:   The first value.
+# b:   The second value.
+# ret: the wrapped sum and the carry
+#[intrinsic("spirv", "core", "OpIAddCarry")]
+pub fun add_carry_u16(a: u16, b: u16) AddCarry[u16];
+
+# Subtract two values, keeping the borrow.
+#
+# The core `OpISubBorrow`: `-` wraps and gives no borrow.
+# ---
+# a:   The first value.
+# b:   The second value.
+# ret: the wrapped difference and the borrow
+#[intrinsic("spirv", "core", "OpISubBorrow")]
+pub fun sub_borrow_u16(a: u16, b: u16) SubBorrow[u16];
+
 # ----- u16x2 -----
 
 # Smaller of two values, per lane.
@@ -1705,6 +1822,26 @@ pub fun max_u16_2(a: u16x2, b: u16x2) u16x2;
 # ret: min(max(x, lo), hi) per lane
 #[intrinsic("spirv", "GLSL.std.450", "UClamp")]
 pub fun clamp_u16_2(x: u16x2, lo: u16x2, hi: u16x2) u16x2;
+
+# Add two values, keeping the carry, per lane.
+#
+# The core `OpIAddCarry`: `+` wraps and gives no carry.
+# ---
+# a:   The first values, one per lane.
+# b:   The second values, one per lane.
+# ret: the wrapped sum and the carry per lane
+#[intrinsic("spirv", "core", "OpIAddCarry")]
+pub fun add_carry_u16_2(a: u16x2, b: u16x2) AddCarry[u16x2];
+
+# Subtract two values, keeping the borrow, per lane.
+#
+# The core `OpISubBorrow`: `-` wraps and gives no borrow.
+# ---
+# a:   The first values, one per lane.
+# b:   The second values, one per lane.
+# ret: the wrapped difference and the borrow per lane
+#[intrinsic("spirv", "core", "OpISubBorrow")]
+pub fun sub_borrow_u16_2(a: u16x2, b: u16x2) SubBorrow[u16x2];
 
 # ----- u16x3 -----
 
@@ -1733,6 +1870,26 @@ pub fun max_u16_3(a: u16x3, b: u16x3) u16x3;
 #[intrinsic("spirv", "GLSL.std.450", "UClamp")]
 pub fun clamp_u16_3(x: u16x3, lo: u16x3, hi: u16x3) u16x3;
 
+# Add two values, keeping the carry, per lane.
+#
+# The core `OpIAddCarry`: `+` wraps and gives no carry.
+# ---
+# a:   The first values, one per lane.
+# b:   The second values, one per lane.
+# ret: the wrapped sum and the carry per lane
+#[intrinsic("spirv", "core", "OpIAddCarry")]
+pub fun add_carry_u16_3(a: u16x3, b: u16x3) AddCarry[u16x3];
+
+# Subtract two values, keeping the borrow, per lane.
+#
+# The core `OpISubBorrow`: `-` wraps and gives no borrow.
+# ---
+# a:   The first values, one per lane.
+# b:   The second values, one per lane.
+# ret: the wrapped difference and the borrow per lane
+#[intrinsic("spirv", "core", "OpISubBorrow")]
+pub fun sub_borrow_u16_3(a: u16x3, b: u16x3) SubBorrow[u16x3];
+
 # ----- u16x4 -----
 
 # Smaller of two values, per lane.
@@ -1759,6 +1916,26 @@ pub fun max_u16_4(a: u16x4, b: u16x4) u16x4;
 # ret: min(max(x, lo), hi) per lane
 #[intrinsic("spirv", "GLSL.std.450", "UClamp")]
 pub fun clamp_u16_4(x: u16x4, lo: u16x4, hi: u16x4) u16x4;
+
+# Add two values, keeping the carry, per lane.
+#
+# The core `OpIAddCarry`: `+` wraps and gives no carry.
+# ---
+# a:   The first values, one per lane.
+# b:   The second values, one per lane.
+# ret: the wrapped sum and the carry per lane
+#[intrinsic("spirv", "core", "OpIAddCarry")]
+pub fun add_carry_u16_4(a: u16x4, b: u16x4) AddCarry[u16x4];
+
+# Subtract two values, keeping the borrow, per lane.
+#
+# The core `OpISubBorrow`: `-` wraps and gives no borrow.
+# ---
+# a:   The first values, one per lane.
+# b:   The second values, one per lane.
+# ret: the wrapped difference and the borrow per lane
+#[intrinsic("spirv", "core", "OpISubBorrow")]
+pub fun sub_borrow_u16_4(a: u16x4, b: u16x4) SubBorrow[u16x4];
 
 # ----- i32 -----
 
@@ -1822,6 +1999,42 @@ pub fun find_msb_i32(x: i32) i32;
 #[intrinsic("spirv", "core", "OpBitCount")]
 pub fun count_ones_i32(x: i32) i32;
 
+# Reverse the order of the bits.
+#
+# The core `OpBitReverse`, which no operator writes.
+# ---
+# x:   The value.
+# ret: x with bit n moved to bit 31 - n
+#[intrinsic("spirv", "core", "OpBitReverse")]
+pub fun reverse_bits_i32(x: i32) i32;
+
+# Replace a field of bits.
+#
+# The core `OpBitFieldInsert`, which no operator writes. The offset and the
+# count must leave the field inside the 32 bits, or the result is undefined.
+# ---
+# x:      The value.
+# insert: Bits to place in the field, taken from bit 0 up.
+# offset: Index of the field's lowest bit. A scalar at every width.
+# count:  Number of bits in the field. A scalar at every width.
+# ret:    x with its count bits from offset replaced by the low bits of insert
+#[intrinsic("spirv", "core", "OpBitFieldInsert")]
+pub fun insert_bits_i32(x: i32, insert: i32, offset: u32, count: u32) i32;
+
+# Read a field of bits.
+#
+# The core `OpBitFieldSExtract` on a signed type, which fills the high bits with
+# the field's top bit, and `OpBitFieldUExtract` on an unsigned one, which fills
+# them with 0. The offset and the count must leave the field inside the 32 bits,
+# or the result is undefined.
+# ---
+# x:      The value.
+# offset: Index of the field's lowest bit. A scalar at every width.
+# count:  Number of bits in the field. A scalar at every width.
+# ret:    the count bits of x from offset, moved down to bit 0
+#[intrinsic("spirv", "core", "OpBitFieldSExtract")]
+pub fun extract_bits_i32(x: i32, offset: u32, count: u32) i32;
+
 # ----- i32x2 -----
 
 # Absolute value, per lane.
@@ -1883,6 +2096,42 @@ pub fun find_msb_i32_2(x: i32x2) i32x2;
 # ret: how many bits of x are 1 per lane
 #[intrinsic("spirv", "core", "OpBitCount")]
 pub fun count_ones_i32_2(x: i32x2) i32x2;
+
+# Reverse the order of the bits, per lane.
+#
+# The core `OpBitReverse`, which no operator writes.
+# ---
+# x:   The values, one per lane.
+# ret: x with bit n moved to bit 31 - n per lane
+#[intrinsic("spirv", "core", "OpBitReverse")]
+pub fun reverse_bits_i32_2(x: i32x2) i32x2;
+
+# Replace a field of bits, per lane.
+#
+# The core `OpBitFieldInsert`, which no operator writes. The offset and the
+# count must leave the field inside the 32 bits, or the result is undefined.
+# ---
+# x:      The values, one per lane.
+# insert: Bits to place in the field, taken from bit 0 up.
+# offset: Index of the field's lowest bit. A scalar at every width.
+# count:  Number of bits in the field. A scalar at every width.
+# ret:    x with its count bits from offset replaced by the low bits of insert per lane
+#[intrinsic("spirv", "core", "OpBitFieldInsert")]
+pub fun insert_bits_i32_2(x: i32x2, insert: i32x2, offset: u32, count: u32) i32x2;
+
+# Read a field of bits, per lane.
+#
+# The core `OpBitFieldSExtract` on a signed type, which fills the high bits with
+# the field's top bit, and `OpBitFieldUExtract` on an unsigned one, which fills
+# them with 0. The offset and the count must leave the field inside the 32 bits,
+# or the result is undefined.
+# ---
+# x:      The values, one per lane.
+# offset: Index of the field's lowest bit. A scalar at every width.
+# count:  Number of bits in the field. A scalar at every width.
+# ret:    the count bits of x from offset, moved down to bit 0 per lane
+#[intrinsic("spirv", "core", "OpBitFieldSExtract")]
+pub fun extract_bits_i32_2(x: i32x2, offset: u32, count: u32) i32x2;
 
 # ----- i32x3 -----
 
@@ -1946,6 +2195,42 @@ pub fun find_msb_i32_3(x: i32x3) i32x3;
 #[intrinsic("spirv", "core", "OpBitCount")]
 pub fun count_ones_i32_3(x: i32x3) i32x3;
 
+# Reverse the order of the bits, per lane.
+#
+# The core `OpBitReverse`, which no operator writes.
+# ---
+# x:   The values, one per lane.
+# ret: x with bit n moved to bit 31 - n per lane
+#[intrinsic("spirv", "core", "OpBitReverse")]
+pub fun reverse_bits_i32_3(x: i32x3) i32x3;
+
+# Replace a field of bits, per lane.
+#
+# The core `OpBitFieldInsert`, which no operator writes. The offset and the
+# count must leave the field inside the 32 bits, or the result is undefined.
+# ---
+# x:      The values, one per lane.
+# insert: Bits to place in the field, taken from bit 0 up.
+# offset: Index of the field's lowest bit. A scalar at every width.
+# count:  Number of bits in the field. A scalar at every width.
+# ret:    x with its count bits from offset replaced by the low bits of insert per lane
+#[intrinsic("spirv", "core", "OpBitFieldInsert")]
+pub fun insert_bits_i32_3(x: i32x3, insert: i32x3, offset: u32, count: u32) i32x3;
+
+# Read a field of bits, per lane.
+#
+# The core `OpBitFieldSExtract` on a signed type, which fills the high bits with
+# the field's top bit, and `OpBitFieldUExtract` on an unsigned one, which fills
+# them with 0. The offset and the count must leave the field inside the 32 bits,
+# or the result is undefined.
+# ---
+# x:      The values, one per lane.
+# offset: Index of the field's lowest bit. A scalar at every width.
+# count:  Number of bits in the field. A scalar at every width.
+# ret:    the count bits of x from offset, moved down to bit 0 per lane
+#[intrinsic("spirv", "core", "OpBitFieldSExtract")]
+pub fun extract_bits_i32_3(x: i32x3, offset: u32, count: u32) i32x3;
+
 # ----- i32x4 -----
 
 # Absolute value, per lane.
@@ -2008,6 +2293,42 @@ pub fun find_msb_i32_4(x: i32x4) i32x4;
 #[intrinsic("spirv", "core", "OpBitCount")]
 pub fun count_ones_i32_4(x: i32x4) i32x4;
 
+# Reverse the order of the bits, per lane.
+#
+# The core `OpBitReverse`, which no operator writes.
+# ---
+# x:   The values, one per lane.
+# ret: x with bit n moved to bit 31 - n per lane
+#[intrinsic("spirv", "core", "OpBitReverse")]
+pub fun reverse_bits_i32_4(x: i32x4) i32x4;
+
+# Replace a field of bits, per lane.
+#
+# The core `OpBitFieldInsert`, which no operator writes. The offset and the
+# count must leave the field inside the 32 bits, or the result is undefined.
+# ---
+# x:      The values, one per lane.
+# insert: Bits to place in the field, taken from bit 0 up.
+# offset: Index of the field's lowest bit. A scalar at every width.
+# count:  Number of bits in the field. A scalar at every width.
+# ret:    x with its count bits from offset replaced by the low bits of insert per lane
+#[intrinsic("spirv", "core", "OpBitFieldInsert")]
+pub fun insert_bits_i32_4(x: i32x4, insert: i32x4, offset: u32, count: u32) i32x4;
+
+# Read a field of bits, per lane.
+#
+# The core `OpBitFieldSExtract` on a signed type, which fills the high bits with
+# the field's top bit, and `OpBitFieldUExtract` on an unsigned one, which fills
+# them with 0. The offset and the count must leave the field inside the 32 bits,
+# or the result is undefined.
+# ---
+# x:      The values, one per lane.
+# offset: Index of the field's lowest bit. A scalar at every width.
+# count:  Number of bits in the field. A scalar at every width.
+# ret:    the count bits of x from offset, moved down to bit 0 per lane
+#[intrinsic("spirv", "core", "OpBitFieldSExtract")]
+pub fun extract_bits_i32_4(x: i32x4, offset: u32, count: u32) i32x4;
+
 # ----- u32 -----
 
 # Smaller of two values.
@@ -2055,6 +2376,62 @@ pub fun find_msb_u32(x: u32) u32;
 # ret: how many bits of x are 1
 #[intrinsic("spirv", "core", "OpBitCount")]
 pub fun count_ones_u32(x: u32) u32;
+
+# Reverse the order of the bits.
+#
+# The core `OpBitReverse`, which no operator writes.
+# ---
+# x:   The value.
+# ret: x with bit n moved to bit 31 - n
+#[intrinsic("spirv", "core", "OpBitReverse")]
+pub fun reverse_bits_u32(x: u32) u32;
+
+# Replace a field of bits.
+#
+# The core `OpBitFieldInsert`, which no operator writes. The offset and the
+# count must leave the field inside the 32 bits, or the result is undefined.
+# ---
+# x:      The value.
+# insert: Bits to place in the field, taken from bit 0 up.
+# offset: Index of the field's lowest bit. A scalar at every width.
+# count:  Number of bits in the field. A scalar at every width.
+# ret:    x with its count bits from offset replaced by the low bits of insert
+#[intrinsic("spirv", "core", "OpBitFieldInsert")]
+pub fun insert_bits_u32(x: u32, insert: u32, offset: u32, count: u32) u32;
+
+# Read a field of bits.
+#
+# The core `OpBitFieldSExtract` on a signed type, which fills the high bits with
+# the field's top bit, and `OpBitFieldUExtract` on an unsigned one, which fills
+# them with 0. The offset and the count must leave the field inside the 32 bits,
+# or the result is undefined.
+# ---
+# x:      The value.
+# offset: Index of the field's lowest bit. A scalar at every width.
+# count:  Number of bits in the field. A scalar at every width.
+# ret:    the count bits of x from offset, moved down to bit 0
+#[intrinsic("spirv", "core", "OpBitFieldUExtract")]
+pub fun extract_bits_u32(x: u32, offset: u32, count: u32) u32;
+
+# Add two values, keeping the carry.
+#
+# The core `OpIAddCarry`: `+` wraps and gives no carry.
+# ---
+# a:   The first value.
+# b:   The second value.
+# ret: the wrapped sum and the carry
+#[intrinsic("spirv", "core", "OpIAddCarry")]
+pub fun add_carry_u32(a: u32, b: u32) AddCarry[u32];
+
+# Subtract two values, keeping the borrow.
+#
+# The core `OpISubBorrow`: `-` wraps and gives no borrow.
+# ---
+# a:   The first value.
+# b:   The second value.
+# ret: the wrapped difference and the borrow
+#[intrinsic("spirv", "core", "OpISubBorrow")]
+pub fun sub_borrow_u32(a: u32, b: u32) SubBorrow[u32];
 
 # ----- u32x2 -----
 
@@ -2104,6 +2481,62 @@ pub fun find_msb_u32_2(x: u32x2) u32x2;
 #[intrinsic("spirv", "core", "OpBitCount")]
 pub fun count_ones_u32_2(x: u32x2) u32x2;
 
+# Reverse the order of the bits, per lane.
+#
+# The core `OpBitReverse`, which no operator writes.
+# ---
+# x:   The values, one per lane.
+# ret: x with bit n moved to bit 31 - n per lane
+#[intrinsic("spirv", "core", "OpBitReverse")]
+pub fun reverse_bits_u32_2(x: u32x2) u32x2;
+
+# Replace a field of bits, per lane.
+#
+# The core `OpBitFieldInsert`, which no operator writes. The offset and the
+# count must leave the field inside the 32 bits, or the result is undefined.
+# ---
+# x:      The values, one per lane.
+# insert: Bits to place in the field, taken from bit 0 up.
+# offset: Index of the field's lowest bit. A scalar at every width.
+# count:  Number of bits in the field. A scalar at every width.
+# ret:    x with its count bits from offset replaced by the low bits of insert per lane
+#[intrinsic("spirv", "core", "OpBitFieldInsert")]
+pub fun insert_bits_u32_2(x: u32x2, insert: u32x2, offset: u32, count: u32) u32x2;
+
+# Read a field of bits, per lane.
+#
+# The core `OpBitFieldSExtract` on a signed type, which fills the high bits with
+# the field's top bit, and `OpBitFieldUExtract` on an unsigned one, which fills
+# them with 0. The offset and the count must leave the field inside the 32 bits,
+# or the result is undefined.
+# ---
+# x:      The values, one per lane.
+# offset: Index of the field's lowest bit. A scalar at every width.
+# count:  Number of bits in the field. A scalar at every width.
+# ret:    the count bits of x from offset, moved down to bit 0 per lane
+#[intrinsic("spirv", "core", "OpBitFieldUExtract")]
+pub fun extract_bits_u32_2(x: u32x2, offset: u32, count: u32) u32x2;
+
+# Add two values, keeping the carry, per lane.
+#
+# The core `OpIAddCarry`: `+` wraps and gives no carry.
+# ---
+# a:   The first values, one per lane.
+# b:   The second values, one per lane.
+# ret: the wrapped sum and the carry per lane
+#[intrinsic("spirv", "core", "OpIAddCarry")]
+pub fun add_carry_u32_2(a: u32x2, b: u32x2) AddCarry[u32x2];
+
+# Subtract two values, keeping the borrow, per lane.
+#
+# The core `OpISubBorrow`: `-` wraps and gives no borrow.
+# ---
+# a:   The first values, one per lane.
+# b:   The second values, one per lane.
+# ret: the wrapped difference and the borrow per lane
+#[intrinsic("spirv", "core", "OpISubBorrow")]
+pub fun sub_borrow_u32_2(a: u32x2, b: u32x2) SubBorrow[u32x2];
+
 # ----- u32x3 -----
 
 # Smaller of two values, per lane.
@@ -2152,6 +2585,62 @@ pub fun find_msb_u32_3(x: u32x3) u32x3;
 #[intrinsic("spirv", "core", "OpBitCount")]
 pub fun count_ones_u32_3(x: u32x3) u32x3;
 
+# Reverse the order of the bits, per lane.
+#
+# The core `OpBitReverse`, which no operator writes.
+# ---
+# x:   The values, one per lane.
+# ret: x with bit n moved to bit 31 - n per lane
+#[intrinsic("spirv", "core", "OpBitReverse")]
+pub fun reverse_bits_u32_3(x: u32x3) u32x3;
+
+# Replace a field of bits, per lane.
+#
+# The core `OpBitFieldInsert`, which no operator writes. The offset and the
+# count must leave the field inside the 32 bits, or the result is undefined.
+# ---
+# x:      The values, one per lane.
+# insert: Bits to place in the field, taken from bit 0 up.
+# offset: Index of the field's lowest bit. A scalar at every width.
+# count:  Number of bits in the field. A scalar at every width.
+# ret:    x with its count bits from offset replaced by the low bits of insert per lane
+#[intrinsic("spirv", "core", "OpBitFieldInsert")]
+pub fun insert_bits_u32_3(x: u32x3, insert: u32x3, offset: u32, count: u32) u32x3;
+
+# Read a field of bits, per lane.
+#
+# The core `OpBitFieldSExtract` on a signed type, which fills the high bits with
+# the field's top bit, and `OpBitFieldUExtract` on an unsigned one, which fills
+# them with 0. The offset and the count must leave the field inside the 32 bits,
+# or the result is undefined.
+# ---
+# x:      The values, one per lane.
+# offset: Index of the field's lowest bit. A scalar at every width.
+# count:  Number of bits in the field. A scalar at every width.
+# ret:    the count bits of x from offset, moved down to bit 0 per lane
+#[intrinsic("spirv", "core", "OpBitFieldUExtract")]
+pub fun extract_bits_u32_3(x: u32x3, offset: u32, count: u32) u32x3;
+
+# Add two values, keeping the carry, per lane.
+#
+# The core `OpIAddCarry`: `+` wraps and gives no carry.
+# ---
+# a:   The first values, one per lane.
+# b:   The second values, one per lane.
+# ret: the wrapped sum and the carry per lane
+#[intrinsic("spirv", "core", "OpIAddCarry")]
+pub fun add_carry_u32_3(a: u32x3, b: u32x3) AddCarry[u32x3];
+
+# Subtract two values, keeping the borrow, per lane.
+#
+# The core `OpISubBorrow`: `-` wraps and gives no borrow.
+# ---
+# a:   The first values, one per lane.
+# b:   The second values, one per lane.
+# ret: the wrapped difference and the borrow per lane
+#[intrinsic("spirv", "core", "OpISubBorrow")]
+pub fun sub_borrow_u32_3(a: u32x3, b: u32x3) SubBorrow[u32x3];
+
 # ----- u32x4 -----
 
 # Smaller of two values, per lane.
@@ -2199,6 +2688,62 @@ pub fun find_msb_u32_4(x: u32x4) u32x4;
 # ret: how many bits of x are 1 per lane
 #[intrinsic("spirv", "core", "OpBitCount")]
 pub fun count_ones_u32_4(x: u32x4) u32x4;
+
+# Reverse the order of the bits, per lane.
+#
+# The core `OpBitReverse`, which no operator writes.
+# ---
+# x:   The values, one per lane.
+# ret: x with bit n moved to bit 31 - n per lane
+#[intrinsic("spirv", "core", "OpBitReverse")]
+pub fun reverse_bits_u32_4(x: u32x4) u32x4;
+
+# Replace a field of bits, per lane.
+#
+# The core `OpBitFieldInsert`, which no operator writes. The offset and the
+# count must leave the field inside the 32 bits, or the result is undefined.
+# ---
+# x:      The values, one per lane.
+# insert: Bits to place in the field, taken from bit 0 up.
+# offset: Index of the field's lowest bit. A scalar at every width.
+# count:  Number of bits in the field. A scalar at every width.
+# ret:    x with its count bits from offset replaced by the low bits of insert per lane
+#[intrinsic("spirv", "core", "OpBitFieldInsert")]
+pub fun insert_bits_u32_4(x: u32x4, insert: u32x4, offset: u32, count: u32) u32x4;
+
+# Read a field of bits, per lane.
+#
+# The core `OpBitFieldSExtract` on a signed type, which fills the high bits with
+# the field's top bit, and `OpBitFieldUExtract` on an unsigned one, which fills
+# them with 0. The offset and the count must leave the field inside the 32 bits,
+# or the result is undefined.
+# ---
+# x:      The values, one per lane.
+# offset: Index of the field's lowest bit. A scalar at every width.
+# count:  Number of bits in the field. A scalar at every width.
+# ret:    the count bits of x from offset, moved down to bit 0 per lane
+#[intrinsic("spirv", "core", "OpBitFieldUExtract")]
+pub fun extract_bits_u32_4(x: u32x4, offset: u32, count: u32) u32x4;
+
+# Add two values, keeping the carry, per lane.
+#
+# The core `OpIAddCarry`: `+` wraps and gives no carry.
+# ---
+# a:   The first values, one per lane.
+# b:   The second values, one per lane.
+# ret: the wrapped sum and the carry per lane
+#[intrinsic("spirv", "core", "OpIAddCarry")]
+pub fun add_carry_u32_4(a: u32x4, b: u32x4) AddCarry[u32x4];
+
+# Subtract two values, keeping the borrow, per lane.
+#
+# The core `OpISubBorrow`: `-` wraps and gives no borrow.
+# ---
+# a:   The first values, one per lane.
+# b:   The second values, one per lane.
+# ret: the wrapped difference and the borrow per lane
+#[intrinsic("spirv", "core", "OpISubBorrow")]
+pub fun sub_borrow_u32_4(a: u32x4, b: u32x4) SubBorrow[u32x4];
 
 # ----- i64 -----
 
@@ -2391,6 +2936,26 @@ pub fun max_u64(a: u64, b: u64) u64;
 #[intrinsic("spirv", "GLSL.std.450", "UClamp")]
 pub fun clamp_u64(x: u64, lo: u64, hi: u64) u64;
 
+# Add two values, keeping the carry.
+#
+# The core `OpIAddCarry`: `+` wraps and gives no carry.
+# ---
+# a:   The first value.
+# b:   The second value.
+# ret: the wrapped sum and the carry
+#[intrinsic("spirv", "core", "OpIAddCarry")]
+pub fun add_carry_u64(a: u64, b: u64) AddCarry[u64];
+
+# Subtract two values, keeping the borrow.
+#
+# The core `OpISubBorrow`: `-` wraps and gives no borrow.
+# ---
+# a:   The first value.
+# b:   The second value.
+# ret: the wrapped difference and the borrow
+#[intrinsic("spirv", "core", "OpISubBorrow")]
+pub fun sub_borrow_u64(a: u64, b: u64) SubBorrow[u64];
+
 # ----- u64x2 -----
 
 # Smaller of two values, per lane.
@@ -2417,6 +2982,26 @@ pub fun max_u64_2(a: u64x2, b: u64x2) u64x2;
 # ret: min(max(x, lo), hi) per lane
 #[intrinsic("spirv", "GLSL.std.450", "UClamp")]
 pub fun clamp_u64_2(x: u64x2, lo: u64x2, hi: u64x2) u64x2;
+
+# Add two values, keeping the carry, per lane.
+#
+# The core `OpIAddCarry`: `+` wraps and gives no carry.
+# ---
+# a:   The first values, one per lane.
+# b:   The second values, one per lane.
+# ret: the wrapped sum and the carry per lane
+#[intrinsic("spirv", "core", "OpIAddCarry")]
+pub fun add_carry_u64_2(a: u64x2, b: u64x2) AddCarry[u64x2];
+
+# Subtract two values, keeping the borrow, per lane.
+#
+# The core `OpISubBorrow`: `-` wraps and gives no borrow.
+# ---
+# a:   The first values, one per lane.
+# b:   The second values, one per lane.
+# ret: the wrapped difference and the borrow per lane
+#[intrinsic("spirv", "core", "OpISubBorrow")]
+pub fun sub_borrow_u64_2(a: u64x2, b: u64x2) SubBorrow[u64x2];
 
 # ----- u64x3 -----
 
@@ -2445,6 +3030,26 @@ pub fun max_u64_3(a: u64x3, b: u64x3) u64x3;
 #[intrinsic("spirv", "GLSL.std.450", "UClamp")]
 pub fun clamp_u64_3(x: u64x3, lo: u64x3, hi: u64x3) u64x3;
 
+# Add two values, keeping the carry, per lane.
+#
+# The core `OpIAddCarry`: `+` wraps and gives no carry.
+# ---
+# a:   The first values, one per lane.
+# b:   The second values, one per lane.
+# ret: the wrapped sum and the carry per lane
+#[intrinsic("spirv", "core", "OpIAddCarry")]
+pub fun add_carry_u64_3(a: u64x3, b: u64x3) AddCarry[u64x3];
+
+# Subtract two values, keeping the borrow, per lane.
+#
+# The core `OpISubBorrow`: `-` wraps and gives no borrow.
+# ---
+# a:   The first values, one per lane.
+# b:   The second values, one per lane.
+# ret: the wrapped difference and the borrow per lane
+#[intrinsic("spirv", "core", "OpISubBorrow")]
+pub fun sub_borrow_u64_3(a: u64x3, b: u64x3) SubBorrow[u64x3];
+
 # ----- u64x4 -----
 
 # Smaller of two values, per lane.
@@ -2471,3 +3076,23 @@ pub fun max_u64_4(a: u64x4, b: u64x4) u64x4;
 # ret: min(max(x, lo), hi) per lane
 #[intrinsic("spirv", "GLSL.std.450", "UClamp")]
 pub fun clamp_u64_4(x: u64x4, lo: u64x4, hi: u64x4) u64x4;
+
+# Add two values, keeping the carry, per lane.
+#
+# The core `OpIAddCarry`: `+` wraps and gives no carry.
+# ---
+# a:   The first values, one per lane.
+# b:   The second values, one per lane.
+# ret: the wrapped sum and the carry per lane
+#[intrinsic("spirv", "core", "OpIAddCarry")]
+pub fun add_carry_u64_4(a: u64x4, b: u64x4) AddCarry[u64x4];
+
+# Subtract two values, keeping the borrow, per lane.
+#
+# The core `OpISubBorrow`: `-` wraps and gives no borrow.
+# ---
+# a:   The first values, one per lane.
+# b:   The second values, one per lane.
+# ret: the wrapped difference and the borrow per lane
+#[intrinsic("spirv", "core", "OpISubBorrow")]
+pub fun sub_borrow_u64_4(a: u64x4, b: u64x4) SubBorrow[u64x4];

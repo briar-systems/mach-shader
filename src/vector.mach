@@ -1,0 +1,3631 @@
+# Shader-side lane operations: the lanes of two vectors rearranged into one, and one lane
+# read or written at an index computed at run time.
+#
+# Every declaration here is one core SPIR-V instruction, named by `#[intrinsic]`, as in
+# `shader.math`, and none is a construct's: `v[i]` reads one lane at a constant index,
+# `v[start, count]` takes consecutive lanes of one vector, and a literal builds a vector
+# from scalars.
+#
+# SHUFFLE. `shuffle_*` builds a vector from the lanes of two, numbered across both: the
+# first vector's from 0 and the second's after them. Each index is a constant written at
+# the call, below the two vectors' lane counts together, or 0xFFFFFFFF for a lane whose
+# value is undefined. A swizzle of one vector passes it twice, so
+# `shuffle_f32_4_4_3(v, v, 2, 1, 0)` is the first three lanes of v in reverse.
+#
+# A RUN-TIME INDEX. `extract_*` and `insert_*` take the lane as a `u32` computed at run
+# time. An index at or past the vector's lane count is undefined behaviour, which nothing
+# checks.
+#
+# TYPES. 16-, 32- and 64-bit integers and floats, at 2, 3 and 4 lanes. A 16- or 64-bit
+# entry needs the target's `Int16`, `Int64`, `Float16` or `Float64` where it names an `env`,
+# and says which.
+#
+# THE NAMING RULE. Every entry carries its component type after an underscore, as in
+# `shader.atomic`, and its lane counts after that. `extract_f32_4` and `insert_f32_4` take
+# an `f32x4`. A shuffle names three: the first vector's, the second's and the result's, so
+# `shuffle_u32_4_2_3` builds a `u32x3` from a `u32x4` and a `u32x2`.
+#
+# THIS IS A SHADER-ONLY MODULE. On any target other than SPIR-V a call to one of these
+# fails to link, for the reason `shader.math` gives.
+#
+# This file is generated. See tools/gencore.py.
+
+# One lane of a vector, chosen at run time.
+#
+# `v[i]` reads a lane at a constant index alone.
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# v:     The vector.
+# index: The lane, below the vector's lane count.
+# ret:   lane index of v
+#[intrinsic("spirv", "core", "OpVectorExtractDynamic")]
+pub fun extract_i16_2(v: i16x2, index: u32) i16;
+
+# A vector with one lane, chosen at run time, replaced.
+#
+# Assigning `v[i]` writes a lane at a constant index alone.
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# v:     The vector.
+# value: The value the lane takes.
+# index: The lane, below the vector's lane count.
+# ret:   v with lane index replaced by value
+#[intrinsic("spirv", "core", "OpVectorInsertDynamic")]
+pub fun insert_i16_2(v: i16x2, value: i16, index: u32) i16x2;
+
+# One lane of a vector, chosen at run time.
+#
+# `v[i]` reads a lane at a constant index alone.
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# v:     The vector.
+# index: The lane, below the vector's lane count.
+# ret:   lane index of v
+#[intrinsic("spirv", "core", "OpVectorExtractDynamic")]
+pub fun extract_i16_3(v: i16x3, index: u32) i16;
+
+# A vector with one lane, chosen at run time, replaced.
+#
+# Assigning `v[i]` writes a lane at a constant index alone.
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# v:     The vector.
+# value: The value the lane takes.
+# index: The lane, below the vector's lane count.
+# ret:   v with lane index replaced by value
+#[intrinsic("spirv", "core", "OpVectorInsertDynamic")]
+pub fun insert_i16_3(v: i16x3, value: i16, index: u32) i16x3;
+
+# One lane of a vector, chosen at run time.
+#
+# `v[i]` reads a lane at a constant index alone.
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# v:     The vector.
+# index: The lane, below the vector's lane count.
+# ret:   lane index of v
+#[intrinsic("spirv", "core", "OpVectorExtractDynamic")]
+pub fun extract_i16_4(v: i16x4, index: u32) i16;
+
+# A vector with one lane, chosen at run time, replaced.
+#
+# Assigning `v[i]` writes a lane at a constant index alone.
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# v:     The vector.
+# value: The value the lane takes.
+# index: The lane, below the vector's lane count.
+# ret:   v with lane index replaced by value
+#[intrinsic("spirv", "core", "OpVectorInsertDynamic")]
+pub fun insert_i16_4(v: i16x4, value: i16, index: u32) i16x4;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i16_2_2_2(first: i16x2, second: i16x2, x: u32, y: u32) i16x2;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i16_2_2_3(first: i16x2, second: i16x2, x: u32, y: u32, z: u32) i16x3;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i16_2_2_4(first: i16x2, second: i16x2, x: u32, y: u32, z: u32, w: u32) i16x4;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i16_2_3_2(first: i16x2, second: i16x3, x: u32, y: u32) i16x2;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i16_2_3_3(first: i16x2, second: i16x3, x: u32, y: u32, z: u32) i16x3;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i16_2_3_4(first: i16x2, second: i16x3, x: u32, y: u32, z: u32, w: u32) i16x4;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i16_2_4_2(first: i16x2, second: i16x4, x: u32, y: u32) i16x2;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i16_2_4_3(first: i16x2, second: i16x4, x: u32, y: u32, z: u32) i16x3;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i16_2_4_4(first: i16x2, second: i16x4, x: u32, y: u32, z: u32, w: u32) i16x4;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i16_3_2_2(first: i16x3, second: i16x2, x: u32, y: u32) i16x2;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i16_3_2_3(first: i16x3, second: i16x2, x: u32, y: u32, z: u32) i16x3;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i16_3_2_4(first: i16x3, second: i16x2, x: u32, y: u32, z: u32, w: u32) i16x4;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i16_3_3_2(first: i16x3, second: i16x3, x: u32, y: u32) i16x2;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i16_3_3_3(first: i16x3, second: i16x3, x: u32, y: u32, z: u32) i16x3;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i16_3_3_4(first: i16x3, second: i16x3, x: u32, y: u32, z: u32, w: u32) i16x4;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i16_3_4_2(first: i16x3, second: i16x4, x: u32, y: u32) i16x2;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i16_3_4_3(first: i16x3, second: i16x4, x: u32, y: u32, z: u32) i16x3;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i16_3_4_4(first: i16x3, second: i16x4, x: u32, y: u32, z: u32, w: u32) i16x4;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i16_4_2_2(first: i16x4, second: i16x2, x: u32, y: u32) i16x2;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i16_4_2_3(first: i16x4, second: i16x2, x: u32, y: u32, z: u32) i16x3;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i16_4_2_4(first: i16x4, second: i16x2, x: u32, y: u32, z: u32, w: u32) i16x4;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i16_4_3_2(first: i16x4, second: i16x3, x: u32, y: u32) i16x2;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i16_4_3_3(first: i16x4, second: i16x3, x: u32, y: u32, z: u32) i16x3;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i16_4_3_4(first: i16x4, second: i16x3, x: u32, y: u32, z: u32, w: u32) i16x4;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i16_4_4_2(first: i16x4, second: i16x4, x: u32, y: u32) i16x2;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i16_4_4_3(first: i16x4, second: i16x4, x: u32, y: u32, z: u32) i16x3;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i16_4_4_4(first: i16x4, second: i16x4, x: u32, y: u32, z: u32, w: u32) i16x4;
+
+# One lane of a vector, chosen at run time.
+#
+# `v[i]` reads a lane at a constant index alone.
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# v:     The vector.
+# index: The lane, below the vector's lane count.
+# ret:   lane index of v
+#[intrinsic("spirv", "core", "OpVectorExtractDynamic")]
+pub fun extract_u16_2(v: u16x2, index: u32) u16;
+
+# A vector with one lane, chosen at run time, replaced.
+#
+# Assigning `v[i]` writes a lane at a constant index alone.
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# v:     The vector.
+# value: The value the lane takes.
+# index: The lane, below the vector's lane count.
+# ret:   v with lane index replaced by value
+#[intrinsic("spirv", "core", "OpVectorInsertDynamic")]
+pub fun insert_u16_2(v: u16x2, value: u16, index: u32) u16x2;
+
+# One lane of a vector, chosen at run time.
+#
+# `v[i]` reads a lane at a constant index alone.
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# v:     The vector.
+# index: The lane, below the vector's lane count.
+# ret:   lane index of v
+#[intrinsic("spirv", "core", "OpVectorExtractDynamic")]
+pub fun extract_u16_3(v: u16x3, index: u32) u16;
+
+# A vector with one lane, chosen at run time, replaced.
+#
+# Assigning `v[i]` writes a lane at a constant index alone.
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# v:     The vector.
+# value: The value the lane takes.
+# index: The lane, below the vector's lane count.
+# ret:   v with lane index replaced by value
+#[intrinsic("spirv", "core", "OpVectorInsertDynamic")]
+pub fun insert_u16_3(v: u16x3, value: u16, index: u32) u16x3;
+
+# One lane of a vector, chosen at run time.
+#
+# `v[i]` reads a lane at a constant index alone.
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# v:     The vector.
+# index: The lane, below the vector's lane count.
+# ret:   lane index of v
+#[intrinsic("spirv", "core", "OpVectorExtractDynamic")]
+pub fun extract_u16_4(v: u16x4, index: u32) u16;
+
+# A vector with one lane, chosen at run time, replaced.
+#
+# Assigning `v[i]` writes a lane at a constant index alone.
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# v:     The vector.
+# value: The value the lane takes.
+# index: The lane, below the vector's lane count.
+# ret:   v with lane index replaced by value
+#[intrinsic("spirv", "core", "OpVectorInsertDynamic")]
+pub fun insert_u16_4(v: u16x4, value: u16, index: u32) u16x4;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u16_2_2_2(first: u16x2, second: u16x2, x: u32, y: u32) u16x2;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u16_2_2_3(first: u16x2, second: u16x2, x: u32, y: u32, z: u32) u16x3;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u16_2_2_4(first: u16x2, second: u16x2, x: u32, y: u32, z: u32, w: u32) u16x4;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u16_2_3_2(first: u16x2, second: u16x3, x: u32, y: u32) u16x2;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u16_2_3_3(first: u16x2, second: u16x3, x: u32, y: u32, z: u32) u16x3;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u16_2_3_4(first: u16x2, second: u16x3, x: u32, y: u32, z: u32, w: u32) u16x4;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u16_2_4_2(first: u16x2, second: u16x4, x: u32, y: u32) u16x2;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u16_2_4_3(first: u16x2, second: u16x4, x: u32, y: u32, z: u32) u16x3;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u16_2_4_4(first: u16x2, second: u16x4, x: u32, y: u32, z: u32, w: u32) u16x4;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u16_3_2_2(first: u16x3, second: u16x2, x: u32, y: u32) u16x2;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u16_3_2_3(first: u16x3, second: u16x2, x: u32, y: u32, z: u32) u16x3;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u16_3_2_4(first: u16x3, second: u16x2, x: u32, y: u32, z: u32, w: u32) u16x4;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u16_3_3_2(first: u16x3, second: u16x3, x: u32, y: u32) u16x2;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u16_3_3_3(first: u16x3, second: u16x3, x: u32, y: u32, z: u32) u16x3;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u16_3_3_4(first: u16x3, second: u16x3, x: u32, y: u32, z: u32, w: u32) u16x4;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u16_3_4_2(first: u16x3, second: u16x4, x: u32, y: u32) u16x2;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u16_3_4_3(first: u16x3, second: u16x4, x: u32, y: u32, z: u32) u16x3;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u16_3_4_4(first: u16x3, second: u16x4, x: u32, y: u32, z: u32, w: u32) u16x4;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u16_4_2_2(first: u16x4, second: u16x2, x: u32, y: u32) u16x2;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u16_4_2_3(first: u16x4, second: u16x2, x: u32, y: u32, z: u32) u16x3;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u16_4_2_4(first: u16x4, second: u16x2, x: u32, y: u32, z: u32, w: u32) u16x4;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u16_4_3_2(first: u16x4, second: u16x3, x: u32, y: u32) u16x2;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u16_4_3_3(first: u16x4, second: u16x3, x: u32, y: u32, z: u32) u16x3;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u16_4_3_4(first: u16x4, second: u16x3, x: u32, y: u32, z: u32, w: u32) u16x4;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u16_4_4_2(first: u16x4, second: u16x4, x: u32, y: u32) u16x2;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u16_4_4_3(first: u16x4, second: u16x4, x: u32, y: u32, z: u32) u16x3;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u16_4_4_4(first: u16x4, second: u16x4, x: u32, y: u32, z: u32, w: u32) u16x4;
+
+# One lane of a vector, chosen at run time.
+#
+# `v[i]` reads a lane at a constant index alone.
+# ---
+# v:     The vector.
+# index: The lane, below the vector's lane count.
+# ret:   lane index of v
+#[intrinsic("spirv", "core", "OpVectorExtractDynamic")]
+pub fun extract_i32_2(v: i32x2, index: u32) i32;
+
+# A vector with one lane, chosen at run time, replaced.
+#
+# Assigning `v[i]` writes a lane at a constant index alone.
+# ---
+# v:     The vector.
+# value: The value the lane takes.
+# index: The lane, below the vector's lane count.
+# ret:   v with lane index replaced by value
+#[intrinsic("spirv", "core", "OpVectorInsertDynamic")]
+pub fun insert_i32_2(v: i32x2, value: i32, index: u32) i32x2;
+
+# One lane of a vector, chosen at run time.
+#
+# `v[i]` reads a lane at a constant index alone.
+# ---
+# v:     The vector.
+# index: The lane, below the vector's lane count.
+# ret:   lane index of v
+#[intrinsic("spirv", "core", "OpVectorExtractDynamic")]
+pub fun extract_i32_3(v: i32x3, index: u32) i32;
+
+# A vector with one lane, chosen at run time, replaced.
+#
+# Assigning `v[i]` writes a lane at a constant index alone.
+# ---
+# v:     The vector.
+# value: The value the lane takes.
+# index: The lane, below the vector's lane count.
+# ret:   v with lane index replaced by value
+#[intrinsic("spirv", "core", "OpVectorInsertDynamic")]
+pub fun insert_i32_3(v: i32x3, value: i32, index: u32) i32x3;
+
+# One lane of a vector, chosen at run time.
+#
+# `v[i]` reads a lane at a constant index alone.
+# ---
+# v:     The vector.
+# index: The lane, below the vector's lane count.
+# ret:   lane index of v
+#[intrinsic("spirv", "core", "OpVectorExtractDynamic")]
+pub fun extract_i32_4(v: i32x4, index: u32) i32;
+
+# A vector with one lane, chosen at run time, replaced.
+#
+# Assigning `v[i]` writes a lane at a constant index alone.
+# ---
+# v:     The vector.
+# value: The value the lane takes.
+# index: The lane, below the vector's lane count.
+# ret:   v with lane index replaced by value
+#[intrinsic("spirv", "core", "OpVectorInsertDynamic")]
+pub fun insert_i32_4(v: i32x4, value: i32, index: u32) i32x4;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i32_2_2_2(first: i32x2, second: i32x2, x: u32, y: u32) i32x2;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i32_2_2_3(first: i32x2, second: i32x2, x: u32, y: u32, z: u32) i32x3;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i32_2_2_4(first: i32x2, second: i32x2, x: u32, y: u32, z: u32, w: u32) i32x4;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i32_2_3_2(first: i32x2, second: i32x3, x: u32, y: u32) i32x2;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i32_2_3_3(first: i32x2, second: i32x3, x: u32, y: u32, z: u32) i32x3;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i32_2_3_4(first: i32x2, second: i32x3, x: u32, y: u32, z: u32, w: u32) i32x4;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i32_2_4_2(first: i32x2, second: i32x4, x: u32, y: u32) i32x2;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i32_2_4_3(first: i32x2, second: i32x4, x: u32, y: u32, z: u32) i32x3;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i32_2_4_4(first: i32x2, second: i32x4, x: u32, y: u32, z: u32, w: u32) i32x4;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i32_3_2_2(first: i32x3, second: i32x2, x: u32, y: u32) i32x2;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i32_3_2_3(first: i32x3, second: i32x2, x: u32, y: u32, z: u32) i32x3;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i32_3_2_4(first: i32x3, second: i32x2, x: u32, y: u32, z: u32, w: u32) i32x4;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i32_3_3_2(first: i32x3, second: i32x3, x: u32, y: u32) i32x2;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i32_3_3_3(first: i32x3, second: i32x3, x: u32, y: u32, z: u32) i32x3;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i32_3_3_4(first: i32x3, second: i32x3, x: u32, y: u32, z: u32, w: u32) i32x4;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i32_3_4_2(first: i32x3, second: i32x4, x: u32, y: u32) i32x2;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i32_3_4_3(first: i32x3, second: i32x4, x: u32, y: u32, z: u32) i32x3;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i32_3_4_4(first: i32x3, second: i32x4, x: u32, y: u32, z: u32, w: u32) i32x4;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i32_4_2_2(first: i32x4, second: i32x2, x: u32, y: u32) i32x2;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i32_4_2_3(first: i32x4, second: i32x2, x: u32, y: u32, z: u32) i32x3;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i32_4_2_4(first: i32x4, second: i32x2, x: u32, y: u32, z: u32, w: u32) i32x4;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i32_4_3_2(first: i32x4, second: i32x3, x: u32, y: u32) i32x2;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i32_4_3_3(first: i32x4, second: i32x3, x: u32, y: u32, z: u32) i32x3;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i32_4_3_4(first: i32x4, second: i32x3, x: u32, y: u32, z: u32, w: u32) i32x4;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i32_4_4_2(first: i32x4, second: i32x4, x: u32, y: u32) i32x2;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i32_4_4_3(first: i32x4, second: i32x4, x: u32, y: u32, z: u32) i32x3;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i32_4_4_4(first: i32x4, second: i32x4, x: u32, y: u32, z: u32, w: u32) i32x4;
+
+# One lane of a vector, chosen at run time.
+#
+# `v[i]` reads a lane at a constant index alone.
+# ---
+# v:     The vector.
+# index: The lane, below the vector's lane count.
+# ret:   lane index of v
+#[intrinsic("spirv", "core", "OpVectorExtractDynamic")]
+pub fun extract_u32_2(v: u32x2, index: u32) u32;
+
+# A vector with one lane, chosen at run time, replaced.
+#
+# Assigning `v[i]` writes a lane at a constant index alone.
+# ---
+# v:     The vector.
+# value: The value the lane takes.
+# index: The lane, below the vector's lane count.
+# ret:   v with lane index replaced by value
+#[intrinsic("spirv", "core", "OpVectorInsertDynamic")]
+pub fun insert_u32_2(v: u32x2, value: u32, index: u32) u32x2;
+
+# One lane of a vector, chosen at run time.
+#
+# `v[i]` reads a lane at a constant index alone.
+# ---
+# v:     The vector.
+# index: The lane, below the vector's lane count.
+# ret:   lane index of v
+#[intrinsic("spirv", "core", "OpVectorExtractDynamic")]
+pub fun extract_u32_3(v: u32x3, index: u32) u32;
+
+# A vector with one lane, chosen at run time, replaced.
+#
+# Assigning `v[i]` writes a lane at a constant index alone.
+# ---
+# v:     The vector.
+# value: The value the lane takes.
+# index: The lane, below the vector's lane count.
+# ret:   v with lane index replaced by value
+#[intrinsic("spirv", "core", "OpVectorInsertDynamic")]
+pub fun insert_u32_3(v: u32x3, value: u32, index: u32) u32x3;
+
+# One lane of a vector, chosen at run time.
+#
+# `v[i]` reads a lane at a constant index alone.
+# ---
+# v:     The vector.
+# index: The lane, below the vector's lane count.
+# ret:   lane index of v
+#[intrinsic("spirv", "core", "OpVectorExtractDynamic")]
+pub fun extract_u32_4(v: u32x4, index: u32) u32;
+
+# A vector with one lane, chosen at run time, replaced.
+#
+# Assigning `v[i]` writes a lane at a constant index alone.
+# ---
+# v:     The vector.
+# value: The value the lane takes.
+# index: The lane, below the vector's lane count.
+# ret:   v with lane index replaced by value
+#[intrinsic("spirv", "core", "OpVectorInsertDynamic")]
+pub fun insert_u32_4(v: u32x4, value: u32, index: u32) u32x4;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u32_2_2_2(first: u32x2, second: u32x2, x: u32, y: u32) u32x2;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u32_2_2_3(first: u32x2, second: u32x2, x: u32, y: u32, z: u32) u32x3;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u32_2_2_4(first: u32x2, second: u32x2, x: u32, y: u32, z: u32, w: u32) u32x4;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u32_2_3_2(first: u32x2, second: u32x3, x: u32, y: u32) u32x2;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u32_2_3_3(first: u32x2, second: u32x3, x: u32, y: u32, z: u32) u32x3;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u32_2_3_4(first: u32x2, second: u32x3, x: u32, y: u32, z: u32, w: u32) u32x4;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u32_2_4_2(first: u32x2, second: u32x4, x: u32, y: u32) u32x2;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u32_2_4_3(first: u32x2, second: u32x4, x: u32, y: u32, z: u32) u32x3;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u32_2_4_4(first: u32x2, second: u32x4, x: u32, y: u32, z: u32, w: u32) u32x4;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u32_3_2_2(first: u32x3, second: u32x2, x: u32, y: u32) u32x2;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u32_3_2_3(first: u32x3, second: u32x2, x: u32, y: u32, z: u32) u32x3;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u32_3_2_4(first: u32x3, second: u32x2, x: u32, y: u32, z: u32, w: u32) u32x4;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u32_3_3_2(first: u32x3, second: u32x3, x: u32, y: u32) u32x2;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u32_3_3_3(first: u32x3, second: u32x3, x: u32, y: u32, z: u32) u32x3;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u32_3_3_4(first: u32x3, second: u32x3, x: u32, y: u32, z: u32, w: u32) u32x4;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u32_3_4_2(first: u32x3, second: u32x4, x: u32, y: u32) u32x2;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u32_3_4_3(first: u32x3, second: u32x4, x: u32, y: u32, z: u32) u32x3;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u32_3_4_4(first: u32x3, second: u32x4, x: u32, y: u32, z: u32, w: u32) u32x4;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u32_4_2_2(first: u32x4, second: u32x2, x: u32, y: u32) u32x2;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u32_4_2_3(first: u32x4, second: u32x2, x: u32, y: u32, z: u32) u32x3;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u32_4_2_4(first: u32x4, second: u32x2, x: u32, y: u32, z: u32, w: u32) u32x4;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u32_4_3_2(first: u32x4, second: u32x3, x: u32, y: u32) u32x2;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u32_4_3_3(first: u32x4, second: u32x3, x: u32, y: u32, z: u32) u32x3;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u32_4_3_4(first: u32x4, second: u32x3, x: u32, y: u32, z: u32, w: u32) u32x4;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u32_4_4_2(first: u32x4, second: u32x4, x: u32, y: u32) u32x2;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u32_4_4_3(first: u32x4, second: u32x4, x: u32, y: u32, z: u32) u32x3;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u32_4_4_4(first: u32x4, second: u32x4, x: u32, y: u32, z: u32, w: u32) u32x4;
+
+# One lane of a vector, chosen at run time.
+#
+# `v[i]` reads a lane at a constant index alone.
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# v:     The vector.
+# index: The lane, below the vector's lane count.
+# ret:   lane index of v
+#[intrinsic("spirv", "core", "OpVectorExtractDynamic")]
+pub fun extract_i64_2(v: i64x2, index: u32) i64;
+
+# A vector with one lane, chosen at run time, replaced.
+#
+# Assigning `v[i]` writes a lane at a constant index alone.
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# v:     The vector.
+# value: The value the lane takes.
+# index: The lane, below the vector's lane count.
+# ret:   v with lane index replaced by value
+#[intrinsic("spirv", "core", "OpVectorInsertDynamic")]
+pub fun insert_i64_2(v: i64x2, value: i64, index: u32) i64x2;
+
+# One lane of a vector, chosen at run time.
+#
+# `v[i]` reads a lane at a constant index alone.
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# v:     The vector.
+# index: The lane, below the vector's lane count.
+# ret:   lane index of v
+#[intrinsic("spirv", "core", "OpVectorExtractDynamic")]
+pub fun extract_i64_3(v: i64x3, index: u32) i64;
+
+# A vector with one lane, chosen at run time, replaced.
+#
+# Assigning `v[i]` writes a lane at a constant index alone.
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# v:     The vector.
+# value: The value the lane takes.
+# index: The lane, below the vector's lane count.
+# ret:   v with lane index replaced by value
+#[intrinsic("spirv", "core", "OpVectorInsertDynamic")]
+pub fun insert_i64_3(v: i64x3, value: i64, index: u32) i64x3;
+
+# One lane of a vector, chosen at run time.
+#
+# `v[i]` reads a lane at a constant index alone.
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# v:     The vector.
+# index: The lane, below the vector's lane count.
+# ret:   lane index of v
+#[intrinsic("spirv", "core", "OpVectorExtractDynamic")]
+pub fun extract_i64_4(v: i64x4, index: u32) i64;
+
+# A vector with one lane, chosen at run time, replaced.
+#
+# Assigning `v[i]` writes a lane at a constant index alone.
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# v:     The vector.
+# value: The value the lane takes.
+# index: The lane, below the vector's lane count.
+# ret:   v with lane index replaced by value
+#[intrinsic("spirv", "core", "OpVectorInsertDynamic")]
+pub fun insert_i64_4(v: i64x4, value: i64, index: u32) i64x4;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i64_2_2_2(first: i64x2, second: i64x2, x: u32, y: u32) i64x2;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i64_2_2_3(first: i64x2, second: i64x2, x: u32, y: u32, z: u32) i64x3;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i64_2_2_4(first: i64x2, second: i64x2, x: u32, y: u32, z: u32, w: u32) i64x4;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i64_2_3_2(first: i64x2, second: i64x3, x: u32, y: u32) i64x2;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i64_2_3_3(first: i64x2, second: i64x3, x: u32, y: u32, z: u32) i64x3;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i64_2_3_4(first: i64x2, second: i64x3, x: u32, y: u32, z: u32, w: u32) i64x4;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i64_2_4_2(first: i64x2, second: i64x4, x: u32, y: u32) i64x2;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i64_2_4_3(first: i64x2, second: i64x4, x: u32, y: u32, z: u32) i64x3;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i64_2_4_4(first: i64x2, second: i64x4, x: u32, y: u32, z: u32, w: u32) i64x4;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i64_3_2_2(first: i64x3, second: i64x2, x: u32, y: u32) i64x2;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i64_3_2_3(first: i64x3, second: i64x2, x: u32, y: u32, z: u32) i64x3;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i64_3_2_4(first: i64x3, second: i64x2, x: u32, y: u32, z: u32, w: u32) i64x4;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i64_3_3_2(first: i64x3, second: i64x3, x: u32, y: u32) i64x2;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i64_3_3_3(first: i64x3, second: i64x3, x: u32, y: u32, z: u32) i64x3;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i64_3_3_4(first: i64x3, second: i64x3, x: u32, y: u32, z: u32, w: u32) i64x4;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i64_3_4_2(first: i64x3, second: i64x4, x: u32, y: u32) i64x2;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i64_3_4_3(first: i64x3, second: i64x4, x: u32, y: u32, z: u32) i64x3;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i64_3_4_4(first: i64x3, second: i64x4, x: u32, y: u32, z: u32, w: u32) i64x4;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i64_4_2_2(first: i64x4, second: i64x2, x: u32, y: u32) i64x2;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i64_4_2_3(first: i64x4, second: i64x2, x: u32, y: u32, z: u32) i64x3;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i64_4_2_4(first: i64x4, second: i64x2, x: u32, y: u32, z: u32, w: u32) i64x4;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i64_4_3_2(first: i64x4, second: i64x3, x: u32, y: u32) i64x2;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i64_4_3_3(first: i64x4, second: i64x3, x: u32, y: u32, z: u32) i64x3;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i64_4_3_4(first: i64x4, second: i64x3, x: u32, y: u32, z: u32, w: u32) i64x4;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i64_4_4_2(first: i64x4, second: i64x4, x: u32, y: u32) i64x2;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i64_4_4_3(first: i64x4, second: i64x4, x: u32, y: u32, z: u32) i64x3;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_i64_4_4_4(first: i64x4, second: i64x4, x: u32, y: u32, z: u32, w: u32) i64x4;
+
+# One lane of a vector, chosen at run time.
+#
+# `v[i]` reads a lane at a constant index alone.
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# v:     The vector.
+# index: The lane, below the vector's lane count.
+# ret:   lane index of v
+#[intrinsic("spirv", "core", "OpVectorExtractDynamic")]
+pub fun extract_u64_2(v: u64x2, index: u32) u64;
+
+# A vector with one lane, chosen at run time, replaced.
+#
+# Assigning `v[i]` writes a lane at a constant index alone.
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# v:     The vector.
+# value: The value the lane takes.
+# index: The lane, below the vector's lane count.
+# ret:   v with lane index replaced by value
+#[intrinsic("spirv", "core", "OpVectorInsertDynamic")]
+pub fun insert_u64_2(v: u64x2, value: u64, index: u32) u64x2;
+
+# One lane of a vector, chosen at run time.
+#
+# `v[i]` reads a lane at a constant index alone.
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# v:     The vector.
+# index: The lane, below the vector's lane count.
+# ret:   lane index of v
+#[intrinsic("spirv", "core", "OpVectorExtractDynamic")]
+pub fun extract_u64_3(v: u64x3, index: u32) u64;
+
+# A vector with one lane, chosen at run time, replaced.
+#
+# Assigning `v[i]` writes a lane at a constant index alone.
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# v:     The vector.
+# value: The value the lane takes.
+# index: The lane, below the vector's lane count.
+# ret:   v with lane index replaced by value
+#[intrinsic("spirv", "core", "OpVectorInsertDynamic")]
+pub fun insert_u64_3(v: u64x3, value: u64, index: u32) u64x3;
+
+# One lane of a vector, chosen at run time.
+#
+# `v[i]` reads a lane at a constant index alone.
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# v:     The vector.
+# index: The lane, below the vector's lane count.
+# ret:   lane index of v
+#[intrinsic("spirv", "core", "OpVectorExtractDynamic")]
+pub fun extract_u64_4(v: u64x4, index: u32) u64;
+
+# A vector with one lane, chosen at run time, replaced.
+#
+# Assigning `v[i]` writes a lane at a constant index alone.
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# v:     The vector.
+# value: The value the lane takes.
+# index: The lane, below the vector's lane count.
+# ret:   v with lane index replaced by value
+#[intrinsic("spirv", "core", "OpVectorInsertDynamic")]
+pub fun insert_u64_4(v: u64x4, value: u64, index: u32) u64x4;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u64_2_2_2(first: u64x2, second: u64x2, x: u32, y: u32) u64x2;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u64_2_2_3(first: u64x2, second: u64x2, x: u32, y: u32, z: u32) u64x3;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u64_2_2_4(first: u64x2, second: u64x2, x: u32, y: u32, z: u32, w: u32) u64x4;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u64_2_3_2(first: u64x2, second: u64x3, x: u32, y: u32) u64x2;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u64_2_3_3(first: u64x2, second: u64x3, x: u32, y: u32, z: u32) u64x3;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u64_2_3_4(first: u64x2, second: u64x3, x: u32, y: u32, z: u32, w: u32) u64x4;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u64_2_4_2(first: u64x2, second: u64x4, x: u32, y: u32) u64x2;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u64_2_4_3(first: u64x2, second: u64x4, x: u32, y: u32, z: u32) u64x3;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u64_2_4_4(first: u64x2, second: u64x4, x: u32, y: u32, z: u32, w: u32) u64x4;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u64_3_2_2(first: u64x3, second: u64x2, x: u32, y: u32) u64x2;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u64_3_2_3(first: u64x3, second: u64x2, x: u32, y: u32, z: u32) u64x3;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u64_3_2_4(first: u64x3, second: u64x2, x: u32, y: u32, z: u32, w: u32) u64x4;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u64_3_3_2(first: u64x3, second: u64x3, x: u32, y: u32) u64x2;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u64_3_3_3(first: u64x3, second: u64x3, x: u32, y: u32, z: u32) u64x3;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u64_3_3_4(first: u64x3, second: u64x3, x: u32, y: u32, z: u32, w: u32) u64x4;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u64_3_4_2(first: u64x3, second: u64x4, x: u32, y: u32) u64x2;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u64_3_4_3(first: u64x3, second: u64x4, x: u32, y: u32, z: u32) u64x3;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u64_3_4_4(first: u64x3, second: u64x4, x: u32, y: u32, z: u32, w: u32) u64x4;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u64_4_2_2(first: u64x4, second: u64x2, x: u32, y: u32) u64x2;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u64_4_2_3(first: u64x4, second: u64x2, x: u32, y: u32, z: u32) u64x3;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u64_4_2_4(first: u64x4, second: u64x2, x: u32, y: u32, z: u32, w: u32) u64x4;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u64_4_3_2(first: u64x4, second: u64x3, x: u32, y: u32) u64x2;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u64_4_3_3(first: u64x4, second: u64x3, x: u32, y: u32, z: u32) u64x3;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u64_4_3_4(first: u64x4, second: u64x3, x: u32, y: u32, z: u32, w: u32) u64x4;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u64_4_4_2(first: u64x4, second: u64x4, x: u32, y: u32) u64x2;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u64_4_4_3(first: u64x4, second: u64x4, x: u32, y: u32, z: u32) u64x3;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_u64_4_4_4(first: u64x4, second: u64x4, x: u32, y: u32, z: u32, w: u32) u64x4;
+
+# One lane of a vector, chosen at run time.
+#
+# `v[i]` reads a lane at a constant index alone.
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# v:     The vector.
+# index: The lane, below the vector's lane count.
+# ret:   lane index of v
+#[intrinsic("spirv", "core", "OpVectorExtractDynamic")]
+pub fun extract_f16_2(v: f16x2, index: u32) f16;
+
+# A vector with one lane, chosen at run time, replaced.
+#
+# Assigning `v[i]` writes a lane at a constant index alone.
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# v:     The vector.
+# value: The value the lane takes.
+# index: The lane, below the vector's lane count.
+# ret:   v with lane index replaced by value
+#[intrinsic("spirv", "core", "OpVectorInsertDynamic")]
+pub fun insert_f16_2(v: f16x2, value: f16, index: u32) f16x2;
+
+# One lane of a vector, chosen at run time.
+#
+# `v[i]` reads a lane at a constant index alone.
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# v:     The vector.
+# index: The lane, below the vector's lane count.
+# ret:   lane index of v
+#[intrinsic("spirv", "core", "OpVectorExtractDynamic")]
+pub fun extract_f16_3(v: f16x3, index: u32) f16;
+
+# A vector with one lane, chosen at run time, replaced.
+#
+# Assigning `v[i]` writes a lane at a constant index alone.
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# v:     The vector.
+# value: The value the lane takes.
+# index: The lane, below the vector's lane count.
+# ret:   v with lane index replaced by value
+#[intrinsic("spirv", "core", "OpVectorInsertDynamic")]
+pub fun insert_f16_3(v: f16x3, value: f16, index: u32) f16x3;
+
+# One lane of a vector, chosen at run time.
+#
+# `v[i]` reads a lane at a constant index alone.
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# v:     The vector.
+# index: The lane, below the vector's lane count.
+# ret:   lane index of v
+#[intrinsic("spirv", "core", "OpVectorExtractDynamic")]
+pub fun extract_f16_4(v: f16x4, index: u32) f16;
+
+# A vector with one lane, chosen at run time, replaced.
+#
+# Assigning `v[i]` writes a lane at a constant index alone.
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# v:     The vector.
+# value: The value the lane takes.
+# index: The lane, below the vector's lane count.
+# ret:   v with lane index replaced by value
+#[intrinsic("spirv", "core", "OpVectorInsertDynamic")]
+pub fun insert_f16_4(v: f16x4, value: f16, index: u32) f16x4;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f16_2_2_2(first: f16x2, second: f16x2, x: u32, y: u32) f16x2;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f16_2_2_3(first: f16x2, second: f16x2, x: u32, y: u32, z: u32) f16x3;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f16_2_2_4(first: f16x2, second: f16x2, x: u32, y: u32, z: u32, w: u32) f16x4;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f16_2_3_2(first: f16x2, second: f16x3, x: u32, y: u32) f16x2;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f16_2_3_3(first: f16x2, second: f16x3, x: u32, y: u32, z: u32) f16x3;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f16_2_3_4(first: f16x2, second: f16x3, x: u32, y: u32, z: u32, w: u32) f16x4;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f16_2_4_2(first: f16x2, second: f16x4, x: u32, y: u32) f16x2;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f16_2_4_3(first: f16x2, second: f16x4, x: u32, y: u32, z: u32) f16x3;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f16_2_4_4(first: f16x2, second: f16x4, x: u32, y: u32, z: u32, w: u32) f16x4;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f16_3_2_2(first: f16x3, second: f16x2, x: u32, y: u32) f16x2;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f16_3_2_3(first: f16x3, second: f16x2, x: u32, y: u32, z: u32) f16x3;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f16_3_2_4(first: f16x3, second: f16x2, x: u32, y: u32, z: u32, w: u32) f16x4;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f16_3_3_2(first: f16x3, second: f16x3, x: u32, y: u32) f16x2;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f16_3_3_3(first: f16x3, second: f16x3, x: u32, y: u32, z: u32) f16x3;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f16_3_3_4(first: f16x3, second: f16x3, x: u32, y: u32, z: u32, w: u32) f16x4;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f16_3_4_2(first: f16x3, second: f16x4, x: u32, y: u32) f16x2;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f16_3_4_3(first: f16x3, second: f16x4, x: u32, y: u32, z: u32) f16x3;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f16_3_4_4(first: f16x3, second: f16x4, x: u32, y: u32, z: u32, w: u32) f16x4;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f16_4_2_2(first: f16x4, second: f16x2, x: u32, y: u32) f16x2;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f16_4_2_3(first: f16x4, second: f16x2, x: u32, y: u32, z: u32) f16x3;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f16_4_2_4(first: f16x4, second: f16x2, x: u32, y: u32, z: u32, w: u32) f16x4;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f16_4_3_2(first: f16x4, second: f16x3, x: u32, y: u32) f16x2;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f16_4_3_3(first: f16x4, second: f16x3, x: u32, y: u32, z: u32) f16x3;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f16_4_3_4(first: f16x4, second: f16x3, x: u32, y: u32, z: u32, w: u32) f16x4;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f16_4_4_2(first: f16x4, second: f16x4, x: u32, y: u32) f16x2;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f16_4_4_3(first: f16x4, second: f16x4, x: u32, y: u32, z: u32) f16x3;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f16_4_4_4(first: f16x4, second: f16x4, x: u32, y: u32, z: u32, w: u32) f16x4;
+
+# One lane of a vector, chosen at run time.
+#
+# `v[i]` reads a lane at a constant index alone.
+# ---
+# v:     The vector.
+# index: The lane, below the vector's lane count.
+# ret:   lane index of v
+#[intrinsic("spirv", "core", "OpVectorExtractDynamic")]
+pub fun extract_f32_2(v: f32x2, index: u32) f32;
+
+# A vector with one lane, chosen at run time, replaced.
+#
+# Assigning `v[i]` writes a lane at a constant index alone.
+# ---
+# v:     The vector.
+# value: The value the lane takes.
+# index: The lane, below the vector's lane count.
+# ret:   v with lane index replaced by value
+#[intrinsic("spirv", "core", "OpVectorInsertDynamic")]
+pub fun insert_f32_2(v: f32x2, value: f32, index: u32) f32x2;
+
+# One lane of a vector, chosen at run time.
+#
+# `v[i]` reads a lane at a constant index alone.
+# ---
+# v:     The vector.
+# index: The lane, below the vector's lane count.
+# ret:   lane index of v
+#[intrinsic("spirv", "core", "OpVectorExtractDynamic")]
+pub fun extract_f32_3(v: f32x3, index: u32) f32;
+
+# A vector with one lane, chosen at run time, replaced.
+#
+# Assigning `v[i]` writes a lane at a constant index alone.
+# ---
+# v:     The vector.
+# value: The value the lane takes.
+# index: The lane, below the vector's lane count.
+# ret:   v with lane index replaced by value
+#[intrinsic("spirv", "core", "OpVectorInsertDynamic")]
+pub fun insert_f32_3(v: f32x3, value: f32, index: u32) f32x3;
+
+# One lane of a vector, chosen at run time.
+#
+# `v[i]` reads a lane at a constant index alone.
+# ---
+# v:     The vector.
+# index: The lane, below the vector's lane count.
+# ret:   lane index of v
+#[intrinsic("spirv", "core", "OpVectorExtractDynamic")]
+pub fun extract_f32_4(v: f32x4, index: u32) f32;
+
+# A vector with one lane, chosen at run time, replaced.
+#
+# Assigning `v[i]` writes a lane at a constant index alone.
+# ---
+# v:     The vector.
+# value: The value the lane takes.
+# index: The lane, below the vector's lane count.
+# ret:   v with lane index replaced by value
+#[intrinsic("spirv", "core", "OpVectorInsertDynamic")]
+pub fun insert_f32_4(v: f32x4, value: f32, index: u32) f32x4;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f32_2_2_2(first: f32x2, second: f32x2, x: u32, y: u32) f32x2;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f32_2_2_3(first: f32x2, second: f32x2, x: u32, y: u32, z: u32) f32x3;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f32_2_2_4(first: f32x2, second: f32x2, x: u32, y: u32, z: u32, w: u32) f32x4;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f32_2_3_2(first: f32x2, second: f32x3, x: u32, y: u32) f32x2;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f32_2_3_3(first: f32x2, second: f32x3, x: u32, y: u32, z: u32) f32x3;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f32_2_3_4(first: f32x2, second: f32x3, x: u32, y: u32, z: u32, w: u32) f32x4;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f32_2_4_2(first: f32x2, second: f32x4, x: u32, y: u32) f32x2;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f32_2_4_3(first: f32x2, second: f32x4, x: u32, y: u32, z: u32) f32x3;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f32_2_4_4(first: f32x2, second: f32x4, x: u32, y: u32, z: u32, w: u32) f32x4;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f32_3_2_2(first: f32x3, second: f32x2, x: u32, y: u32) f32x2;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f32_3_2_3(first: f32x3, second: f32x2, x: u32, y: u32, z: u32) f32x3;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f32_3_2_4(first: f32x3, second: f32x2, x: u32, y: u32, z: u32, w: u32) f32x4;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f32_3_3_2(first: f32x3, second: f32x3, x: u32, y: u32) f32x2;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f32_3_3_3(first: f32x3, second: f32x3, x: u32, y: u32, z: u32) f32x3;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f32_3_3_4(first: f32x3, second: f32x3, x: u32, y: u32, z: u32, w: u32) f32x4;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f32_3_4_2(first: f32x3, second: f32x4, x: u32, y: u32) f32x2;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f32_3_4_3(first: f32x3, second: f32x4, x: u32, y: u32, z: u32) f32x3;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f32_3_4_4(first: f32x3, second: f32x4, x: u32, y: u32, z: u32, w: u32) f32x4;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f32_4_2_2(first: f32x4, second: f32x2, x: u32, y: u32) f32x2;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f32_4_2_3(first: f32x4, second: f32x2, x: u32, y: u32, z: u32) f32x3;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f32_4_2_4(first: f32x4, second: f32x2, x: u32, y: u32, z: u32, w: u32) f32x4;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f32_4_3_2(first: f32x4, second: f32x3, x: u32, y: u32) f32x2;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f32_4_3_3(first: f32x4, second: f32x3, x: u32, y: u32, z: u32) f32x3;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f32_4_3_4(first: f32x4, second: f32x3, x: u32, y: u32, z: u32, w: u32) f32x4;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f32_4_4_2(first: f32x4, second: f32x4, x: u32, y: u32) f32x2;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f32_4_4_3(first: f32x4, second: f32x4, x: u32, y: u32, z: u32) f32x3;
+
+# A vector built from the lanes of two.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f32_4_4_4(first: f32x4, second: f32x4, x: u32, y: u32, z: u32, w: u32) f32x4;
+
+# One lane of a vector, chosen at run time.
+#
+# `v[i]` reads a lane at a constant index alone.
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# v:     The vector.
+# index: The lane, below the vector's lane count.
+# ret:   lane index of v
+#[intrinsic("spirv", "core", "OpVectorExtractDynamic")]
+pub fun extract_f64_2(v: f64x2, index: u32) f64;
+
+# A vector with one lane, chosen at run time, replaced.
+#
+# Assigning `v[i]` writes a lane at a constant index alone.
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# v:     The vector.
+# value: The value the lane takes.
+# index: The lane, below the vector's lane count.
+# ret:   v with lane index replaced by value
+#[intrinsic("spirv", "core", "OpVectorInsertDynamic")]
+pub fun insert_f64_2(v: f64x2, value: f64, index: u32) f64x2;
+
+# One lane of a vector, chosen at run time.
+#
+# `v[i]` reads a lane at a constant index alone.
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# v:     The vector.
+# index: The lane, below the vector's lane count.
+# ret:   lane index of v
+#[intrinsic("spirv", "core", "OpVectorExtractDynamic")]
+pub fun extract_f64_3(v: f64x3, index: u32) f64;
+
+# A vector with one lane, chosen at run time, replaced.
+#
+# Assigning `v[i]` writes a lane at a constant index alone.
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# v:     The vector.
+# value: The value the lane takes.
+# index: The lane, below the vector's lane count.
+# ret:   v with lane index replaced by value
+#[intrinsic("spirv", "core", "OpVectorInsertDynamic")]
+pub fun insert_f64_3(v: f64x3, value: f64, index: u32) f64x3;
+
+# One lane of a vector, chosen at run time.
+#
+# `v[i]` reads a lane at a constant index alone.
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# v:     The vector.
+# index: The lane, below the vector's lane count.
+# ret:   lane index of v
+#[intrinsic("spirv", "core", "OpVectorExtractDynamic")]
+pub fun extract_f64_4(v: f64x4, index: u32) f64;
+
+# A vector with one lane, chosen at run time, replaced.
+#
+# Assigning `v[i]` writes a lane at a constant index alone.
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# v:     The vector.
+# value: The value the lane takes.
+# index: The lane, below the vector's lane count.
+# ret:   v with lane index replaced by value
+#[intrinsic("spirv", "core", "OpVectorInsertDynamic")]
+pub fun insert_f64_4(v: f64x4, value: f64, index: u32) f64x4;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f64_2_2_2(first: f64x2, second: f64x2, x: u32, y: u32) f64x2;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f64_2_2_3(first: f64x2, second: f64x2, x: u32, y: u32, z: u32) f64x3;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f64_2_2_4(first: f64x2, second: f64x2, x: u32, y: u32, z: u32, w: u32) f64x4;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f64_2_3_2(first: f64x2, second: f64x3, x: u32, y: u32) f64x2;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f64_2_3_3(first: f64x2, second: f64x3, x: u32, y: u32, z: u32) f64x3;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f64_2_3_4(first: f64x2, second: f64x3, x: u32, y: u32, z: u32, w: u32) f64x4;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f64_2_4_2(first: f64x2, second: f64x4, x: u32, y: u32) f64x2;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f64_2_4_3(first: f64x2, second: f64x4, x: u32, y: u32, z: u32) f64x3;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 2.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f64_2_4_4(first: f64x2, second: f64x4, x: u32, y: u32, z: u32, w: u32) f64x4;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f64_3_2_2(first: f64x3, second: f64x2, x: u32, y: u32) f64x2;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f64_3_2_3(first: f64x3, second: f64x2, x: u32, y: u32, z: u32) f64x3;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f64_3_2_4(first: f64x3, second: f64x2, x: u32, y: u32, z: u32, w: u32) f64x4;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f64_3_3_2(first: f64x3, second: f64x3, x: u32, y: u32) f64x2;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f64_3_3_3(first: f64x3, second: f64x3, x: u32, y: u32, z: u32) f64x3;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f64_3_3_4(first: f64x3, second: f64x3, x: u32, y: u32, z: u32, w: u32) f64x4;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f64_3_4_2(first: f64x3, second: f64x4, x: u32, y: u32) f64x2;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f64_3_4_3(first: f64x3, second: f64x4, x: u32, y: u32, z: u32) f64x3;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 3.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f64_3_4_4(first: f64x3, second: f64x4, x: u32, y: u32, z: u32, w: u32) f64x4;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f64_4_2_2(first: f64x4, second: f64x2, x: u32, y: u32) f64x2;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f64_4_2_3(first: f64x4, second: f64x2, x: u32, y: u32, z: u32) f64x3;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f64_4_2_4(first: f64x4, second: f64x2, x: u32, y: u32, z: u32, w: u32) f64x4;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f64_4_3_2(first: f64x4, second: f64x3, x: u32, y: u32) f64x2;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f64_4_3_3(first: f64x4, second: f64x3, x: u32, y: u32, z: u32) f64x3;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f64_4_3_4(first: f64x4, second: f64x3, x: u32, y: u32, z: u32, w: u32) f64x4;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f64_4_4_2(first: f64x4, second: f64x4, x: u32, y: u32) f64x2;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f64_4_4_3(first: f64x4, second: f64x4, x: u32, y: u32, z: u32) f64x3;
+
+# A vector built from the lanes of two.
+#
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# first:  The first vector, whose lanes are numbered from 0.
+# second: The second vector, whose lanes are numbered from 4.
+# x:      The source lane of the result's lane 0, a constant.
+# y:      The source lane of the result's lane 1, a constant.
+# z:      The source lane of the result's lane 2, a constant.
+# w:      The source lane of the result's lane 3, a constant.
+# ret:    the lane each index names, in order
+#[intrinsic("spirv", "core", "OpVectorShuffle")]
+pub fun shuffle_f64_4_4_4(first: f64x4, second: f64x4, x: u32, y: u32, z: u32, w: u32) f64x4;

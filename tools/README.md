@@ -33,17 +33,34 @@ python3 tools/gensubgroup.py > src/subgroup.mach
 
 `conform/verify.sh` diffs each against its committed file.
 
+## gencore.py
+
+Generates `src/compare.mach`, `src/logic.mach` and `src/vector.mach`, the core
+instructions no language construct writes, from their tables and the component types
+and lane counts each takes, and with `--conform` the conformance shader of each, a
+compute stage calling every declaration, with the same compiler requirement.
+
+```sh
+python3 tools/gencore.py compare > src/compare.mach
+python3 tools/gencore.py compare --conform > conform/src/conform_compare_comp.mach
+```
+
+`conform/verify.sh` diffs all six against their committed files.
+
 ## opcheck.py
 
 Checks that the conformance shaders call every `#[intrinsic]` a module declares and that
 each instruction reaches a disassembled conformance module. `conform/verify.sh`
-runs it over `shader.math`, `shader.texture`, `shader.sync`, `shader.atomic` and `shader.subgroup`.
+runs it over every module.
 
-## mathcheck.py
+## instcheck.py
 
-Checks that the release `conform_frag` module holds one instruction for each
-`shader.math` declaration, keyed by instruction, result type and operand types, so a
-call dropped or folded away at one width fails. `conform/verify.sh` runs it.
+Checks that a conformance module holds one instruction for each declaration of the
+module it was generated from, keyed by instruction, result type and operand types, so a
+call dropped or folded away at one width fails. A truth value is keyed as the integer
+the program holds and a literal as a 32-bit word. `conform/verify.sh` runs it over
+`shader.math` against `conform_frag`, and over `shader.compare`, `shader.logic` and
+`shader.vector` against their compute stages at both optimization levels.
 
 ## texcheck.py
 

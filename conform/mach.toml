@@ -109,3 +109,30 @@ out     = "{project.work}/conform_subgroup_comp.spv"
 targets = ["spirv"]
 link    = []
 need    = []
+
+# every comparison, every logical operation and selection, and every lane operation, each
+# calling every declaration of its module from a compute stage, whose values come from a
+# buffer so the module holds only the comparisons and selects the shader called
+[artifact.conform_compare_comp]
+kind    = "module"
+entry   = "conform_compare_comp.mach"
+out     = "{project.work}/conform_compare_comp.spv"
+targets = ["spirv"]
+link    = []
+need    = []
+
+[artifact.conform_logic_comp]
+kind    = "module"
+entry   = "conform_logic_comp.mach"
+out     = "{project.work}/conform_logic_comp.spv"
+targets = ["spirv"]
+link    = []
+need    = []
+
+[artifact.conform_vector_comp]
+kind    = "module"
+entry   = "conform_vector_comp.mach"
+out     = "{project.work}/conform_vector_comp.spv"
+targets = ["spirv"]
+link    = []
+need    = []

@@ -1,0 +1,715 @@
+# Shader-side logic: truth values combined lane by lane without a branch, a vector's lanes
+# reduced to one truth value, and a choice between two values by a truth value.
+#
+# Every declaration here is one core SPIR-V instruction, named by `#[intrinsic]`, as in
+# `shader.math`, and none is an operator's: `&&` and `||` branch, a truth value is an
+# integer to every other operator, and the language has no reduction of a vector's lanes
+# and no conditional expression.
+#
+# TRUTH VALUES. A truth value is a `u32`, or a `u32` vector holding one per lane, true where
+# it is nonzero, as in `shader.subgroup`. An entry that answers yes or no returns 1 or 0 in
+# each lane, and the comparisons of `shader.compare` return exactly that.
+#
+# NOTHING BRANCHES. `logical_and` and `logical_or` evaluate both operands, where `&&` and
+# `||` skip the second, and `select_*` evaluates both values, where an `if` runs one. Both
+# operands are computed whatever they hold, so neither may be something only the other's
+# truth makes safe to compute.
+#
+# TYPES. `select_*` chooses between 16-, 32- and 64-bit integers and floats, scalar and 2, 3
+# and 4 lanes, with a condition of the values' lane count. A 16- or 64-bit entry needs the
+# target's `Int16`, `Int64`, `Float16` or `Float64` where it names an `env`, and says which.
+#
+# THE NAMING RULE. An entry over truth values alone has fixed types, so it takes the plain
+# name, and a vector entry its lane count after an underscore: `logical_and`,
+# `logical_and_3`, `all_4`. `select_*` carries the type of the values it chooses between:
+# `select_f32`, `select_u16_3`.
+#
+# THIS IS A SHADER-ONLY MODULE. On any target other than SPIR-V a call to one of these
+# fails to link, for the reason `shader.math` gives.
+#
+# This file is generated. See tools/gencore.py.
+
+# Whether two truth values both hold.
+#
+# Unlike `&&`, both operands are evaluated and nothing branches.
+# ---
+# a:   A truth value, true where nonzero.
+# b:   A truth value, true where nonzero.
+# ret: 1 where a and b are both true, else 0
+#[intrinsic("spirv", "core", "OpLogicalAnd")]
+pub fun logical_and(a: u32, b: u32) u32;
+
+# Whether either of two truth values holds.
+#
+# Unlike `||`, both operands are evaluated and nothing branches.
+# ---
+# a:   A truth value, true where nonzero.
+# b:   A truth value, true where nonzero.
+# ret: 1 where a or b is true, else 0
+#[intrinsic("spirv", "core", "OpLogicalOr")]
+pub fun logical_or(a: u32, b: u32) u32;
+
+# The opposite of a truth value.
+#
+# The result is 1 or 0, where `~` would flip every bit of the integer.
+# ---
+# a:   A truth value, true where nonzero.
+# ret: 1 where a is false, else 0
+#[intrinsic("spirv", "core", "OpLogicalNot")]
+pub fun logical_not(a: u32) u32;
+
+# Whether two truth values agree.
+#
+# Any two nonzero values agree, where `==` compares the integers.
+# ---
+# a:   A truth value, true where nonzero.
+# b:   A truth value, true where nonzero.
+# ret: 1 where a and b are both true or both false, else 0
+#[intrinsic("spirv", "core", "OpLogicalEqual")]
+pub fun logical_equal(a: u32, b: u32) u32;
+
+# Whether two truth values differ.
+#
+# Any two nonzero values agree, where `!=` compares the integers.
+# ---
+# a:   A truth value, true where nonzero.
+# b:   A truth value, true where nonzero.
+# ret: 1 where exactly one of a and b is true, else 0
+#[intrinsic("spirv", "core", "OpLogicalNotEqual")]
+pub fun logical_not_equal(a: u32, b: u32) u32;
+
+# Whether two truth values both hold, per lane.
+#
+# Unlike `&&`, both operands are evaluated and nothing branches.
+# ---
+# a:   The truth values, one per lane, each true where nonzero.
+# b:   The truth values, one per lane, each true where nonzero.
+# ret: 1 where a and b are both true, else 0 in each lane
+#[intrinsic("spirv", "core", "OpLogicalAnd")]
+pub fun logical_and_2(a: u32x2, b: u32x2) u32x2;
+
+# Whether either of two truth values holds, per lane.
+#
+# Unlike `||`, both operands are evaluated and nothing branches.
+# ---
+# a:   The truth values, one per lane, each true where nonzero.
+# b:   The truth values, one per lane, each true where nonzero.
+# ret: 1 where a or b is true, else 0 in each lane
+#[intrinsic("spirv", "core", "OpLogicalOr")]
+pub fun logical_or_2(a: u32x2, b: u32x2) u32x2;
+
+# The opposite of a truth value, per lane.
+#
+# The result is 1 or 0, where `~` would flip every bit of the integer.
+# ---
+# a:   The truth values, one per lane, each true where nonzero.
+# ret: 1 where a is false, else 0 in each lane
+#[intrinsic("spirv", "core", "OpLogicalNot")]
+pub fun logical_not_2(a: u32x2) u32x2;
+
+# Whether two truth values agree, per lane.
+#
+# Any two nonzero values agree, where `==` compares the integers.
+# ---
+# a:   The truth values, one per lane, each true where nonzero.
+# b:   The truth values, one per lane, each true where nonzero.
+# ret: 1 where a and b are both true or both false, else 0 in each lane
+#[intrinsic("spirv", "core", "OpLogicalEqual")]
+pub fun logical_equal_2(a: u32x2, b: u32x2) u32x2;
+
+# Whether two truth values differ, per lane.
+#
+# Any two nonzero values agree, where `!=` compares the integers.
+# ---
+# a:   The truth values, one per lane, each true where nonzero.
+# b:   The truth values, one per lane, each true where nonzero.
+# ret: 1 where exactly one of a and b is true, else 0 in each lane
+#[intrinsic("spirv", "core", "OpLogicalNotEqual")]
+pub fun logical_not_equal_2(a: u32x2, b: u32x2) u32x2;
+
+# Whether two truth values both hold, per lane.
+#
+# Unlike `&&`, both operands are evaluated and nothing branches.
+# ---
+# a:   The truth values, one per lane, each true where nonzero.
+# b:   The truth values, one per lane, each true where nonzero.
+# ret: 1 where a and b are both true, else 0 in each lane
+#[intrinsic("spirv", "core", "OpLogicalAnd")]
+pub fun logical_and_3(a: u32x3, b: u32x3) u32x3;
+
+# Whether either of two truth values holds, per lane.
+#
+# Unlike `||`, both operands are evaluated and nothing branches.
+# ---
+# a:   The truth values, one per lane, each true where nonzero.
+# b:   The truth values, one per lane, each true where nonzero.
+# ret: 1 where a or b is true, else 0 in each lane
+#[intrinsic("spirv", "core", "OpLogicalOr")]
+pub fun logical_or_3(a: u32x3, b: u32x3) u32x3;
+
+# The opposite of a truth value, per lane.
+#
+# The result is 1 or 0, where `~` would flip every bit of the integer.
+# ---
+# a:   The truth values, one per lane, each true where nonzero.
+# ret: 1 where a is false, else 0 in each lane
+#[intrinsic("spirv", "core", "OpLogicalNot")]
+pub fun logical_not_3(a: u32x3) u32x3;
+
+# Whether two truth values agree, per lane.
+#
+# Any two nonzero values agree, where `==` compares the integers.
+# ---
+# a:   The truth values, one per lane, each true where nonzero.
+# b:   The truth values, one per lane, each true where nonzero.
+# ret: 1 where a and b are both true or both false, else 0 in each lane
+#[intrinsic("spirv", "core", "OpLogicalEqual")]
+pub fun logical_equal_3(a: u32x3, b: u32x3) u32x3;
+
+# Whether two truth values differ, per lane.
+#
+# Any two nonzero values agree, where `!=` compares the integers.
+# ---
+# a:   The truth values, one per lane, each true where nonzero.
+# b:   The truth values, one per lane, each true where nonzero.
+# ret: 1 where exactly one of a and b is true, else 0 in each lane
+#[intrinsic("spirv", "core", "OpLogicalNotEqual")]
+pub fun logical_not_equal_3(a: u32x3, b: u32x3) u32x3;
+
+# Whether two truth values both hold, per lane.
+#
+# Unlike `&&`, both operands are evaluated and nothing branches.
+# ---
+# a:   The truth values, one per lane, each true where nonzero.
+# b:   The truth values, one per lane, each true where nonzero.
+# ret: 1 where a and b are both true, else 0 in each lane
+#[intrinsic("spirv", "core", "OpLogicalAnd")]
+pub fun logical_and_4(a: u32x4, b: u32x4) u32x4;
+
+# Whether either of two truth values holds, per lane.
+#
+# Unlike `||`, both operands are evaluated and nothing branches.
+# ---
+# a:   The truth values, one per lane, each true where nonzero.
+# b:   The truth values, one per lane, each true where nonzero.
+# ret: 1 where a or b is true, else 0 in each lane
+#[intrinsic("spirv", "core", "OpLogicalOr")]
+pub fun logical_or_4(a: u32x4, b: u32x4) u32x4;
+
+# The opposite of a truth value, per lane.
+#
+# The result is 1 or 0, where `~` would flip every bit of the integer.
+# ---
+# a:   The truth values, one per lane, each true where nonzero.
+# ret: 1 where a is false, else 0 in each lane
+#[intrinsic("spirv", "core", "OpLogicalNot")]
+pub fun logical_not_4(a: u32x4) u32x4;
+
+# Whether two truth values agree, per lane.
+#
+# Any two nonzero values agree, where `==` compares the integers.
+# ---
+# a:   The truth values, one per lane, each true where nonzero.
+# b:   The truth values, one per lane, each true where nonzero.
+# ret: 1 where a and b are both true or both false, else 0 in each lane
+#[intrinsic("spirv", "core", "OpLogicalEqual")]
+pub fun logical_equal_4(a: u32x4, b: u32x4) u32x4;
+
+# Whether two truth values differ, per lane.
+#
+# Any two nonzero values agree, where `!=` compares the integers.
+# ---
+# a:   The truth values, one per lane, each true where nonzero.
+# b:   The truth values, one per lane, each true where nonzero.
+# ret: 1 where exactly one of a and b is true, else 0 in each lane
+#[intrinsic("spirv", "core", "OpLogicalNotEqual")]
+pub fun logical_not_equal_4(a: u32x4, b: u32x4) u32x4;
+
+# Whether every lane of a truth vector holds.
+# ---
+# v:   The truth values, one per lane, each true where nonzero.
+# ret: 1 where every lane is true, else 0
+#[intrinsic("spirv", "core", "OpAll")]
+pub fun all_2(v: u32x2) u32;
+
+# Whether any lane of a truth vector holds.
+# ---
+# v:   The truth values, one per lane, each true where nonzero.
+# ret: 1 where at least one lane is true, else 0
+#[intrinsic("spirv", "core", "OpAny")]
+pub fun any_2(v: u32x2) u32;
+
+# Whether every lane of a truth vector holds.
+# ---
+# v:   The truth values, one per lane, each true where nonzero.
+# ret: 1 where every lane is true, else 0
+#[intrinsic("spirv", "core", "OpAll")]
+pub fun all_3(v: u32x3) u32;
+
+# Whether any lane of a truth vector holds.
+# ---
+# v:   The truth values, one per lane, each true where nonzero.
+# ret: 1 where at least one lane is true, else 0
+#[intrinsic("spirv", "core", "OpAny")]
+pub fun any_3(v: u32x3) u32;
+
+# Whether every lane of a truth vector holds.
+# ---
+# v:   The truth values, one per lane, each true where nonzero.
+# ret: 1 where every lane is true, else 0
+#[intrinsic("spirv", "core", "OpAll")]
+pub fun all_4(v: u32x4) u32;
+
+# Whether any lane of a truth vector holds.
+# ---
+# v:   The truth values, one per lane, each true where nonzero.
+# ret: 1 where at least one lane is true, else 0
+#[intrinsic("spirv", "core", "OpAny")]
+pub fun any_4(v: u32x4) u32;
+
+# Choose between two values by a truth value.
+#
+# Both values are evaluated and nothing branches.
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# condition: A truth value, true where nonzero.
+# a:         The value where the condition is true.
+# b:         The value where it is false.
+# ret:       a where condition is true, else b
+#[intrinsic("spirv", "core", "OpSelect")]
+pub fun select_i16(condition: u32, a: i16, b: i16) i16;
+
+# Choose between two values by a truth value, per lane.
+#
+# Both values are evaluated and nothing branches. Each lane is chosen by its own lane of
+# the condition.
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# condition: The truth values, one per lane, each true where nonzero.
+# a:         The values where the condition is true, one per lane.
+# b:         The values where it is false, one per lane.
+# ret:       a where condition is true, else b, in each lane
+#[intrinsic("spirv", "core", "OpSelect")]
+pub fun select_i16_2(condition: u32x2, a: i16x2, b: i16x2) i16x2;
+
+# Choose between two values by a truth value, per lane.
+#
+# Both values are evaluated and nothing branches. Each lane is chosen by its own lane of
+# the condition.
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# condition: The truth values, one per lane, each true where nonzero.
+# a:         The values where the condition is true, one per lane.
+# b:         The values where it is false, one per lane.
+# ret:       a where condition is true, else b, in each lane
+#[intrinsic("spirv", "core", "OpSelect")]
+pub fun select_i16_3(condition: u32x3, a: i16x3, b: i16x3) i16x3;
+
+# Choose between two values by a truth value, per lane.
+#
+# Both values are evaluated and nothing branches. Each lane is chosen by its own lane of
+# the condition.
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# condition: The truth values, one per lane, each true where nonzero.
+# a:         The values where the condition is true, one per lane.
+# b:         The values where it is false, one per lane.
+# ret:       a where condition is true, else b, in each lane
+#[intrinsic("spirv", "core", "OpSelect")]
+pub fun select_i16_4(condition: u32x4, a: i16x4, b: i16x4) i16x4;
+
+# Choose between two values by a truth value.
+#
+# Both values are evaluated and nothing branches.
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# condition: A truth value, true where nonzero.
+# a:         The value where the condition is true.
+# b:         The value where it is false.
+# ret:       a where condition is true, else b
+#[intrinsic("spirv", "core", "OpSelect")]
+pub fun select_u16(condition: u32, a: u16, b: u16) u16;
+
+# Choose between two values by a truth value, per lane.
+#
+# Both values are evaluated and nothing branches. Each lane is chosen by its own lane of
+# the condition.
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# condition: The truth values, one per lane, each true where nonzero.
+# a:         The values where the condition is true, one per lane.
+# b:         The values where it is false, one per lane.
+# ret:       a where condition is true, else b, in each lane
+#[intrinsic("spirv", "core", "OpSelect")]
+pub fun select_u16_2(condition: u32x2, a: u16x2, b: u16x2) u16x2;
+
+# Choose between two values by a truth value, per lane.
+#
+# Both values are evaluated and nothing branches. Each lane is chosen by its own lane of
+# the condition.
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# condition: The truth values, one per lane, each true where nonzero.
+# a:         The values where the condition is true, one per lane.
+# b:         The values where it is false, one per lane.
+# ret:       a where condition is true, else b, in each lane
+#[intrinsic("spirv", "core", "OpSelect")]
+pub fun select_u16_3(condition: u32x3, a: u16x3, b: u16x3) u16x3;
+
+# Choose between two values by a truth value, per lane.
+#
+# Both values are evaluated and nothing branches. Each lane is chosen by its own lane of
+# the condition.
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# condition: The truth values, one per lane, each true where nonzero.
+# a:         The values where the condition is true, one per lane.
+# b:         The values where it is false, one per lane.
+# ret:       a where condition is true, else b, in each lane
+#[intrinsic("spirv", "core", "OpSelect")]
+pub fun select_u16_4(condition: u32x4, a: u16x4, b: u16x4) u16x4;
+
+# Choose between two values by a truth value.
+#
+# Both values are evaluated and nothing branches.
+# ---
+# condition: A truth value, true where nonzero.
+# a:         The value where the condition is true.
+# b:         The value where it is false.
+# ret:       a where condition is true, else b
+#[intrinsic("spirv", "core", "OpSelect")]
+pub fun select_i32(condition: u32, a: i32, b: i32) i32;
+
+# Choose between two values by a truth value, per lane.
+#
+# Both values are evaluated and nothing branches. Each lane is chosen by its own lane of
+# the condition.
+# ---
+# condition: The truth values, one per lane, each true where nonzero.
+# a:         The values where the condition is true, one per lane.
+# b:         The values where it is false, one per lane.
+# ret:       a where condition is true, else b, in each lane
+#[intrinsic("spirv", "core", "OpSelect")]
+pub fun select_i32_2(condition: u32x2, a: i32x2, b: i32x2) i32x2;
+
+# Choose between two values by a truth value, per lane.
+#
+# Both values are evaluated and nothing branches. Each lane is chosen by its own lane of
+# the condition.
+# ---
+# condition: The truth values, one per lane, each true where nonzero.
+# a:         The values where the condition is true, one per lane.
+# b:         The values where it is false, one per lane.
+# ret:       a where condition is true, else b, in each lane
+#[intrinsic("spirv", "core", "OpSelect")]
+pub fun select_i32_3(condition: u32x3, a: i32x3, b: i32x3) i32x3;
+
+# Choose between two values by a truth value, per lane.
+#
+# Both values are evaluated and nothing branches. Each lane is chosen by its own lane of
+# the condition.
+# ---
+# condition: The truth values, one per lane, each true where nonzero.
+# a:         The values where the condition is true, one per lane.
+# b:         The values where it is false, one per lane.
+# ret:       a where condition is true, else b, in each lane
+#[intrinsic("spirv", "core", "OpSelect")]
+pub fun select_i32_4(condition: u32x4, a: i32x4, b: i32x4) i32x4;
+
+# Choose between two values by a truth value.
+#
+# Both values are evaluated and nothing branches.
+# ---
+# condition: A truth value, true where nonzero.
+# a:         The value where the condition is true.
+# b:         The value where it is false.
+# ret:       a where condition is true, else b
+#[intrinsic("spirv", "core", "OpSelect")]
+pub fun select_u32(condition: u32, a: u32, b: u32) u32;
+
+# Choose between two values by a truth value, per lane.
+#
+# Both values are evaluated and nothing branches. Each lane is chosen by its own lane of
+# the condition.
+# ---
+# condition: The truth values, one per lane, each true where nonzero.
+# a:         The values where the condition is true, one per lane.
+# b:         The values where it is false, one per lane.
+# ret:       a where condition is true, else b, in each lane
+#[intrinsic("spirv", "core", "OpSelect")]
+pub fun select_u32_2(condition: u32x2, a: u32x2, b: u32x2) u32x2;
+
+# Choose between two values by a truth value, per lane.
+#
+# Both values are evaluated and nothing branches. Each lane is chosen by its own lane of
+# the condition.
+# ---
+# condition: The truth values, one per lane, each true where nonzero.
+# a:         The values where the condition is true, one per lane.
+# b:         The values where it is false, one per lane.
+# ret:       a where condition is true, else b, in each lane
+#[intrinsic("spirv", "core", "OpSelect")]
+pub fun select_u32_3(condition: u32x3, a: u32x3, b: u32x3) u32x3;
+
+# Choose between two values by a truth value, per lane.
+#
+# Both values are evaluated and nothing branches. Each lane is chosen by its own lane of
+# the condition.
+# ---
+# condition: The truth values, one per lane, each true where nonzero.
+# a:         The values where the condition is true, one per lane.
+# b:         The values where it is false, one per lane.
+# ret:       a where condition is true, else b, in each lane
+#[intrinsic("spirv", "core", "OpSelect")]
+pub fun select_u32_4(condition: u32x4, a: u32x4, b: u32x4) u32x4;
+
+# Choose between two values by a truth value.
+#
+# Both values are evaluated and nothing branches.
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# condition: A truth value, true where nonzero.
+# a:         The value where the condition is true.
+# b:         The value where it is false.
+# ret:       a where condition is true, else b
+#[intrinsic("spirv", "core", "OpSelect")]
+pub fun select_i64(condition: u32, a: i64, b: i64) i64;
+
+# Choose between two values by a truth value, per lane.
+#
+# Both values are evaluated and nothing branches. Each lane is chosen by its own lane of
+# the condition.
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# condition: The truth values, one per lane, each true where nonzero.
+# a:         The values where the condition is true, one per lane.
+# b:         The values where it is false, one per lane.
+# ret:       a where condition is true, else b, in each lane
+#[intrinsic("spirv", "core", "OpSelect")]
+pub fun select_i64_2(condition: u32x2, a: i64x2, b: i64x2) i64x2;
+
+# Choose between two values by a truth value, per lane.
+#
+# Both values are evaluated and nothing branches. Each lane is chosen by its own lane of
+# the condition.
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# condition: The truth values, one per lane, each true where nonzero.
+# a:         The values where the condition is true, one per lane.
+# b:         The values where it is false, one per lane.
+# ret:       a where condition is true, else b, in each lane
+#[intrinsic("spirv", "core", "OpSelect")]
+pub fun select_i64_3(condition: u32x3, a: i64x3, b: i64x3) i64x3;
+
+# Choose between two values by a truth value, per lane.
+#
+# Both values are evaluated and nothing branches. Each lane is chosen by its own lane of
+# the condition.
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# condition: The truth values, one per lane, each true where nonzero.
+# a:         The values where the condition is true, one per lane.
+# b:         The values where it is false, one per lane.
+# ret:       a where condition is true, else b, in each lane
+#[intrinsic("spirv", "core", "OpSelect")]
+pub fun select_i64_4(condition: u32x4, a: i64x4, b: i64x4) i64x4;
+
+# Choose between two values by a truth value.
+#
+# Both values are evaluated and nothing branches.
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# condition: A truth value, true where nonzero.
+# a:         The value where the condition is true.
+# b:         The value where it is false.
+# ret:       a where condition is true, else b
+#[intrinsic("spirv", "core", "OpSelect")]
+pub fun select_u64(condition: u32, a: u64, b: u64) u64;
+
+# Choose between two values by a truth value, per lane.
+#
+# Both values are evaluated and nothing branches. Each lane is chosen by its own lane of
+# the condition.
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# condition: The truth values, one per lane, each true where nonzero.
+# a:         The values where the condition is true, one per lane.
+# b:         The values where it is false, one per lane.
+# ret:       a where condition is true, else b, in each lane
+#[intrinsic("spirv", "core", "OpSelect")]
+pub fun select_u64_2(condition: u32x2, a: u64x2, b: u64x2) u64x2;
+
+# Choose between two values by a truth value, per lane.
+#
+# Both values are evaluated and nothing branches. Each lane is chosen by its own lane of
+# the condition.
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# condition: The truth values, one per lane, each true where nonzero.
+# a:         The values where the condition is true, one per lane.
+# b:         The values where it is false, one per lane.
+# ret:       a where condition is true, else b, in each lane
+#[intrinsic("spirv", "core", "OpSelect")]
+pub fun select_u64_3(condition: u32x3, a: u64x3, b: u64x3) u64x3;
+
+# Choose between two values by a truth value, per lane.
+#
+# Both values are evaluated and nothing branches. Each lane is chosen by its own lane of
+# the condition.
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# condition: The truth values, one per lane, each true where nonzero.
+# a:         The values where the condition is true, one per lane.
+# b:         The values where it is false, one per lane.
+# ret:       a where condition is true, else b, in each lane
+#[intrinsic("spirv", "core", "OpSelect")]
+pub fun select_u64_4(condition: u32x4, a: u64x4, b: u64x4) u64x4;
+
+# Choose between two values by a truth value.
+#
+# Both values are evaluated and nothing branches.
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# condition: A truth value, true where nonzero.
+# a:         The value where the condition is true.
+# b:         The value where it is false.
+# ret:       a where condition is true, else b
+#[intrinsic("spirv", "core", "OpSelect")]
+pub fun select_f16(condition: u32, a: f16, b: f16) f16;
+
+# Choose between two values by a truth value, per lane.
+#
+# Both values are evaluated and nothing branches. Each lane is chosen by its own lane of
+# the condition.
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# condition: The truth values, one per lane, each true where nonzero.
+# a:         The values where the condition is true, one per lane.
+# b:         The values where it is false, one per lane.
+# ret:       a where condition is true, else b, in each lane
+#[intrinsic("spirv", "core", "OpSelect")]
+pub fun select_f16_2(condition: u32x2, a: f16x2, b: f16x2) f16x2;
+
+# Choose between two values by a truth value, per lane.
+#
+# Both values are evaluated and nothing branches. Each lane is chosen by its own lane of
+# the condition.
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# condition: The truth values, one per lane, each true where nonzero.
+# a:         The values where the condition is true, one per lane.
+# b:         The values where it is false, one per lane.
+# ret:       a where condition is true, else b, in each lane
+#[intrinsic("spirv", "core", "OpSelect")]
+pub fun select_f16_3(condition: u32x3, a: f16x3, b: f16x3) f16x3;
+
+# Choose between two values by a truth value, per lane.
+#
+# Both values are evaluated and nothing branches. Each lane is chosen by its own lane of
+# the condition.
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# condition: The truth values, one per lane, each true where nonzero.
+# a:         The values where the condition is true, one per lane.
+# b:         The values where it is false, one per lane.
+# ret:       a where condition is true, else b, in each lane
+#[intrinsic("spirv", "core", "OpSelect")]
+pub fun select_f16_4(condition: u32x4, a: f16x4, b: f16x4) f16x4;
+
+# Choose between two values by a truth value.
+#
+# Both values are evaluated and nothing branches.
+# ---
+# condition: A truth value, true where nonzero.
+# a:         The value where the condition is true.
+# b:         The value where it is false.
+# ret:       a where condition is true, else b
+#[intrinsic("spirv", "core", "OpSelect")]
+pub fun select_f32(condition: u32, a: f32, b: f32) f32;
+
+# Choose between two values by a truth value, per lane.
+#
+# Both values are evaluated and nothing branches. Each lane is chosen by its own lane of
+# the condition.
+# ---
+# condition: The truth values, one per lane, each true where nonzero.
+# a:         The values where the condition is true, one per lane.
+# b:         The values where it is false, one per lane.
+# ret:       a where condition is true, else b, in each lane
+#[intrinsic("spirv", "core", "OpSelect")]
+pub fun select_f32_2(condition: u32x2, a: f32x2, b: f32x2) f32x2;
+
+# Choose between two values by a truth value, per lane.
+#
+# Both values are evaluated and nothing branches. Each lane is chosen by its own lane of
+# the condition.
+# ---
+# condition: The truth values, one per lane, each true where nonzero.
+# a:         The values where the condition is true, one per lane.
+# b:         The values where it is false, one per lane.
+# ret:       a where condition is true, else b, in each lane
+#[intrinsic("spirv", "core", "OpSelect")]
+pub fun select_f32_3(condition: u32x3, a: f32x3, b: f32x3) f32x3;
+
+# Choose between two values by a truth value, per lane.
+#
+# Both values are evaluated and nothing branches. Each lane is chosen by its own lane of
+# the condition.
+# ---
+# condition: The truth values, one per lane, each true where nonzero.
+# a:         The values where the condition is true, one per lane.
+# b:         The values where it is false, one per lane.
+# ret:       a where condition is true, else b, in each lane
+#[intrinsic("spirv", "core", "OpSelect")]
+pub fun select_f32_4(condition: u32x4, a: f32x4, b: f32x4) f32x4;
+
+# Choose between two values by a truth value.
+#
+# Both values are evaluated and nothing branches.
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# condition: A truth value, true where nonzero.
+# a:         The value where the condition is true.
+# b:         The value where it is false.
+# ret:       a where condition is true, else b
+#[intrinsic("spirv", "core", "OpSelect")]
+pub fun select_f64(condition: u32, a: f64, b: f64) f64;
+
+# Choose between two values by a truth value, per lane.
+#
+# Both values are evaluated and nothing branches. Each lane is chosen by its own lane of
+# the condition.
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# condition: The truth values, one per lane, each true where nonzero.
+# a:         The values where the condition is true, one per lane.
+# b:         The values where it is false, one per lane.
+# ret:       a where condition is true, else b, in each lane
+#[intrinsic("spirv", "core", "OpSelect")]
+pub fun select_f64_2(condition: u32x2, a: f64x2, b: f64x2) f64x2;
+
+# Choose between two values by a truth value, per lane.
+#
+# Both values are evaluated and nothing branches. Each lane is chosen by its own lane of
+# the condition.
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# condition: The truth values, one per lane, each true where nonzero.
+# a:         The values where the condition is true, one per lane.
+# b:         The values where it is false, one per lane.
+# ret:       a where condition is true, else b, in each lane
+#[intrinsic("spirv", "core", "OpSelect")]
+pub fun select_f64_3(condition: u32x3, a: f64x3, b: f64x3) f64x3;
+
+# Choose between two values by a truth value, per lane.
+#
+# Both values are evaluated and nothing branches. Each lane is chosen by its own lane of
+# the condition.
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# condition: The truth values, one per lane, each true where nonzero.
+# a:         The values where the condition is true, one per lane.
+# b:         The values where it is false, one per lane.
+# ret:       a where condition is true, else b, in each lane
+#[intrinsic("spirv", "core", "OpSelect")]
+pub fun select_f64_4(condition: u32x4, a: f64x4, b: f64x4) f64x4;

@@ -114,6 +114,7 @@ BINARY = [
     ("min",   "FMin",  ["a", "b"],    "Smaller of two values.",               "a where a < b, else b"),
     ("max",   "FMax",  ["a", "b"],    "Larger of two values.",                "a where a > b, else b"),
     ("step",  "Step",  ["edge", "x"], "A step from 0 to 1 at an edge.",       "0.0 below edge, else 1.0"),
+    ("rem",   "OpFRem", ["a", "b"],   "Remainder of a division, as the driver computes it.", "a - b * trunc(a / b), with the sign of a", "core"),
 ]
 
 TERNARY = [
@@ -153,6 +154,22 @@ PARAM_DOC_BY_FUN = {
     "smooth_step":  {"lo": "The lower edge.", "hi": "The upper edge.", "x": "The value."},
     "step":         {"x": "The value."},
     "fma":          {"a": "The first factor.", "b": "The second factor."},
+    "rem":          {"a": "The dividend.", "b": "The divisor."},
+}
+
+# lines between an entry's summary and its parameters, saying what an operator does not give
+NOTE_BY_FUN = {
+    "rem": ["Not the `%` operator: a float `%` is computed exactly by code the compiler",
+            "provides, and this is the core `OpFRem`, to whatever precision the driver gives."],
+    "reverse_bits": ["The core `OpBitReverse`, which no operator writes."],
+    "insert_bits": ["The core `OpBitFieldInsert`, which no operator writes. The offset and the",
+                    "count must leave the field inside the 32 bits, or the result is undefined."],
+    "extract_bits": ["The core `OpBitFieldSExtract` on a signed type, which fills the high bits with",
+                     "the field's top bit, and `OpBitFieldUExtract` on an unsigned one, which fills",
+                     "them with 0. The offset and the count must leave the field inside the 32 bits,",
+                     "or the result is undefined."],
+    "add_carry": ["The core `OpIAddCarry`: `+` wraps and gives no carry."],
+    "sub_borrow": ["The core `OpISubBorrow`: `-` wraps and gives no borrow."],
 }
 
 PARAM_DOC = {
@@ -166,6 +183,9 @@ PARAM_DOC = {
     "lo":   "The lower bound.",
     "hi":   "The upper bound.",
     "edge": "Where the step happens.",
+    "insert": "Bits to place in the field, taken from bit 0 up.",
+    "offset": "Index of the field's lowest bit. A scalar at every width.",
+    "count":  "Number of bits in the field. A scalar at every width.",
 }
 
 
@@ -173,21 +193,27 @@ def widths():
     return [("", "f32", "scalar"), ("_2", "f32x2", "2"), ("_3", "f32x3", "3"), ("_4", "f32x4", "4")]
 
 
-def decl(name, suffix, glsl, params, ty, summary, ret, per_lane, sset="GLSL.std.450"):
-    args = ", ".join(f"{p}: {ty}" for p in params)
+def decl(name, suffix, glsl, params, ty, summary, ret, per_lane, sset="GLSL.std.450", rty=None):
+    # a parameter is a name, of the entry's type, or a (name, type) pair
+    params = [p if isinstance(p, tuple) else (p, ty) for p in params]
+    args = ", ".join(f"{p}: {t}" for p, t in params)
     lines = [f"# {summary}"]
     if per_lane:
         lines[0] = f"# {summary[:-1]}, per lane."
+    if name in NOTE_BY_FUN:
+        lines += ["#"] + [f"# {line}" for line in NOTE_BY_FUN[name]]
     lines.append("# ---")
-    for p in params:
+    width = max(4, *(len(p) + 1 for p, _ in params))
+    for p, _ in params:
         doc = PARAM_DOC_BY_FUN.get(name, {}).get(p, PARAM_DOC.get(p, "The operand."))
         if per_lane and doc.startswith("The ") and not doc.endswith("s."):
             doc = doc[:-1] + "s, one per lane."
-        lines.append(f"# {p}:{' ' * (4 - len(p))}{doc}")
+        lines.append(f"# {p + ':':<{width}} {doc}")
     tail = ret + (" per lane" if per_lane else "")
-    lines.append(f"# ret: {tail[0].lower()}{tail[1:]}" if tail[0].isupper() else f"# ret: {tail}")
+    tail = f"{tail[0].lower()}{tail[1:]}" if tail[0].isupper() else tail
+    lines.append(f"# {'ret:':<{width}} {tail}")
     lines.append(f'#[intrinsic("spirv", "{sset}", "{glsl}")]')
-    lines.append(f"pub fun {name}{suffix}({args}) {ty};")
+    lines.append(f"pub fun {name}{suffix}({args}) {rty or ty};")
     return "\n".join(lines)
 
 
@@ -246,8 +272,8 @@ for suffix, ty, label in widths():
         out.append(f"\n# ---------- per lane of an {ty} ----------\n")
     per_lane = label != "scalar"
     for group in (UNARY, BINARY, TERNARY):
-        for name, glsl, params, summary, ret in group:
-            out.append(decl(name, suffix, glsl, params, ty, summary, ret, per_lane))
+        for name, glsl, params, summary, ret, *iset in group:
+            out.append(decl(name, suffix, glsl, params, ty, summary, ret, per_lane, *iset))
             out.append("")
     for name, glsl, param, pty, summary, pdoc, ret in SPLIT:
         out.append(split(name, suffix, glsl, param, pty, ty, summary, pdoc, ret, per_lane))
@@ -340,6 +366,19 @@ for suffix, ty, label in widths():
     out.append("\n".join(lines))
     out.append("")
 
+    lines = ["# Scale a vector by a scalar.",
+             "#",
+             "# The core `OpVectorTimesScalar`. The `*` operator multiplies a vector by a vector",
+             "# of one shape, so it scales only once the scalar is built into a vector.",
+             "# ---",
+             "# v:   The vector.",
+             "# s:   The factor every lane is multiplied by. A scalar at every width.",
+             "# ret: v with each lane multiplied by s",
+             '#[intrinsic("spirv", "core", "OpVectorTimesScalar")]',
+             f"pub fun scale{suffix}(v: {ty}, s: f32) {ty};"]
+    out.append("\n".join(lines))
+    out.append("")
+
     if suffix == "_3":
         lines = ["# Cross product.",
                  "#",
@@ -370,6 +409,26 @@ out.append('''
 # `FindSMsb` and `FindUMsb` on 32-bit integers alone. The count of set bits is the core
 # `OpBitCount`, which no operator writes, and is 32-bit only too: Vulkan holds its operand
 # to 32 bits unless the device enables `maintenance9`, which no Vulkan version guarantees.
+# The same rule holds the other core bit rows, `reverse_bits`, `insert_bits` and
+# `extract_bits`, to 32 bits.
+#
+# `add_carry` and `sub_borrow` are the core `OpIAddCarry` and `OpISubBorrow`, over unsigned
+# integers only, as SPIR-V defines them. Each returns its two results as a record of two
+# members of the operands' type.
+
+# the result of an `add_carry`: the sum wrapped to the operands' width, and 1 in each lane
+# where the sum overflowed, else 0
+pub rec AddCarry[T] {
+    sum:   T;
+    carry: T;
+}
+
+# the result of a `sub_borrow`: the difference wrapped to the operands' width, and 1 in
+# each lane where b was larger than a, else 0
+pub rec SubBorrow[T] {
+    difference: T;
+    borrow:     T;
+}
 ''')
 
 # name, instruction for a signed and an unsigned type (absent where the signedness has
@@ -386,6 +445,18 @@ INTEGER = [
     ("find_lsb", {"i": "FindILsb", "u": "FindILsb"},  ["x"],             "Index of the least significant set bit.", "the bit index, or every bit set (-1) at zero", (32,)),
     ("find_msb", {"i": "FindSMsb", "u": "FindUMsb"},  ["x"],             "Index of the most significant bit that differs from the sign.", "the bit index, or every bit set (-1) where there is none", (32,)),
     ("count_ones", {"i": "OpBitCount", "u": "OpBitCount"}, ["x"],        "Number of set bits.",            "how many bits of x are 1", (32,), "core"),
+    ("reverse_bits", {"i": "OpBitReverse", "u": "OpBitReverse"}, ["x"],  "Reverse the order of the bits.", "x with bit n moved to bit 31 - n", (32,), "core"),
+    ("insert_bits", {"i": "OpBitFieldInsert", "u": "OpBitFieldInsert"}, ["x", "insert", ("offset", "u32"), ("count", "u32")],
+     "Replace a field of bits.", "x with its count bits from offset replaced by the low bits of insert", (32,), "core"),
+    ("extract_bits", {"i": "OpBitFieldSExtract", "u": "OpBitFieldUExtract"}, ["x", ("offset", "u32"), ("count", "u32")],
+     "Read a field of bits.", "the count bits of x from offset, moved down to bit 0", (32,), "core"),
+]
+
+# name, instruction, the record it returns, doc summary, return description. unsigned only,
+# as SPIR-V defines both
+CARRY = [
+    ("add_carry",  "OpIAddCarry",  "AddCarry",  "Add two values, keeping the carry.",       "the wrapped sum and the carry"),
+    ("sub_borrow", "OpISubBorrow", "SubBorrow", "Subtract two values, keeping the borrow.", "the wrapped difference and the borrow"),
 ]
 
 for bits in ANY_WIDTH:
@@ -397,8 +468,11 @@ for bits in ANY_WIDTH:
             per_lane = label != "scalar"
             for name, glsl, params, summary, ret, takes, *iset in INTEGER:
                 if sign in glsl and bits in takes:
-                    out.append(decl(f"{name}_{ity}", suffix, glsl[sign], params, ty, summary, ret, per_lane, *iset))
+                    out.append(decl(name, f"_{ity}{suffix}", glsl[sign], params, ty, summary, ret, per_lane, *iset))
                     out.append("")
+            for name, op, record, summary, ret in CARRY if sign == "u" else ():
+                out.append(decl(name, f"_{ity}{suffix}", op, ["a", "b"], ty, summary, ret, per_lane, "core", f"{record}[{ty}]"))
+                out.append("")
 
 text = "\n".join(out)
 
@@ -437,7 +511,8 @@ var s:  f32;
 var out_colour: f32x4;
 '''
 
-SIGNATURE = re.compile(r"pub fun (\w+)\(([^)]*)\) (\w+);")
+SIGNATURE = re.compile(r"pub fun (\w+)\(([^)]*)\) ([\w\[\]]+);")
+RECORD = re.compile(r"pub rec (\w+)\[T\] \{([^}]*)\}")
 
 
 def lanes(ty):
@@ -468,6 +543,7 @@ def conform(library):
         options = values[ty]
         return options[i % len(options)]
 
+    members = {name: re.findall(r"(\w+):\s*T;", fields) for name, fields in RECORD.findall(library)}
     body = []
     for n, (fun, params, ret) in enumerate(SIGNATURE.findall(library)):
         args = []
@@ -478,10 +554,14 @@ def conform(library):
                 args.append(f"?p{n}")
             else:
                 args.append(value(ty, i))
-        body.append(f"    val r{n}: {ret} = sh.{fun}({', '.join(args)});")
-        scalar, width = lanes(ret)
-        lane = f"r{n}" if width == 1 else f"r{n}[0]"
-        body.append(f"    total = total + {lane if scalar == 'f32' else lane + '::f32'};")
+        record = re.fullmatch(r"(\w+)\[(\w+)\]", ret)
+        body.append(f"    val r{n}: {'sh.' + ret if record else ret} = sh.{fun}({', '.join(args)});")
+        # a record result adds each of its members, so neither can be eliminated
+        places = [(f"r{n}.{m}", record.group(2)) for m in members[record.group(1)]] if record else [(f"r{n}", ret)]
+        for place, ty in places:
+            scalar, width = lanes(ty)
+            lane = place if width == 1 else f"{place}[0]"
+            body.append(f"    total = total + {lane if scalar == 'f32' else lane + '::f32'};")
     return "\n".join([CONFORM_HEADER, "#[gpu.stage(\"fragment\")]", "fun frag_main() {",
                       *prelude, "    var total: f32 = 0.0;", *body,
                       "    out_colour = f32x4{total, total, total, total};", "}", ""])
