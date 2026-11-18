@@ -59,7 +59,8 @@ Beside the implicit-lod samples it declares the explicit-lod ones a compute stag
 samples with (`sample_lod_*`, `sample_grad_*`), the depth images and their comparisons
 (`sample_compare_*`, `sample_compare_lod_*`, `gather_compare_*`), gathers
 (`gather_*`), integer-coordinate fetches (`fetch_*`) and the size and level queries
-(`size_*`, `levels_*`). A multisampled image is never sampled and is not declared, and
+(`size_*`, `levels_*`), and the image a combined handle is built over (`image_of_*`).
+A multisampled image is never sampled and is not declared, and
 the target refuses the `Rect` dimensionality by naming the operand.
 
 ### Storage images and texel buffers
@@ -148,7 +149,8 @@ one a bodyless `#[intrinsic]` declaration like the maths:
 
 - `shader.sync`: the `SCOPE_*` and `SEMANTICS_*` operand constants,
   `control_barrier` and `memory_barrier`, and the wrappers `workgroup_barrier`,
-  `storage_barrier`, `image_barrier` and `subgroup_barrier`.
+  `storage_barrier`, `image_barrier` and `subgroup_barrier`, and `terminate_invocation`,
+  which ends a fragment's invocation and the block its call stands in.
 - `shader.atomic`: every SPIR-V atomic over `u32`, `i32`, `u64` and `i64`, and the
   load, store, exchange, add, min and max over `f16`, `f32` and `f64`.
 - `shader.subgroup`: the `OpGroupNonUniform*` families, the `GROUP_*` operations and

@@ -143,6 +143,44 @@ pub fun combine_depth_cube(t: DepthTextureCube, s: Sampler) DepthSamplerCube;
 #[intrinsic("spirv", "core", "OpSampledImage")]
 pub fun combine_depth_cube_array(t: DepthTextureCubeArray, s: Sampler) DepthSamplerCubeArray;
 
+# the image a combined handle is built over, the inverse of a combine, for the queries and
+# fetches that read an image with no sampler
+#[intrinsic("spirv", "core", "OpImage")]
+pub fun image_of_1d(s: Sampler1D) Texture1D;
+
+#[intrinsic("spirv", "core", "OpImage")]
+pub fun image_of_2d(s: Sampler2D) Texture2D;
+
+#[intrinsic("spirv", "core", "OpImage")]
+pub fun image_of_3d(s: Sampler3D) Texture3D;
+
+#[intrinsic("spirv", "core", "OpImage")]
+pub fun image_of_cube(s: SamplerCube) TextureCube;
+
+#[intrinsic("spirv", "core", "OpImage")]
+pub fun image_of_2d_array(s: Sampler2DArray) Texture2DArray;
+
+#[intrinsic("spirv", "core", "OpImage")]
+pub fun image_of_cube_array(s: SamplerCubeArray) TextureCubeArray;
+
+#[intrinsic("spirv", "core", "OpImage")]
+pub fun image_of_2d_i(s: ISampler2D) ITexture2D;
+
+#[intrinsic("spirv", "core", "OpImage")]
+pub fun image_of_2d_u(s: USampler2D) UTexture2D;
+
+#[intrinsic("spirv", "core", "OpImage")]
+pub fun image_of_depth_2d(s: DepthSampler2D) DepthTexture2D;
+
+#[intrinsic("spirv", "core", "OpImage")]
+pub fun image_of_depth_2d_array(s: DepthSampler2DArray) DepthTexture2DArray;
+
+#[intrinsic("spirv", "core", "OpImage")]
+pub fun image_of_depth_cube(s: DepthSamplerCube) DepthTextureCube;
+
+#[intrinsic("spirv", "core", "OpImage")]
+pub fun image_of_depth_cube_array(s: DepthSamplerCubeArray) DepthTextureCubeArray;
+
 # sample a combined handle at a coordinate, with the level of detail derived from
 # the fragment stage's own derivatives.
 #

@@ -69,6 +69,15 @@ pub fun control_barrier(execution: u32, memory: u32, semantics: u32);
 #[intrinsic("spirv", "core", "OpMemoryBarrier")]
 pub fun memory_barrier(memory: u32, semantics: u32);
 
+# End the invocation: a fragment stage that discards its fragment, which writes nothing.
+#
+# GLSL's `terminateInvocation()`. The call ends the block it stands in, so nothing after
+# it in the same block runs or is compiled: call it under a condition. A fragment whose
+# neighbours still take derivatives from it is demoted to a helper instead, with
+# `OpDemoteToHelperInvocation`.
+#[intrinsic("spirv", "core", "OpTerminateInvocation")]
+pub fun terminate_invocation();
+
 # Wait for the whole workgroup, with its workgroup memory written before the barrier
 # visible to every invocation after it.
 #

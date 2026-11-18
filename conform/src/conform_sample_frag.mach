@@ -8,6 +8,7 @@
 # which a compute stage reaches and an implicit-lod one cannot. Every result is
 # written to an output or a buffer so no call can be eliminated.
 
+use sy:  shader.sync;
 use tex: shader.texture;
 
 #[gpu.sampler(0, 0)]
@@ -155,6 +156,21 @@ fun frag_query() {
         + tex.levels_depth_2d(depth_tex) + tex.levels_depth_2d_array(depth_layers_tex)
         + tex.levels_depth_cube(depth_cube_tex) + tex.levels_depth_cube_array(depth_cubes_tex);
     out_size = i32x4{s2[0] + s3[0], s2[1] + s3[1], s3[2], levels + tex.size_1d(line_tex, 0)};
+}
+
+# the images the combined handles are built over, each queried, and a fragment that ends
+# itself under a condition
+#[gpu.stage("fragment")]
+fun frag_image_of() {
+    if (in_depth < 0.0) {
+        sy.terminate_invocation();
+    }
+    out_size = i32x4{tex.levels_1d(tex.image_of_1d(ramp)) + tex.levels_2d(tex.image_of_2d(albedo))
+        + tex.levels_3d(tex.image_of_3d(volume)) + tex.levels_cube(tex.image_of_cube(env))
+        + tex.levels_2d_array(tex.image_of_2d_array(layers)) + tex.levels_cube_array(tex.image_of_cube_array(envs)),
+        tex.levels_2d_i(tex.image_of_2d_i(signed)) + tex.levels_2d_u(tex.image_of_2d_u(ids)),
+        tex.levels_depth_2d(tex.image_of_depth_2d(shadow_2d)) + tex.levels_depth_2d_array(tex.image_of_depth_2d_array(shadow_2d_array)),
+        tex.levels_depth_cube(tex.image_of_depth_cube(shadow_cube)) + tex.levels_depth_cube_array(tex.image_of_depth_cube_array(shadow_cube_array))};
 }
 
 #[gpu.stage("fragment")]
