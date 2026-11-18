@@ -4,7 +4,7 @@
 # `shader.math`. `<`, `<=`, `==` and `!=` are instructions of their own, and `>` and `>=`
 # are the less-than instructions with their operands exchanged, so the compiler keeps those
 # to the operators. What is here is the rest: the greater-than instructions themselves, the
-# float relations no operator gives, and `OpIsNan`.
+# float relations no operator gives, and `OpIsNan` and `OpIsInf`.
 #
 # ONE OR ZERO PER LANE. A comparison here returns a `u32`, or a `u32` vector of its
 # operands' lane count, holding 1 where the relation holds and 0 where it does not. A
@@ -577,6 +577,15 @@ pub fun unordered_greater_equal_f16(a: f16, b: f16) u32;
 #[intrinsic("spirv", "core", "OpIsNan")]
 pub fun is_nan_f16(x: f16) u32;
 
+# Whether a value is an infinity.
+#
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# x:   The value.
+# ret: 1 where x is an infinity, else 0
+#[intrinsic("spirv", "core", "OpIsInf")]
+pub fun is_inf_f16(x: f16) u32;
+
 # Whether one value is greater than another, per lane.
 #
 # Ordered, as the operator is: 0 where either operand is NaN.
@@ -673,6 +682,15 @@ pub fun unordered_greater_equal_f16_2(a: f16x2, b: f16x2) u32x2;
 # ret: 1 where x is NaN, else 0 in each lane
 #[intrinsic("spirv", "core", "OpIsNan")]
 pub fun is_nan_f16_2(x: f16x2) u32x2;
+
+# Whether a value is an infinity, per lane.
+#
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# x:   The values, one per lane.
+# ret: 1 where x is an infinity, else 0 in each lane
+#[intrinsic("spirv", "core", "OpIsInf")]
+pub fun is_inf_f16_2(x: f16x2) u32x2;
 
 # Whether one value is greater than another, per lane.
 #
@@ -771,6 +789,15 @@ pub fun unordered_greater_equal_f16_3(a: f16x3, b: f16x3) u32x3;
 #[intrinsic("spirv", "core", "OpIsNan")]
 pub fun is_nan_f16_3(x: f16x3) u32x3;
 
+# Whether a value is an infinity, per lane.
+#
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# x:   The values, one per lane.
+# ret: 1 where x is an infinity, else 0 in each lane
+#[intrinsic("spirv", "core", "OpIsInf")]
+pub fun is_inf_f16_3(x: f16x3) u32x3;
+
 # Whether one value is greater than another, per lane.
 #
 # Ordered, as the operator is: 0 where either operand is NaN.
@@ -868,6 +895,15 @@ pub fun unordered_greater_equal_f16_4(a: f16x4, b: f16x4) u32x4;
 #[intrinsic("spirv", "core", "OpIsNan")]
 pub fun is_nan_f16_4(x: f16x4) u32x4;
 
+# Whether a value is an infinity, per lane.
+#
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# x:   The values, one per lane.
+# ret: 1 where x is an infinity, else 0 in each lane
+#[intrinsic("spirv", "core", "OpIsInf")]
+pub fun is_inf_f16_4(x: f16x4) u32x4;
+
 # Whether one value is greater than another.
 #
 # Ordered, as the operator is: 0 where either operand is NaN.
@@ -954,6 +990,13 @@ pub fun unordered_greater_equal_f32(a: f32, b: f32) u32;
 # ret: 1 where x is NaN, else 0
 #[intrinsic("spirv", "core", "OpIsNan")]
 pub fun is_nan_f32(x: f32) u32;
+
+# Whether a value is an infinity.
+# ---
+# x:   The value.
+# ret: 1 where x is an infinity, else 0
+#[intrinsic("spirv", "core", "OpIsInf")]
+pub fun is_inf_f32(x: f32) u32;
 
 # Whether one value is greater than another, per lane.
 #
@@ -1042,6 +1085,13 @@ pub fun unordered_greater_equal_f32_2(a: f32x2, b: f32x2) u32x2;
 #[intrinsic("spirv", "core", "OpIsNan")]
 pub fun is_nan_f32_2(x: f32x2) u32x2;
 
+# Whether a value is an infinity, per lane.
+# ---
+# x:   The values, one per lane.
+# ret: 1 where x is an infinity, else 0 in each lane
+#[intrinsic("spirv", "core", "OpIsInf")]
+pub fun is_inf_f32_2(x: f32x2) u32x2;
+
 # Whether one value is greater than another, per lane.
 #
 # Ordered, as the operator is: 0 where either operand is NaN.
@@ -1129,6 +1179,13 @@ pub fun unordered_greater_equal_f32_3(a: f32x3, b: f32x3) u32x3;
 #[intrinsic("spirv", "core", "OpIsNan")]
 pub fun is_nan_f32_3(x: f32x3) u32x3;
 
+# Whether a value is an infinity, per lane.
+# ---
+# x:   The values, one per lane.
+# ret: 1 where x is an infinity, else 0 in each lane
+#[intrinsic("spirv", "core", "OpIsInf")]
+pub fun is_inf_f32_3(x: f32x3) u32x3;
+
 # Whether one value is greater than another, per lane.
 #
 # Ordered, as the operator is: 0 where either operand is NaN.
@@ -1215,6 +1272,13 @@ pub fun unordered_greater_equal_f32_4(a: f32x4, b: f32x4) u32x4;
 # ret: 1 where x is NaN, else 0 in each lane
 #[intrinsic("spirv", "core", "OpIsNan")]
 pub fun is_nan_f32_4(x: f32x4) u32x4;
+
+# Whether a value is an infinity, per lane.
+# ---
+# x:   The values, one per lane.
+# ret: 1 where x is an infinity, else 0 in each lane
+#[intrinsic("spirv", "core", "OpIsInf")]
+pub fun is_inf_f32_4(x: f32x4) u32x4;
 
 # Whether one value is greater than another.
 #
@@ -1313,6 +1377,15 @@ pub fun unordered_greater_equal_f64(a: f64, b: f64) u32;
 #[intrinsic("spirv", "core", "OpIsNan")]
 pub fun is_nan_f64(x: f64) u32;
 
+# Whether a value is an infinity.
+#
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# x:   The value.
+# ret: 1 where x is an infinity, else 0
+#[intrinsic("spirv", "core", "OpIsInf")]
+pub fun is_inf_f64(x: f64) u32;
+
 # Whether one value is greater than another, per lane.
 #
 # Ordered, as the operator is: 0 where either operand is NaN.
@@ -1409,6 +1482,15 @@ pub fun unordered_greater_equal_f64_2(a: f64x2, b: f64x2) u32x2;
 # ret: 1 where x is NaN, else 0 in each lane
 #[intrinsic("spirv", "core", "OpIsNan")]
 pub fun is_nan_f64_2(x: f64x2) u32x2;
+
+# Whether a value is an infinity, per lane.
+#
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# x:   The values, one per lane.
+# ret: 1 where x is an infinity, else 0 in each lane
+#[intrinsic("spirv", "core", "OpIsInf")]
+pub fun is_inf_f64_2(x: f64x2) u32x2;
 
 # Whether one value is greater than another, per lane.
 #
@@ -1507,6 +1589,15 @@ pub fun unordered_greater_equal_f64_3(a: f64x3, b: f64x3) u32x3;
 #[intrinsic("spirv", "core", "OpIsNan")]
 pub fun is_nan_f64_3(x: f64x3) u32x3;
 
+# Whether a value is an infinity, per lane.
+#
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# x:   The values, one per lane.
+# ret: 1 where x is an infinity, else 0 in each lane
+#[intrinsic("spirv", "core", "OpIsInf")]
+pub fun is_inf_f64_3(x: f64x3) u32x3;
+
 # Whether one value is greater than another, per lane.
 #
 # Ordered, as the operator is: 0 where either operand is NaN.
@@ -1603,3 +1694,12 @@ pub fun unordered_greater_equal_f64_4(a: f64x4, b: f64x4) u32x4;
 # ret: 1 where x is NaN, else 0 in each lane
 #[intrinsic("spirv", "core", "OpIsNan")]
 pub fun is_nan_f64_4(x: f64x4) u32x4;
+
+# Whether a value is an infinity, per lane.
+#
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# x:   The values, one per lane.
+# ret: 1 where x is an infinity, else 0 in each lane
+#[intrinsic("spirv", "core", "OpIsInf")]
+pub fun is_inf_f64_4(x: f64x4) u32x4;

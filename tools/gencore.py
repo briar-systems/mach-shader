@@ -104,7 +104,7 @@ COMPARE_HEADER = '''# Shader-side comparisons: the relations no operator writes,
 # `shader.math`. `<`, `<=`, `==` and `!=` are instructions of their own, and `>` and `>=`
 # are the less-than instructions with their operands exchanged, so the compiler keeps those
 # to the operators. What is here is the rest: the greater-than instructions themselves, the
-# float relations no operator gives, and `OpIsNan`.
+# float relations no operator gives, and `OpIsNan` and `OpIsInf`.
 #
 # ONE OR ZERO PER LANE. A comparison here returns a `u32`, or a `u32` vector of its
 # operands' lane count, holding 1 where the relation holds and 0 where it does not. A
@@ -157,6 +157,7 @@ COMPARE = [
 # name, instruction by component kind, summary, return description
 CLASSIFY = [
     ("is_nan", {"f": "OpIsNan"}, "Whether a value is NaN.", "1 where x is NaN, else 0"),
+    ("is_inf", {"f": "OpIsInf"}, "Whether a value is an infinity.", "1 where x is an infinity, else 0"),
 ]
 
 
