@@ -9,7 +9,7 @@
 [project]
 id      = "conform"
 version = "0.1.0"
-mach    = ">=6, <8"
+mach    = "^7"
 src     = "src"
 work    = "out/{profile.name}"
 
