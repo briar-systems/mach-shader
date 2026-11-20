@@ -249,7 +249,9 @@ any of these is emitted as a call. On any other target, a program that calls one
 fails to link:
 
 ```
-error: undefined symbol: _M6shader4mathN4sqrt
+error[link.input_invalid] the link refers to symbols nothing defines (src/main.mach)
+  note nothing defines `shader.math.sqrt`
+  note src/main.mach refers to `shader.math.sqrt`
 ```
 
 That is deliberate. The alternative - native bodies, so the same source also runs
@@ -347,8 +349,8 @@ hand-maintaining it would let the widths drift apart. `src/atomic.mach` and
 `src/subgroup.mach` are generated the same way, by `tools/genatomic.py` and
 `tools/gensubgroup.py`, from their instructions and the types each takes, and
 `src/compare.mach`, `src/logic.mach` and `src/vector.mach` by `tools/gencore.py`. Each
-generator passes its output through `mach fmt -`, so it needs mach 5.1.0 or newer
-(see `tools/README.md`), either the `mach` on `PATH` or the one the `MACH`
+generator passes its output through `mach fmt -` and writes the mach 7 forms, so it needs
+mach 7.0.0 or newer (see `tools/README.md`), either the `mach` on `PATH` or the one the `MACH`
 environment variable names, and a formatted tree never drifts from it.
 
 The library itself compiles to nothing - every declaration is bodyless - so

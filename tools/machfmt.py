@@ -5,8 +5,8 @@ import re
 import subprocess
 import sys
 
-# `mach fmt -` (stdin) first shipped in mach 5.1.0
-MIN_MACH = (5, 1, 0)
+# the generated modules are in the mach 7 forms, which no earlier `mach fmt -` reads
+MIN_MACH = (7, 0, 0)
 
 
 def require_mach(tool, mach):
@@ -20,7 +20,7 @@ def require_mach(tool, mach):
         sys.exit(f"{tool}: could not read the version of '{mach}' from `mach info`; mach {want} or newer is required")
     have = tuple(int(n) for n in found.groups())
     if have < MIN_MACH:
-        sys.exit(f"{tool}: '{mach}' is mach {'.'.join(map(str, have))}, but mach {want} or newer is required for `mach fmt -`; "
+        sys.exit(f"{tool}: '{mach}' is mach {'.'.join(map(str, have))}, but mach {want} or newer is required; "
                  "install a newer compiler or point MACH at one")
 
 

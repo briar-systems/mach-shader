@@ -14,7 +14,8 @@ With `--conform` it writes the conformance shader instead, a fragment stage that
 calls every declaration the library run would write, so a new entry is called
 without an edit.
 
-It pipes its output through `mach fmt -`, so it needs **mach 5.1.0 or newer**. It
+It writes the mach 7 forms and pipes its output through `mach fmt -`, so it needs
+**mach 7.0.0 or newer**. It
 uses the `mach` on `PATH`, or the compiler the `MACH` environment variable names,
 and stops with a clear message when that compiler is older. `conform/verify.sh`
 runs the generator both ways and diffs each result against its committed file, so the
