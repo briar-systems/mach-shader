@@ -42,3 +42,4 @@ targets = ["linux-x86_64", "linux-aarch64"]
 link = []
 need = []
 default = true
+export = true
