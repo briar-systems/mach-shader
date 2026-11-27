@@ -335,7 +335,7 @@ That writes this stanza to `mach.toml`:
 ```toml
 [dep.shader]
 git = "https://github.com/briar-systems/mach-shader"
-version = "^0.6.0"
+version = "^0.7.0"
 ```
 
 Requires a Mach compiler with `#[intrinsic]`, the `#[gpu.*]` shader decorators and
