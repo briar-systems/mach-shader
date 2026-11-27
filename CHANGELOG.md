@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-11-27
+
+### Added
+- `shader.compare`, `shader.logic` and `shader.vector`: three modules of the core SPIR-V instructions no operator writes. `shader.compare` holds the greater-than comparisons, ordered not-equal, the unordered relations, `is_nan` and `is_inf`, each giving 1 or 0 per lane where a comparison operator on vectors gives a mask. `shader.logic` holds the logical instructions, which evaluate both operands and branch on nothing, `all` and `any` over a vector's lanes, and `select`. `shader.vector` holds `shuffle` over every mix of lane counts, and a lane read or written at a run-time index.
+- `shader.math`: `count_ones`, `ldexp` with its integer exponent, the derivatives `dpdx`, `dpdy` and `fwidth` with their fine and coarse forms, which exist in a fragment stage only, `rem` (the driver's `OpFRem`, not the exact `%`), `scale_*`, a vector scaled by a scalar, `reverse_bits`, `insert_bits` and `extract_bits`, and `add_carry` and `sub_borrow`. `shader.math` has 357 entries.
+- `shader.texture`: the subpass inputs `SubpassInput`, `ISubpassInput`, `USubpassInput` and `SubpassInputMS` with `subpass_load*`. A subpass input binds through `#[gpu.storage]` beside `#[gpu.attachment(index)]`, and only a fragment stage reaches it. `image_of_*` gives the image a combined handle is built over, for the twelve combined shapes.
+- `shader.sync`: `terminate_invocation`, which ends a fragment's invocation.
+- `tools/gencore.py` writes `shader.compare`, `shader.logic`, `shader.vector` and their conformance shaders from one table each. `tools/instcheck.py` replaces `mathcheck.py` and requires every declaration of those modules and of `shader.math` to have its own instruction in the built module at both optimization levels.
+
+### Changed
+- **Breaking: requires mach 7.** Both manifests declare `mach = "^7"`, and CI and CD seed mach v7.0.0 (#59). Every declaration names its instruction with `#[intrinsic]`, the shaders bind and stage through the `#[gpu.*]` decorators, and handle operands are written as literals. The manifests state `arch`, `sys` and `abi`, the `vulkan` system with the `shader` ABI, `optimize` in place of `opt`, and a `module` artifact for each conformance shader. Device features are named by the SPIR-V capability they enable.
+- readme: The dependency stanza declares `version = "^0.7.0"`, the shader-only note shows the link refusal mach 7 gives a native caller, and the generators' floor is stated as mach 7.0.0.
+
+### Fixed
+- The generators read the compiler version from `mach --version`, so they run under mach 7.1 and newer, whose `mach info` prints an aligned table (#60).
+
 ## [0.6.0] - 2026-10-02
 
 ### Added

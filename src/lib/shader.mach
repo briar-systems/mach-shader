@@ -7,3 +7,6 @@ fwd shader.texture;
 fwd shader.sync;
 fwd shader.atomic;
 fwd shader.subgroup;
+fwd shader.compare;
+fwd shader.logic;
+fwd shader.vector;

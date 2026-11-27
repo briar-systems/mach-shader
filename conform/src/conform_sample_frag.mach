@@ -1,5 +1,6 @@
-# Every texture read that is not a plain sample: depth comparisons, gathers, fetches
-# and the size and level queries, over every handle shape each one takes.
+# Every texture read that is not a plain sample: depth comparisons, gathers, fetches,
+# the size and level queries and the subpass inputs, over every handle shape each one
+# takes.
 #
 # This exists to be compiled and validated, not to shade anything. It is a fragment
 # stage because an implicit-lod comparison derives its level from a fragment stage's
@@ -7,84 +8,100 @@
 # which a compute stage reaches and an implicit-lod one cannot. Every result is
 # written to an output or a buffer so no call can be eliminated.
 
+use sy:  shader.sync;
 use tex: shader.texture;
 
-#[sampler(0, 0)]
+#[gpu.sampler(0, 0)]
 var shadow_2d:         tex.DepthSampler2D;
-#[sampler(0, 1)]
+#[gpu.sampler(0, 1)]
 var shadow_2d_array:   tex.DepthSampler2DArray;
-#[sampler(0, 2)]
+#[gpu.sampler(0, 2)]
 var shadow_cube:       tex.DepthSamplerCube;
-#[sampler(0, 3)]
+#[gpu.sampler(0, 3)]
 var shadow_cube_array: tex.DepthSamplerCubeArray;
-#[sampler(0, 4)]
+#[gpu.sampler(0, 4)]
 var albedo:            tex.Sampler2D;
-#[sampler(0, 5)]
+#[gpu.sampler(0, 5)]
 var layers:            tex.Sampler2DArray;
-#[sampler(0, 6)]
+#[gpu.sampler(0, 6)]
 var env:               tex.SamplerCube;
-#[sampler(0, 7)]
+#[gpu.sampler(0, 7)]
 var envs:              tex.SamplerCubeArray;
-#[sampler(0, 8)]
+#[gpu.sampler(0, 8)]
 var signed:            tex.ISampler2D;
-#[sampler(0, 9)]
+#[gpu.sampler(0, 9)]
 var ids:               tex.USampler2D;
 
-#[sampler(0, 10)]
+#[gpu.sampler(0, 10)]
 var ramp:   tex.Sampler1D;
-#[sampler(0, 11)]
+#[gpu.sampler(0, 11)]
 var volume: tex.Sampler3D;
 
 # the separately-bound images the fetches and queries read, and the sampler the depth
 # images are combined with
-#[sampler(1, 0)]
+#[gpu.sampler(1, 0)]
 var smp:              tex.Sampler;
-#[sampler(1, 1)]
+#[gpu.sampler(1, 1)]
 var line_tex:         tex.Texture1D;
-#[sampler(1, 2)]
+#[gpu.sampler(1, 2)]
 var base_tex:         tex.Texture2D;
-#[sampler(1, 3)]
+#[gpu.sampler(1, 3)]
 var volume_tex:       tex.Texture3D;
-#[sampler(1, 4)]
+#[gpu.sampler(1, 4)]
 var env_tex:          tex.TextureCube;
-#[sampler(1, 5)]
+#[gpu.sampler(1, 5)]
 var layers_tex:       tex.Texture2DArray;
-#[sampler(1, 6)]
+#[gpu.sampler(1, 6)]
 var envs_tex:         tex.TextureCubeArray;
-#[sampler(1, 7)]
+#[gpu.sampler(1, 7)]
 var signed_tex:       tex.ITexture2D;
-#[sampler(1, 8)]
+#[gpu.sampler(1, 8)]
 var ids_tex:          tex.UTexture2D;
-#[sampler(1, 9)]
+#[gpu.sampler(1, 9)]
 var depth_tex:        tex.DepthTexture2D;
-#[sampler(1, 10)]
+#[gpu.sampler(1, 10)]
 var depth_layers_tex: tex.DepthTexture2DArray;
-#[sampler(1, 11)]
+#[gpu.sampler(1, 11)]
 var depth_cube_tex:   tex.DepthTextureCube;
-#[sampler(1, 12)]
+#[gpu.sampler(1, 12)]
 var depth_cubes_tex:  tex.DepthTextureCubeArray;
 
-#[input(0)]
+# the subpass inputs, each naming the input attachment it reads. only the fragment stage
+# below reaches them, since a subpass input exists in no other
+#[gpu.storage(3, 0)]
+#[gpu.attachment(0)]
+var gbuffer_colour: tex.SubpassInput;
+#[gpu.storage(3, 1)]
+#[gpu.attachment(1)]
+var gbuffer_signed: tex.ISubpassInput;
+#[gpu.storage(3, 2)]
+#[gpu.attachment(2)]
+var gbuffer_ids:    tex.USubpassInput;
+#[gpu.storage(3, 3)]
+#[gpu.attachment(3)]
+var gbuffer_ms:     tex.SubpassInputMS;
+
+#[gpu.input(0)]
 var in_uv:    f32x2;
-#[input(1)]
+#[gpu.input(1)]
 var in_uvw:   f32x3;
-#[input(2)]
+#[gpu.input(2)]
 var in_uvwl:  f32x4;
-#[input(3)]
+#[gpu.input(3)]
 var in_depth: f32;
-#[input(4)]
+#[gpu.input(4)]
 var in_at:    i32x3;
 
-#[output(0)]
+#[gpu.output(0)]
 var out_colour: f32x4;
-#[output(1)]
+#[gpu.output(1)]
 var out_ids:    u32x4;
-#[output(2)]
+#[gpu.output(2)]
 var out_signed: i32x4;
-#[output(3)]
+#[gpu.output(3)]
 var out_size:   i32x4;
 
-#[stage("fragment")]
+#[gpu.stage("fragment")]
 fun frag_compare() {
     val c: f32 = tex.sample_compare_2d(shadow_2d, in_uv, in_depth)
         + tex.sample_compare_2d_array(shadow_2d_array, in_uvw, in_depth)
@@ -104,7 +121,7 @@ fun frag_compare() {
         + tex.gather_compare_cube_array(shadow_cube_array, in_uvwl, in_depth);
 }
 
-#[stage("fragment")]
+#[gpu.stage("fragment")]
 fun frag_gather() {
     out_colour = tex.gather_2d(albedo, in_uv, 0)
         + tex.gather_2d_array(layers, in_uvw, 1)
@@ -114,7 +131,7 @@ fun frag_gather() {
     out_ids    = tex.gather_2d_u(ids, in_uv, 0);
 }
 
-#[stage("fragment")]
+#[gpu.stage("fragment")]
 fun frag_fetch() {
     val at: i32x2 = i32x2{in_at[0], in_at[1]};
     out_colour = tex.fetch_1d(line_tex, in_at[0], tex.IMAGE_OPERANDS_LOD, 0)
@@ -125,7 +142,7 @@ fun frag_fetch() {
     out_ids    = tex.fetch_2d_u(ids_tex, at, tex.IMAGE_OPERANDS_LOD, 0);
 }
 
-#[stage("fragment")]
+#[gpu.stage("fragment")]
 fun frag_query() {
     val s2: i32x2 = tex.size_2d(base_tex, 0) + tex.size_cube(env_tex, 0)
         + tex.size_2d_i(signed_tex, 0) + tex.size_2d_u(ids_tex, 0)
@@ -141,20 +158,44 @@ fun frag_query() {
     out_size = i32x4{s2[0] + s3[0], s2[1] + s3[1], s3[2], levels + tex.size_1d(line_tex, 0)};
 }
 
+# the images the combined handles are built over, each queried, and a fragment that ends
+# itself under a condition
+#[gpu.stage("fragment")]
+fun frag_image_of() {
+    if (in_depth < 0.0) {
+        sy.terminate_invocation();
+    }
+    out_size = i32x4{tex.levels_1d(tex.image_of_1d(ramp)) + tex.levels_2d(tex.image_of_2d(albedo))
+        + tex.levels_3d(tex.image_of_3d(volume)) + tex.levels_cube(tex.image_of_cube(env))
+        + tex.levels_2d_array(tex.image_of_2d_array(layers)) + tex.levels_cube_array(tex.image_of_cube_array(envs)),
+        tex.levels_2d_i(tex.image_of_2d_i(signed)) + tex.levels_2d_u(tex.image_of_2d_u(ids)),
+        tex.levels_depth_2d(tex.image_of_depth_2d(shadow_2d)) + tex.levels_depth_2d_array(tex.image_of_depth_2d_array(shadow_2d_array)),
+        tex.levels_depth_cube(tex.image_of_depth_cube(shadow_cube)) + tex.levels_depth_cube_array(tex.image_of_depth_cube_array(shadow_cube_array))};
+}
+
+#[gpu.stage("fragment")]
+fun frag_subpass() {
+    val here: i32x2 = i32x2{0, 0};
+    out_colour = tex.subpass_load(gbuffer_colour, here)
+        + tex.subpass_load_ms(gbuffer_ms, here, tex.IMAGE_OPERANDS_SAMPLE, 1);
+    out_signed = tex.subpass_load_i(gbuffer_signed, here);
+    out_ids    = tex.subpass_load_u(gbuffer_ids, here);
+}
+
 rec Samples {
     colour: [64]f32x4;
     signed: [64]i32x4;
     ids:    [64]u32x4;
 }
 
-#[storage(2, 0, "writeonly")]
+#[gpu.storage(2, 0, "writeonly")]
 var samples: Samples;
 
-#[builtin("local_invocation_index")]
+#[gpu.builtin("local_invocation_index")]
 var lid: u32;
 
-#[stage("compute")]
-#[workgroup(64, 1, 1)]
+#[gpu.stage("compute")]
+#[gpu.workgroup(64, 1, 1)]
 fun comp_explicit() {
     val i:  u32   = lid;
     val t:  f32   = i::f32 / 64.0;

@@ -14,7 +14,7 @@ import machfmt
 
 HEADER = '''# Shader-side maths: the functions that ARE SPIR-V instructions.
 #
-# Every declaration here is one SPIR-V instruction, named by an `#[op(target, set,
+# Every declaration here is one SPIR-V instruction, named by an `#[intrinsic(target, set,
 # name)]` decorator the compiler reads at the call site. A call to `normalize3`
 # in a shader does not become a call at all: it becomes the instruction, inline,
 # in the calling function's body.
@@ -114,6 +114,7 @@ BINARY = [
     ("min",   "FMin",  ["a", "b"],    "Smaller of two values.",               "a where a < b, else b"),
     ("max",   "FMax",  ["a", "b"],    "Larger of two values.",                "a where a > b, else b"),
     ("step",  "Step",  ["edge", "x"], "A step from 0 to 1 at an edge.",       "0.0 below edge, else 1.0"),
+    ("rem",   "OpFRem", ["a", "b"],   "Remainder of a division, as the driver computes it.", "a - b * trunc(a / b), with the sign of a", "core"),
 ]
 
 TERNARY = [
@@ -153,6 +154,22 @@ PARAM_DOC_BY_FUN = {
     "smooth_step":  {"lo": "The lower edge.", "hi": "The upper edge.", "x": "The value."},
     "step":         {"x": "The value."},
     "fma":          {"a": "The first factor.", "b": "The second factor."},
+    "rem":          {"a": "The dividend.", "b": "The divisor."},
+}
+
+# lines between an entry's summary and its parameters, saying what an operator does not give
+NOTE_BY_FUN = {
+    "rem": ["Not the `%` operator: a float `%` is computed exactly by code the compiler",
+            "provides, and this is the core `OpFRem`, to whatever precision the driver gives."],
+    "reverse_bits": ["The core `OpBitReverse`, which no operator writes."],
+    "insert_bits": ["The core `OpBitFieldInsert`, which no operator writes. The offset and the",
+                    "count must leave the field inside the 32 bits, or the result is undefined."],
+    "extract_bits": ["The core `OpBitFieldSExtract` on a signed type, which fills the high bits with",
+                     "the field's top bit, and `OpBitFieldUExtract` on an unsigned one, which fills",
+                     "them with 0. The offset and the count must leave the field inside the 32 bits,",
+                     "or the result is undefined."],
+    "add_carry": ["The core `OpIAddCarry`: `+` wraps and gives no carry."],
+    "sub_borrow": ["The core `OpISubBorrow`: `-` wraps and gives no borrow."],
 }
 
 PARAM_DOC = {
@@ -166,6 +183,9 @@ PARAM_DOC = {
     "lo":   "The lower bound.",
     "hi":   "The upper bound.",
     "edge": "Where the step happens.",
+    "insert": "Bits to place in the field, taken from bit 0 up.",
+    "offset": "Index of the field's lowest bit. A scalar at every width.",
+    "count":  "Number of bits in the field. A scalar at every width.",
 }
 
 
@@ -173,21 +193,27 @@ def widths():
     return [("", "f32", "scalar"), ("_2", "f32x2", "2"), ("_3", "f32x3", "3"), ("_4", "f32x4", "4")]
 
 
-def decl(name, suffix, glsl, params, ty, summary, ret, per_lane, sset="GLSL.std.450"):
-    args = ", ".join(f"{p}: {ty}" for p in params)
+def decl(name, suffix, glsl, params, ty, summary, ret, per_lane, sset="GLSL.std.450", rty=None):
+    # a parameter is a name, of the entry's type, or a (name, type) pair
+    params = [p if isinstance(p, tuple) else (p, ty) for p in params]
+    args = ", ".join(f"{p}: {t}" for p, t in params)
     lines = [f"# {summary}"]
     if per_lane:
         lines[0] = f"# {summary[:-1]}, per lane."
+    if name in NOTE_BY_FUN:
+        lines += ["#"] + [f"# {line}" for line in NOTE_BY_FUN[name]]
     lines.append("# ---")
-    for p in params:
+    width = max(4, *(len(p) + 1 for p, _ in params))
+    for p, _ in params:
         doc = PARAM_DOC_BY_FUN.get(name, {}).get(p, PARAM_DOC.get(p, "The operand."))
         if per_lane and doc.startswith("The ") and not doc.endswith("s."):
             doc = doc[:-1] + "s, one per lane."
-        lines.append(f"# {p}:{' ' * (4 - len(p))}{doc}")
+        lines.append(f"# {p + ':':<{width}} {doc}")
     tail = ret + (" per lane" if per_lane else "")
-    lines.append(f"# ret: {tail[0].lower()}{tail[1:]}" if tail[0].isupper() else f"# ret: {tail}")
-    lines.append(f'#[op("spirv", "{sset}", "{glsl}")]')
-    lines.append(f"pub fun {name}{suffix}({args}) {ty};")
+    tail = f"{tail[0].lower()}{tail[1:]}" if tail[0].isupper() else tail
+    lines.append(f"# {'ret:':<{width}} {tail}")
+    lines.append(f'#[intrinsic("spirv", "{sset}", "{glsl}")]')
+    lines.append(f"pub fun {name}{suffix}({args}) {rty or ty};")
     return "\n".join(lines)
 
 
@@ -199,8 +225,41 @@ def split(name, suffix, glsl, param, pty, ty, summary, pdoc, ret, per_lane):
     lines.append(f"# {'x:':<{width}} {'The values, one per lane.' if per_lane else 'The value.'}")
     lines.append(f"# {param + ':':<{width}} {pdoc}")
     lines.append(f"# {'ret:':<{width}} {ret}" + (" per lane" if per_lane else ""))
-    lines.append(f'#[op("spirv", "GLSL.std.450", "{glsl}")]')
+    lines.append(f'#[intrinsic("spirv", "GLSL.std.450", "{glsl}")]')
     lines.append(f"pub fun {name}{suffix}(x: {ty}, {param}: *{target}) {ty};")
+    return "\n".join(lines)
+
+
+def ldexp(suffix, ty, per_lane):
+    exp = "i32" + ty[len("f32"):]
+    lines = ["# Build a value from a significand and a power of two, per lane." if per_lane else "# Build a value from a significand and a power of two.", "# ---"]
+    lines.append(f"# x:   {'The significands, one per lane.' if per_lane else 'The significand.'}")
+    lines.append(f"# exp: {'The exponents, one per lane.' if per_lane else 'The exponent.'}")
+    lines.append("# ret: x * 2 ** exp" + (" per lane" if per_lane else ""))
+    lines.append('#[intrinsic("spirv", "GLSL.std.450", "Ldexp")]')
+    lines.append(f"pub fun ldexp{suffix}(x: {ty}, exp: {exp}) {ty};")
+    return "\n".join(lines)
+
+
+DERIVATIVES = [
+    ("dpdx",          "OpDPdx",         "Rate of change along the window's x axis.", "the difference between neighbouring fragments' values in x"),
+    ("dpdy",          "OpDPdy",         "Rate of change along the window's y axis.", "the difference between neighbouring fragments' values in y"),
+    ("fwidth",        "OpFwidth",       "Total rate of change in x and y.",           "abs(dpdx(p)) + abs(dpdy(p))"),
+    ("dpdx_fine",     "OpDPdxFine",     "Rate of change along x, from the fragment's own neighbour.",  "the difference in x within the fragment's row of its quad"),
+    ("dpdy_fine",     "OpDPdyFine",     "Rate of change along y, from the fragment's own neighbour.",  "the difference in y within the fragment's column of its quad"),
+    ("fwidth_fine",   "OpFwidthFine",   "Total rate of change from the fragment's own neighbours.",    "abs(dpdx_fine(p)) + abs(dpdy_fine(p))"),
+    ("dpdx_coarse",   "OpDPdxCoarse",   "Rate of change along x, one value for the whole quad.",       "the difference in x the quad shares"),
+    ("dpdy_coarse",   "OpDPdyCoarse",   "Rate of change along y, one value for the whole quad.",       "the difference in y the quad shares"),
+    ("fwidth_coarse", "OpFwidthCoarse", "Total rate of change, one value for the whole quad.",         "abs(dpdx_coarse(p)) + abs(dpdy_coarse(p))"),
+]
+
+
+def derivative(name, suffix, op, ty, summary, ret, per_lane):
+    lines = [f"# {summary[:-1]}, per lane." if per_lane else f"# {summary}", "# ---"]
+    lines.append(f"# p:   {'The values, one per lane.' if per_lane else 'The value.'}")
+    lines.append(f"# ret: {ret}" + (" per lane" if per_lane else ""))
+    lines.append(f'#[intrinsic("spirv", "core", "{op}")]')
+    lines.append(f"pub fun {name}{suffix}(p: {ty}) {ty};")
     return "\n".join(lines)
 
 
@@ -213,11 +272,29 @@ for suffix, ty, label in widths():
         out.append(f"\n# ---------- per lane of an {ty} ----------\n")
     per_lane = label != "scalar"
     for group in (UNARY, BINARY, TERNARY):
-        for name, glsl, params, summary, ret in group:
-            out.append(decl(name, suffix, glsl, params, ty, summary, ret, per_lane))
+        for name, glsl, params, summary, ret, *iset in group:
+            out.append(decl(name, suffix, glsl, params, ty, summary, ret, per_lane, *iset))
             out.append("")
     for name, glsl, param, pty, summary, pdoc, ret in SPLIT:
         out.append(split(name, suffix, glsl, param, pty, ty, summary, pdoc, ret, per_lane))
+        out.append("")
+    out.append(ldexp(suffix, ty, per_lane))
+    out.append("")
+
+out.append('''
+# ---------- derivatives ----------
+#
+# A derivative is the difference between a value in neighbouring fragments of a 2x2
+# quad, so it exists in a fragment stage only, and a call from any other stage is
+# refused where it is written. The plain forms leave the choice of neighbour to the
+# driver, the fine forms take the fragment's own, and the coarse forms one for the
+# whole quad. Each is a core instruction over 32-bit floats.
+''')
+
+for suffix, ty, label in widths():
+    out.append(f"\n# ----- {ty} -----\n")
+    for name, op, summary, ret in DERIVATIVES:
+        out.append(derivative(name, suffix, op, ty, summary, ret, label != "scalar"))
         out.append("")
 
 out.append('''
@@ -261,7 +338,7 @@ def geom(name, suffix, glsl, params, ty, summary, ret, result, sset="GLSL.std.45
     for p in params:
         lines.append(f"# {p}:{' ' * (4 - len(p))}{GEOM_DOC[p]}")
     lines.append(f"# ret: {ret}")
-    lines.append(f'#[op("spirv", "{sset}", "{glsl}")]')
+    lines.append(f'#[intrinsic("spirv", "{sset}", "{glsl}")]')
     lines.append(f"pub fun {name}{suffix}({args}) {rty};")
     return "\n".join(lines)
 
@@ -284,8 +361,21 @@ for suffix, ty, label in widths():
              "# n:   The surface normal, which must already be normalized.",
              "# eta: The ratio of indices of refraction. A scalar at every width.",
              "# ret: the refracted vector, or the zero vector under total internal reflection",
-             '#[op("spirv", "GLSL.std.450", "Refract")]',
+             '#[intrinsic("spirv", "GLSL.std.450", "Refract")]',
              f"pub fun refract{suffix}(i: {ty}, n: {ty}, eta: f32) {ty};"]
+    out.append("\n".join(lines))
+    out.append("")
+
+    lines = ["# Scale a vector by a scalar.",
+             "#",
+             "# The core `OpVectorTimesScalar`. The `*` operator multiplies a vector by a vector",
+             "# of one shape, so it scales only once the scalar is built into a vector.",
+             "# ---",
+             "# v:   The vector.",
+             "# s:   The factor every lane is multiplied by. A scalar at every width.",
+             "# ret: v with each lane multiplied by s",
+             '#[intrinsic("spirv", "core", "OpVectorTimesScalar")]',
+             f"pub fun scale{suffix}(v: {ty}, s: f32) {ty};"]
     out.append("\n".join(lines))
     out.append("")
 
@@ -298,7 +388,7 @@ for suffix, ty, label in widths():
                  "# a:   The first vector.",
                  "# b:   The second vector.",
                  "# ret: the vector perpendicular to both, right-handed",
-                 '#[op("spirv", "GLSL.std.450", "Cross")]',
+                 '#[intrinsic("spirv", "GLSL.std.450", "Cross")]',
                  "pub fun cross_3(a: f32x3, b: f32x3) f32x3;"]
         out.append("\n".join(lines))
         out.append("")
@@ -314,14 +404,37 @@ out.append('''
 # most significant bit that differs from the sign bit, so it scans for a 0 in a
 # negative value.
 #
-# A 16-bit entry needs the target's `int16` and a 64-bit one its `int64`, where the
+# A 16-bit entry needs the target's `Int16` and a 64-bit one its `Int64`, where the
 # target names an `env`. The bit scans are 32-bit only: GLSL.std.450 defines `FindILsb`,
-# `FindSMsb` and `FindUMsb` on 32-bit integers alone.
+# `FindSMsb` and `FindUMsb` on 32-bit integers alone. The count of set bits is the core
+# `OpBitCount`, which no operator writes, and is 32-bit only too: Vulkan holds its operand
+# to 32 bits unless the device enables `maintenance9`, which no Vulkan version guarantees.
+# The same rule holds the other core bit rows, `reverse_bits`, `insert_bits` and
+# `extract_bits`, to 32 bits.
+#
+# `add_carry` and `sub_borrow` are the core `OpIAddCarry` and `OpISubBorrow`, over unsigned
+# integers only, as SPIR-V defines them. Each returns its two results as a record of two
+# members of the operands' type.
+
+# the result of an `add_carry`: the sum wrapped to the operands' width, and 1 in each lane
+# where the sum overflowed, else 0
+pub rec AddCarry[T] {
+    sum:   T;
+    carry: T;
+}
+
+# the result of a `sub_borrow`: the difference wrapped to the operands' width, and 1 in
+# each lane where b was larger than a, else 0
+pub rec SubBorrow[T] {
+    difference: T;
+    borrow:     T;
+}
 ''')
 
 # name, instruction for a signed and an unsigned type (absent where the signedness has
-# no form), parameter names, doc summary, return description, the widths it takes.
-# the bit scans take 32 bits alone, since GLSL.std.450 defines them on no other width
+# no form), parameter names, doc summary, return description, the widths it takes, and
+# the instruction set. the bit scans take 32 bits alone, since GLSL.std.450 defines them
+# on no other width, and the bit count since vulkan holds OpBitCount to 32 bits
 ANY_WIDTH = (16, 32, 64)
 INTEGER = [
     ("abs",      {"i": "SAbs"},                       ["x"],             "Absolute value.",                "|x|", ANY_WIDTH),
@@ -331,6 +444,19 @@ INTEGER = [
     ("clamp",    {"i": "SClamp",   "u": "UClamp"},    ["x", "lo", "hi"], "Constrain a value to a range.",  "min(max(x, lo), hi)", ANY_WIDTH),
     ("find_lsb", {"i": "FindILsb", "u": "FindILsb"},  ["x"],             "Index of the least significant set bit.", "the bit index, or every bit set (-1) at zero", (32,)),
     ("find_msb", {"i": "FindSMsb", "u": "FindUMsb"},  ["x"],             "Index of the most significant bit that differs from the sign.", "the bit index, or every bit set (-1) where there is none", (32,)),
+    ("count_ones", {"i": "OpBitCount", "u": "OpBitCount"}, ["x"],        "Number of set bits.",            "how many bits of x are 1", (32,), "core"),
+    ("reverse_bits", {"i": "OpBitReverse", "u": "OpBitReverse"}, ["x"],  "Reverse the order of the bits.", "x with bit n moved to bit 31 - n", (32,), "core"),
+    ("insert_bits", {"i": "OpBitFieldInsert", "u": "OpBitFieldInsert"}, ["x", "insert", ("offset", "u32"), ("count", "u32")],
+     "Replace a field of bits.", "x with its count bits from offset replaced by the low bits of insert", (32,), "core"),
+    ("extract_bits", {"i": "OpBitFieldSExtract", "u": "OpBitFieldUExtract"}, ["x", ("offset", "u32"), ("count", "u32")],
+     "Read a field of bits.", "the count bits of x from offset, moved down to bit 0", (32,), "core"),
+]
+
+# name, instruction, the record it returns, doc summary, return description. unsigned only,
+# as SPIR-V defines both
+CARRY = [
+    ("add_carry",  "OpIAddCarry",  "AddCarry",  "Add two values, keeping the carry.",       "the wrapped sum and the carry"),
+    ("sub_borrow", "OpISubBorrow", "SubBorrow", "Subtract two values, keeping the borrow.", "the wrapped difference and the borrow"),
 ]
 
 for bits in ANY_WIDTH:
@@ -340,17 +466,20 @@ for bits in ANY_WIDTH:
             ty = ity + fty[len("f32"):]
             out.append(f"\n# ----- {ty} -----\n")
             per_lane = label != "scalar"
-            for name, glsl, params, summary, ret, takes in INTEGER:
+            for name, glsl, params, summary, ret, takes, *iset in INTEGER:
                 if sign in glsl and bits in takes:
-                    out.append(decl(f"{name}_{ity}", suffix, glsl[sign], params, ty, summary, ret, per_lane))
+                    out.append(decl(name, f"_{ity}{suffix}", glsl[sign], params, ty, summary, ret, per_lane, *iset))
                     out.append("")
+            for name, op, record, summary, ret in CARRY if sign == "u" else ():
+                out.append(decl(name, f"_{ity}{suffix}", op, ["a", "b"], ty, summary, ret, per_lane, "core", f"{record}[{ty}]"))
+                out.append("")
 
 text = "\n".join(out)
 
 CONFORM_HEADER = '''# Calls every entry in `shader.math`.
 #
 # This exists to be compiled, not to shade anything. Each call forces the
-# compiler to resolve an `#[op]` decorator and emit the instruction at that
+# compiler to resolve an `#[intrinsic]` decorator and emit the instruction at that
 # operand width, so a wrong instruction name or a signature SPIR-V rejects turns
 # into a build failure here. The library on its own compiles to nothing and would
 # catch neither.
@@ -363,26 +492,27 @@ CONFORM_HEADER = '''# Calls every entry in `shader.math`.
 
 use sh: shader.math;
 
-#[input(0)]
+#[gpu.input(0)]
 var a2: f32x2;
-#[input(1)]
+#[gpu.input(1)]
 var b2: f32x2;
-#[input(2)]
+#[gpu.input(2)]
 var a3: f32x3;
-#[input(3)]
+#[gpu.input(3)]
 var b3: f32x3;
-#[input(4)]
+#[gpu.input(4)]
 var a4: f32x4;
-#[input(5)]
+#[gpu.input(5)]
 var b4: f32x4;
-#[input(6)]
+#[gpu.input(6)]
 var s:  f32;
 
-#[output(0)]
+#[gpu.output(0)]
 var out_colour: f32x4;
 '''
 
-SIGNATURE = re.compile(r"pub fun (\w+)\(([^)]*)\) (\w+);")
+SIGNATURE = re.compile(r"pub fun (\w+)\(([^)]*)\) ([\w\[\]]+);")
+RECORD = re.compile(r"pub rec (\w+)\[T\] \{([^}]*)\}")
 
 
 def lanes(ty):
@@ -413,6 +543,7 @@ def conform(library):
         options = values[ty]
         return options[i % len(options)]
 
+    members = {name: re.findall(r"(\w+):\s*T;", fields) for name, fields in RECORD.findall(library)}
     body = []
     for n, (fun, params, ret) in enumerate(SIGNATURE.findall(library)):
         args = []
@@ -423,11 +554,15 @@ def conform(library):
                 args.append(f"?p{n}")
             else:
                 args.append(value(ty, i))
-        body.append(f"    val r{n}: {ret} = sh.{fun}({', '.join(args)});")
-        scalar, width = lanes(ret)
-        lane = f"r{n}" if width == 1 else f"r{n}[0]"
-        body.append(f"    total = total + {lane if scalar == 'f32' else lane + '::f32'};")
-    return "\n".join([CONFORM_HEADER, "#[stage(\"fragment\")]", "fun frag_main() {",
+        record = re.fullmatch(r"(\w+)\[(\w+)\]", ret)
+        body.append(f"    val r{n}: {'sh.' + ret if record else ret} = sh.{fun}({', '.join(args)});")
+        # a record result adds each of its members, so neither can be eliminated
+        places = [(f"r{n}.{m}", record.group(2)) for m in members[record.group(1)]] if record else [(f"r{n}", ret)]
+        for place, ty in places:
+            scalar, width = lanes(ty)
+            lane = place if width == 1 else f"{place}[0]"
+            body.append(f"    total = total + {lane if scalar == 'f32' else lane + '::f32'};")
+    return "\n".join([CONFORM_HEADER, "#[gpu.stage(\"fragment\")]", "fun frag_main() {",
                       *prelude, "    var total: f32 = 0.0;", *body,
                       "    out_colour = f32x4{total, total, total, total};", "}", ""])
 

@@ -15,18 +15,19 @@ HEADER = '''# Shader-side subgroup operations: the invocations of one subgroup c
 # without a barrier or shared memory.
 #
 # Every declaration here is one SPIR-V `OpGroupNonUniform*` instruction, named by
-# `#[op]`, as in `shader.math`. Each takes the `SCOPE_SUBGROUP` from `shader.sync` as
+# `#[intrinsic]`, as in `shader.math`. Each takes the `SCOPE_SUBGROUP` from `shader.sync` as
 # its first operand, the one scope Vulkan admits, written at the call.
 #
 # EACH FAMILY IS A DEVICE FEATURE. Every subgroup operation needs SPIR-V 1.3, so
 # `vulkan1.1` or later. Elect is every such device's, and each other family needs the
-# target's `extensions` to name the feature Vulkan reports it by: `subgroup_vote`
-# (all, any, all-equal), `subgroup_arithmetic` (a reduction or scan),
-# `subgroup_clustered` (a clustered reduction), `subgroup_ballot` (ballot and
-# broadcast), `subgroup_shuffle`, `subgroup_shuffle_relative` (shuffle up and down)
-# and `subgroup_quad`. Vulkan guarantees them only in a compute stage, so a use from a
-# vertex or fragment stage also needs `subgroup_graphics_stages`. A call whose
-# feature the target does not select is refused there, naming it.
+# target's `ext` to name the capability of the feature Vulkan reports it by:
+# `GroupNonUniformVote` (all, any, all-equal), `GroupNonUniformArithmetic` (a reduction
+# or scan), `GroupNonUniformClustered` (a clustered reduction), `GroupNonUniformBallot`
+# (ballot and broadcast), `GroupNonUniformShuffle`, `GroupNonUniformShuffleRelative`
+# (shuffle up and down) and `GroupNonUniformQuad`. Vulkan guarantees them only in a
+# compute stage, and the stages a device supports them in have no name a target can
+# select, so a use from a vertex or fragment stage builds and is the consumer's to
+# check. A call whose capability the target does not select is refused there, naming it.
 #
 # CONSTANT OPERANDS. A `GROUP_*` operation, a broadcast's lane, a quad broadcast's
 # index and a quad swap's direction are constants written at the call, never values
@@ -77,7 +78,7 @@ def decl(name, op, summary, params, ret_ty, ret_doc):
     for n, _, d in params:
         lines.append(f"# {n + ':':<{width}} {d}")
     lines.append(f"# {'ret:':<{width}} {ret_doc}")
-    lines.append(f'#[op("spirv", "core", "OpGroupNonUniform{op}")]')
+    lines.append(f'#[intrinsic("spirv", "core", "OpGroupNonUniform{op}")]')
     args = ", ".join(f"{n}: {t}" for n, t, _ in params)
     lines.append(f"pub fun {name}({args}) {ret_ty};")
     return "\n".join(lines)

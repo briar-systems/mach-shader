@@ -3,7 +3,7 @@
 
 usage: opcheck.py <module.mach>... -- <conform source or module.spvasm>...
 
-Each `#[op("spirv", set, name)]` declaration in a module must be called, by its name,
+Each `#[intrinsic("spirv", set, name)]` declaration in a module must be called, by its name,
 from a conformance source, and its instruction must appear in a disassembled
 conformance module. The declarations are read from the modules themselves, so an
 entry added to the library is checked without editing this script, and an entry no
@@ -13,7 +13,7 @@ shader calls, or one whose call never reached the module, fails here.
 import re
 import sys
 
-OP = re.compile(r'#\[op\("spirv",\s*"([^"]+)",\s*"(\w+)"\)\]\s*\npub fun (\w+)\(')
+OP = re.compile(r'#\[intrinsic\("spirv",\s*"([^"]+)",\s*"(\w+)"\)\]\s*\npub fun (\w+)\(')
 
 
 def main():
@@ -38,7 +38,7 @@ def main():
                 print(f"::error::{path}: `{fun}` names {iset} {name}, which no conformance module contains")
                 failed = True
     if count == 0:
-        sys.exit(f"opcheck: no #[op] declarations found in {' '.join(modules)}")
+        sys.exit(f"opcheck: no #[intrinsic] declarations found in {' '.join(modules)}")
     if failed:
         sys.exit(1)
     print(f"every declared instruction ({count} declarations) is called and emitted")

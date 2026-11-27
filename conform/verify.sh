@@ -17,6 +17,12 @@ for module in math atomic subgroup; do
   MACH="$MACH_COMPILER" python3 "tools/gen$module.py" | diff -u "src/$module.mach" -
   echo "src/$module.mach matches tools/gen$module.py"
 done
+for module in compare logic vector; do
+  MACH="$MACH_COMPILER" python3 tools/gencore.py "$module" | diff -u "src/$module.mach" -
+  echo "src/$module.mach matches tools/gencore.py $module"
+  MACH="$MACH_COMPILER" python3 tools/gencore.py "$module" --conform | diff -u "conform/src/conform_${module}_comp.mach" -
+  echo "conform/src/conform_${module}_comp.mach matches tools/gencore.py $module --conform"
+done
 
 # every module at both optimization levels, as SPIR-V and as Vulkan consumes it: the
 # Vulkan rules are the ones a pipeline is created against, and some only it checks
@@ -33,7 +39,17 @@ done
 MACH="$MACH_COMPILER" python3 tools/genmath.py --conform | diff -u conform/src/conform_frag.mach -
 echo "conform/src/conform_frag.mach matches tools/genmath.py --conform"
 spirv-dis conform/out/release/conform_frag.spv > "$scratch/conform.spvasm"
-python3 tools/mathcheck.py src/math.mach "$scratch/conform.spvasm"
+python3 tools/instcheck.py src/math.mach "$scratch/conform.spvasm"
+
+# the same proof for the modules tools/gencore.py writes, each against its own compute
+# stage, at both optimization levels, since a value the optimizer folds is still held
+# to its own instruction
+for module in compare logic vector; do
+  for profile in debug release; do
+    spirv-dis "conform/out/$profile/conform_${module}_comp.spv" > "$scratch/${module}_$profile.spvasm"
+    python3 tools/instcheck.py "src/$module.mach" "$scratch/${module}_$profile.spvasm"
+  done
+done
 
 # the same proof for the texture module: every image shape the library declares
 # is read by a sample and built by a combine, so a dropped call fails here
@@ -58,4 +74,5 @@ for module in conform/out/release/*.spv; do
   spirv-dis "$module" > "$scratch/$(basename "$module" .spv).spvasm"
 done
 python3 tools/opcheck.py src/math.mach src/texture.mach src/sync.mach src/atomic.mach src/subgroup.mach \
+  src/compare.mach src/logic.mach src/vector.mach \
   -- conform/src/*.mach "$scratch"/*.spvasm

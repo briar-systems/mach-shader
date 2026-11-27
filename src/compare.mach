@@ -1,0 +1,1705 @@
+# Shader-side comparisons: the relations no operator writes, each giving 1 or 0 per lane.
+#
+# Every declaration here is one core SPIR-V instruction, named by `#[intrinsic]`, as in
+# `shader.math`. `<`, `<=`, `==` and `!=` are instructions of their own, and `>` and `>=`
+# are the less-than instructions with their operands exchanged, so the compiler keeps those
+# to the operators. What is here is the rest: the greater-than instructions themselves, the
+# float relations no operator gives, and `OpIsNan` and `OpIsInf`.
+#
+# ONE OR ZERO PER LANE. A comparison here returns a `u32`, or a `u32` vector of its
+# operands' lane count, holding 1 where the relation holds and 0 where it does not. A
+# comparison operator on vectors gives a mask instead, every bit of a lane set where it
+# holds, in the unsigned integer of the operands' width. The 1 or 0 is the truth value
+# `shader.logic` takes, and a count or a weight as it stands. A 1 or 0 per lane for
+# less-than is `greater_than` with the operands exchanged.
+#
+# ORDERED AND UNORDERED. An ordered float relation is false where either operand is NaN,
+# and an unordered one true. `<`, `<=`, `==`, `>` and `>=` are ordered and `!=` is
+# unordered, so `greater_than_f32` and `greater_equal_f32` are ordered as `>` and `>=` are,
+# and the ordered not-equal and the unordered forms of the others are here.
+#
+# TYPES. 16-, 32- and 64-bit integers and floats, scalar and 2, 3 and 4 lanes. The
+# instruction follows the signedness, so `greater_than_i32` is `OpSGreaterThan` and
+# `greater_than_u32` is `OpUGreaterThan`. A 16- or 64-bit entry needs the target's `Int16`,
+# `Int64`, `Float16` or `Float64` where it names an `env`, and says which.
+#
+# THE NAMING RULE. Every entry carries its operands' type after an underscore, as in
+# `shader.atomic`, and a vector entry its lane count after that: `greater_than_f32`,
+# `unordered_less_than_f16_3`.
+#
+# THIS IS A SHADER-ONLY MODULE. On any target other than SPIR-V a call to one of these
+# fails to link, for the reason `shader.math` gives.
+#
+# This file is generated. See tools/gencore.py.
+
+# Whether one value is greater than another.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# a:   The left operand.
+# b:   The right operand.
+# ret: 1 where a is greater than b, else 0
+#[intrinsic("spirv", "core", "OpSGreaterThan")]
+pub fun greater_than_i16(a: i16, b: i16) u32;
+
+# Whether one value is greater than or equal to another.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# a:   The left operand.
+# b:   The right operand.
+# ret: 1 where a is greater than or equal to b, else 0
+#[intrinsic("spirv", "core", "OpSGreaterThanEqual")]
+pub fun greater_equal_i16(a: i16, b: i16) u32;
+
+# Whether one value is greater than another, per lane.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than b, else 0 in each lane
+#[intrinsic("spirv", "core", "OpSGreaterThan")]
+pub fun greater_than_i16_2(a: i16x2, b: i16x2) u32x2;
+
+# Whether one value is greater than or equal to another, per lane.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than or equal to b, else 0 in each lane
+#[intrinsic("spirv", "core", "OpSGreaterThanEqual")]
+pub fun greater_equal_i16_2(a: i16x2, b: i16x2) u32x2;
+
+# Whether one value is greater than another, per lane.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than b, else 0 in each lane
+#[intrinsic("spirv", "core", "OpSGreaterThan")]
+pub fun greater_than_i16_3(a: i16x3, b: i16x3) u32x3;
+
+# Whether one value is greater than or equal to another, per lane.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than or equal to b, else 0 in each lane
+#[intrinsic("spirv", "core", "OpSGreaterThanEqual")]
+pub fun greater_equal_i16_3(a: i16x3, b: i16x3) u32x3;
+
+# Whether one value is greater than another, per lane.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than b, else 0 in each lane
+#[intrinsic("spirv", "core", "OpSGreaterThan")]
+pub fun greater_than_i16_4(a: i16x4, b: i16x4) u32x4;
+
+# Whether one value is greater than or equal to another, per lane.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than or equal to b, else 0 in each lane
+#[intrinsic("spirv", "core", "OpSGreaterThanEqual")]
+pub fun greater_equal_i16_4(a: i16x4, b: i16x4) u32x4;
+
+# Whether one value is greater than another.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# a:   The left operand.
+# b:   The right operand.
+# ret: 1 where a is greater than b, else 0
+#[intrinsic("spirv", "core", "OpUGreaterThan")]
+pub fun greater_than_u16(a: u16, b: u16) u32;
+
+# Whether one value is greater than or equal to another.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# a:   The left operand.
+# b:   The right operand.
+# ret: 1 where a is greater than or equal to b, else 0
+#[intrinsic("spirv", "core", "OpUGreaterThanEqual")]
+pub fun greater_equal_u16(a: u16, b: u16) u32;
+
+# Whether one value is greater than another, per lane.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than b, else 0 in each lane
+#[intrinsic("spirv", "core", "OpUGreaterThan")]
+pub fun greater_than_u16_2(a: u16x2, b: u16x2) u32x2;
+
+# Whether one value is greater than or equal to another, per lane.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than or equal to b, else 0 in each lane
+#[intrinsic("spirv", "core", "OpUGreaterThanEqual")]
+pub fun greater_equal_u16_2(a: u16x2, b: u16x2) u32x2;
+
+# Whether one value is greater than another, per lane.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than b, else 0 in each lane
+#[intrinsic("spirv", "core", "OpUGreaterThan")]
+pub fun greater_than_u16_3(a: u16x3, b: u16x3) u32x3;
+
+# Whether one value is greater than or equal to another, per lane.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than or equal to b, else 0 in each lane
+#[intrinsic("spirv", "core", "OpUGreaterThanEqual")]
+pub fun greater_equal_u16_3(a: u16x3, b: u16x3) u32x3;
+
+# Whether one value is greater than another, per lane.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than b, else 0 in each lane
+#[intrinsic("spirv", "core", "OpUGreaterThan")]
+pub fun greater_than_u16_4(a: u16x4, b: u16x4) u32x4;
+
+# Whether one value is greater than or equal to another, per lane.
+#
+# Needs the target's `Int16` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than or equal to b, else 0 in each lane
+#[intrinsic("spirv", "core", "OpUGreaterThanEqual")]
+pub fun greater_equal_u16_4(a: u16x4, b: u16x4) u32x4;
+
+# Whether one value is greater than another.
+# ---
+# a:   The left operand.
+# b:   The right operand.
+# ret: 1 where a is greater than b, else 0
+#[intrinsic("spirv", "core", "OpSGreaterThan")]
+pub fun greater_than_i32(a: i32, b: i32) u32;
+
+# Whether one value is greater than or equal to another.
+# ---
+# a:   The left operand.
+# b:   The right operand.
+# ret: 1 where a is greater than or equal to b, else 0
+#[intrinsic("spirv", "core", "OpSGreaterThanEqual")]
+pub fun greater_equal_i32(a: i32, b: i32) u32;
+
+# Whether one value is greater than another, per lane.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than b, else 0 in each lane
+#[intrinsic("spirv", "core", "OpSGreaterThan")]
+pub fun greater_than_i32_2(a: i32x2, b: i32x2) u32x2;
+
+# Whether one value is greater than or equal to another, per lane.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than or equal to b, else 0 in each lane
+#[intrinsic("spirv", "core", "OpSGreaterThanEqual")]
+pub fun greater_equal_i32_2(a: i32x2, b: i32x2) u32x2;
+
+# Whether one value is greater than another, per lane.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than b, else 0 in each lane
+#[intrinsic("spirv", "core", "OpSGreaterThan")]
+pub fun greater_than_i32_3(a: i32x3, b: i32x3) u32x3;
+
+# Whether one value is greater than or equal to another, per lane.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than or equal to b, else 0 in each lane
+#[intrinsic("spirv", "core", "OpSGreaterThanEqual")]
+pub fun greater_equal_i32_3(a: i32x3, b: i32x3) u32x3;
+
+# Whether one value is greater than another, per lane.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than b, else 0 in each lane
+#[intrinsic("spirv", "core", "OpSGreaterThan")]
+pub fun greater_than_i32_4(a: i32x4, b: i32x4) u32x4;
+
+# Whether one value is greater than or equal to another, per lane.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than or equal to b, else 0 in each lane
+#[intrinsic("spirv", "core", "OpSGreaterThanEqual")]
+pub fun greater_equal_i32_4(a: i32x4, b: i32x4) u32x4;
+
+# Whether one value is greater than another.
+# ---
+# a:   The left operand.
+# b:   The right operand.
+# ret: 1 where a is greater than b, else 0
+#[intrinsic("spirv", "core", "OpUGreaterThan")]
+pub fun greater_than_u32(a: u32, b: u32) u32;
+
+# Whether one value is greater than or equal to another.
+# ---
+# a:   The left operand.
+# b:   The right operand.
+# ret: 1 where a is greater than or equal to b, else 0
+#[intrinsic("spirv", "core", "OpUGreaterThanEqual")]
+pub fun greater_equal_u32(a: u32, b: u32) u32;
+
+# Whether one value is greater than another, per lane.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than b, else 0 in each lane
+#[intrinsic("spirv", "core", "OpUGreaterThan")]
+pub fun greater_than_u32_2(a: u32x2, b: u32x2) u32x2;
+
+# Whether one value is greater than or equal to another, per lane.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than or equal to b, else 0 in each lane
+#[intrinsic("spirv", "core", "OpUGreaterThanEqual")]
+pub fun greater_equal_u32_2(a: u32x2, b: u32x2) u32x2;
+
+# Whether one value is greater than another, per lane.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than b, else 0 in each lane
+#[intrinsic("spirv", "core", "OpUGreaterThan")]
+pub fun greater_than_u32_3(a: u32x3, b: u32x3) u32x3;
+
+# Whether one value is greater than or equal to another, per lane.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than or equal to b, else 0 in each lane
+#[intrinsic("spirv", "core", "OpUGreaterThanEqual")]
+pub fun greater_equal_u32_3(a: u32x3, b: u32x3) u32x3;
+
+# Whether one value is greater than another, per lane.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than b, else 0 in each lane
+#[intrinsic("spirv", "core", "OpUGreaterThan")]
+pub fun greater_than_u32_4(a: u32x4, b: u32x4) u32x4;
+
+# Whether one value is greater than or equal to another, per lane.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than or equal to b, else 0 in each lane
+#[intrinsic("spirv", "core", "OpUGreaterThanEqual")]
+pub fun greater_equal_u32_4(a: u32x4, b: u32x4) u32x4;
+
+# Whether one value is greater than another.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# a:   The left operand.
+# b:   The right operand.
+# ret: 1 where a is greater than b, else 0
+#[intrinsic("spirv", "core", "OpSGreaterThan")]
+pub fun greater_than_i64(a: i64, b: i64) u32;
+
+# Whether one value is greater than or equal to another.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# a:   The left operand.
+# b:   The right operand.
+# ret: 1 where a is greater than or equal to b, else 0
+#[intrinsic("spirv", "core", "OpSGreaterThanEqual")]
+pub fun greater_equal_i64(a: i64, b: i64) u32;
+
+# Whether one value is greater than another, per lane.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than b, else 0 in each lane
+#[intrinsic("spirv", "core", "OpSGreaterThan")]
+pub fun greater_than_i64_2(a: i64x2, b: i64x2) u32x2;
+
+# Whether one value is greater than or equal to another, per lane.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than or equal to b, else 0 in each lane
+#[intrinsic("spirv", "core", "OpSGreaterThanEqual")]
+pub fun greater_equal_i64_2(a: i64x2, b: i64x2) u32x2;
+
+# Whether one value is greater than another, per lane.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than b, else 0 in each lane
+#[intrinsic("spirv", "core", "OpSGreaterThan")]
+pub fun greater_than_i64_3(a: i64x3, b: i64x3) u32x3;
+
+# Whether one value is greater than or equal to another, per lane.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than or equal to b, else 0 in each lane
+#[intrinsic("spirv", "core", "OpSGreaterThanEqual")]
+pub fun greater_equal_i64_3(a: i64x3, b: i64x3) u32x3;
+
+# Whether one value is greater than another, per lane.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than b, else 0 in each lane
+#[intrinsic("spirv", "core", "OpSGreaterThan")]
+pub fun greater_than_i64_4(a: i64x4, b: i64x4) u32x4;
+
+# Whether one value is greater than or equal to another, per lane.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than or equal to b, else 0 in each lane
+#[intrinsic("spirv", "core", "OpSGreaterThanEqual")]
+pub fun greater_equal_i64_4(a: i64x4, b: i64x4) u32x4;
+
+# Whether one value is greater than another.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# a:   The left operand.
+# b:   The right operand.
+# ret: 1 where a is greater than b, else 0
+#[intrinsic("spirv", "core", "OpUGreaterThan")]
+pub fun greater_than_u64(a: u64, b: u64) u32;
+
+# Whether one value is greater than or equal to another.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# a:   The left operand.
+# b:   The right operand.
+# ret: 1 where a is greater than or equal to b, else 0
+#[intrinsic("spirv", "core", "OpUGreaterThanEqual")]
+pub fun greater_equal_u64(a: u64, b: u64) u32;
+
+# Whether one value is greater than another, per lane.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than b, else 0 in each lane
+#[intrinsic("spirv", "core", "OpUGreaterThan")]
+pub fun greater_than_u64_2(a: u64x2, b: u64x2) u32x2;
+
+# Whether one value is greater than or equal to another, per lane.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than or equal to b, else 0 in each lane
+#[intrinsic("spirv", "core", "OpUGreaterThanEqual")]
+pub fun greater_equal_u64_2(a: u64x2, b: u64x2) u32x2;
+
+# Whether one value is greater than another, per lane.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than b, else 0 in each lane
+#[intrinsic("spirv", "core", "OpUGreaterThan")]
+pub fun greater_than_u64_3(a: u64x3, b: u64x3) u32x3;
+
+# Whether one value is greater than or equal to another, per lane.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than or equal to b, else 0 in each lane
+#[intrinsic("spirv", "core", "OpUGreaterThanEqual")]
+pub fun greater_equal_u64_3(a: u64x3, b: u64x3) u32x3;
+
+# Whether one value is greater than another, per lane.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than b, else 0 in each lane
+#[intrinsic("spirv", "core", "OpUGreaterThan")]
+pub fun greater_than_u64_4(a: u64x4, b: u64x4) u32x4;
+
+# Whether one value is greater than or equal to another, per lane.
+#
+# Needs the target's `Int64` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than or equal to b, else 0 in each lane
+#[intrinsic("spirv", "core", "OpUGreaterThanEqual")]
+pub fun greater_equal_u64_4(a: u64x4, b: u64x4) u32x4;
+
+# Whether one value is greater than another.
+#
+# Ordered, as the operator is: 0 where either operand is NaN.
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# a:   The left operand.
+# b:   The right operand.
+# ret: 1 where a is greater than b, else 0
+#[intrinsic("spirv", "core", "OpFOrdGreaterThan")]
+pub fun greater_than_f16(a: f16, b: f16) u32;
+
+# Whether one value is greater than or equal to another.
+#
+# Ordered, as the operator is: 0 where either operand is NaN.
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# a:   The left operand.
+# b:   The right operand.
+# ret: 1 where a is greater than or equal to b, else 0
+#[intrinsic("spirv", "core", "OpFOrdGreaterThanEqual")]
+pub fun greater_equal_f16(a: f16, b: f16) u32;
+
+# Whether two values differ and neither is NaN.
+#
+# Ordered: 0 where either operand is NaN, where `!=` gives 1.
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# a:   The left operand.
+# b:   The right operand.
+# ret: 1 where a and b differ and neither is NaN, else 0
+#[intrinsic("spirv", "core", "OpFOrdNotEqual")]
+pub fun ordered_not_equal_f16(a: f16, b: f16) u32;
+
+# Whether two values are equal or either is NaN.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# a:   The left operand.
+# b:   The right operand.
+# ret: 1 where a equals b or either is NaN, else 0
+#[intrinsic("spirv", "core", "OpFUnordEqual")]
+pub fun unordered_equal_f16(a: f16, b: f16) u32;
+
+# Whether one value is less than another or either is NaN.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# a:   The left operand.
+# b:   The right operand.
+# ret: 1 where a is less than b or either is NaN, else 0
+#[intrinsic("spirv", "core", "OpFUnordLessThan")]
+pub fun unordered_less_than_f16(a: f16, b: f16) u32;
+
+# Whether one value is less than or equal to another or either is NaN.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# a:   The left operand.
+# b:   The right operand.
+# ret: 1 where a is less than or equal to b or either is NaN, else 0
+#[intrinsic("spirv", "core", "OpFUnordLessThanEqual")]
+pub fun unordered_less_equal_f16(a: f16, b: f16) u32;
+
+# Whether one value is greater than another or either is NaN.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# a:   The left operand.
+# b:   The right operand.
+# ret: 1 where a is greater than b or either is NaN, else 0
+#[intrinsic("spirv", "core", "OpFUnordGreaterThan")]
+pub fun unordered_greater_than_f16(a: f16, b: f16) u32;
+
+# Whether one value is greater than or equal to another or either is NaN.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# a:   The left operand.
+# b:   The right operand.
+# ret: 1 where a is greater than or equal to b or either is NaN, else 0
+#[intrinsic("spirv", "core", "OpFUnordGreaterThanEqual")]
+pub fun unordered_greater_equal_f16(a: f16, b: f16) u32;
+
+# Whether a value is NaN.
+#
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# x:   The value.
+# ret: 1 where x is NaN, else 0
+#[intrinsic("spirv", "core", "OpIsNan")]
+pub fun is_nan_f16(x: f16) u32;
+
+# Whether a value is an infinity.
+#
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# x:   The value.
+# ret: 1 where x is an infinity, else 0
+#[intrinsic("spirv", "core", "OpIsInf")]
+pub fun is_inf_f16(x: f16) u32;
+
+# Whether one value is greater than another, per lane.
+#
+# Ordered, as the operator is: 0 where either operand is NaN.
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than b, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFOrdGreaterThan")]
+pub fun greater_than_f16_2(a: f16x2, b: f16x2) u32x2;
+
+# Whether one value is greater than or equal to another, per lane.
+#
+# Ordered, as the operator is: 0 where either operand is NaN.
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than or equal to b, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFOrdGreaterThanEqual")]
+pub fun greater_equal_f16_2(a: f16x2, b: f16x2) u32x2;
+
+# Whether two values differ and neither is NaN, per lane.
+#
+# Ordered: 0 where either operand is NaN, where `!=` gives 1.
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a and b differ and neither is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFOrdNotEqual")]
+pub fun ordered_not_equal_f16_2(a: f16x2, b: f16x2) u32x2;
+
+# Whether two values are equal or either is NaN, per lane.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a equals b or either is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFUnordEqual")]
+pub fun unordered_equal_f16_2(a: f16x2, b: f16x2) u32x2;
+
+# Whether one value is less than another or either is NaN, per lane.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is less than b or either is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFUnordLessThan")]
+pub fun unordered_less_than_f16_2(a: f16x2, b: f16x2) u32x2;
+
+# Whether one value is less than or equal to another or either is NaN, per lane.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is less than or equal to b or either is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFUnordLessThanEqual")]
+pub fun unordered_less_equal_f16_2(a: f16x2, b: f16x2) u32x2;
+
+# Whether one value is greater than another or either is NaN, per lane.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than b or either is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFUnordGreaterThan")]
+pub fun unordered_greater_than_f16_2(a: f16x2, b: f16x2) u32x2;
+
+# Whether one value is greater than or equal to another or either is NaN, per lane.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than or equal to b or either is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFUnordGreaterThanEqual")]
+pub fun unordered_greater_equal_f16_2(a: f16x2, b: f16x2) u32x2;
+
+# Whether a value is NaN, per lane.
+#
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# x:   The values, one per lane.
+# ret: 1 where x is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpIsNan")]
+pub fun is_nan_f16_2(x: f16x2) u32x2;
+
+# Whether a value is an infinity, per lane.
+#
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# x:   The values, one per lane.
+# ret: 1 where x is an infinity, else 0 in each lane
+#[intrinsic("spirv", "core", "OpIsInf")]
+pub fun is_inf_f16_2(x: f16x2) u32x2;
+
+# Whether one value is greater than another, per lane.
+#
+# Ordered, as the operator is: 0 where either operand is NaN.
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than b, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFOrdGreaterThan")]
+pub fun greater_than_f16_3(a: f16x3, b: f16x3) u32x3;
+
+# Whether one value is greater than or equal to another, per lane.
+#
+# Ordered, as the operator is: 0 where either operand is NaN.
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than or equal to b, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFOrdGreaterThanEqual")]
+pub fun greater_equal_f16_3(a: f16x3, b: f16x3) u32x3;
+
+# Whether two values differ and neither is NaN, per lane.
+#
+# Ordered: 0 where either operand is NaN, where `!=` gives 1.
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a and b differ and neither is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFOrdNotEqual")]
+pub fun ordered_not_equal_f16_3(a: f16x3, b: f16x3) u32x3;
+
+# Whether two values are equal or either is NaN, per lane.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a equals b or either is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFUnordEqual")]
+pub fun unordered_equal_f16_3(a: f16x3, b: f16x3) u32x3;
+
+# Whether one value is less than another or either is NaN, per lane.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is less than b or either is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFUnordLessThan")]
+pub fun unordered_less_than_f16_3(a: f16x3, b: f16x3) u32x3;
+
+# Whether one value is less than or equal to another or either is NaN, per lane.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is less than or equal to b or either is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFUnordLessThanEqual")]
+pub fun unordered_less_equal_f16_3(a: f16x3, b: f16x3) u32x3;
+
+# Whether one value is greater than another or either is NaN, per lane.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than b or either is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFUnordGreaterThan")]
+pub fun unordered_greater_than_f16_3(a: f16x3, b: f16x3) u32x3;
+
+# Whether one value is greater than or equal to another or either is NaN, per lane.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than or equal to b or either is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFUnordGreaterThanEqual")]
+pub fun unordered_greater_equal_f16_3(a: f16x3, b: f16x3) u32x3;
+
+# Whether a value is NaN, per lane.
+#
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# x:   The values, one per lane.
+# ret: 1 where x is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpIsNan")]
+pub fun is_nan_f16_3(x: f16x3) u32x3;
+
+# Whether a value is an infinity, per lane.
+#
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# x:   The values, one per lane.
+# ret: 1 where x is an infinity, else 0 in each lane
+#[intrinsic("spirv", "core", "OpIsInf")]
+pub fun is_inf_f16_3(x: f16x3) u32x3;
+
+# Whether one value is greater than another, per lane.
+#
+# Ordered, as the operator is: 0 where either operand is NaN.
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than b, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFOrdGreaterThan")]
+pub fun greater_than_f16_4(a: f16x4, b: f16x4) u32x4;
+
+# Whether one value is greater than or equal to another, per lane.
+#
+# Ordered, as the operator is: 0 where either operand is NaN.
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than or equal to b, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFOrdGreaterThanEqual")]
+pub fun greater_equal_f16_4(a: f16x4, b: f16x4) u32x4;
+
+# Whether two values differ and neither is NaN, per lane.
+#
+# Ordered: 0 where either operand is NaN, where `!=` gives 1.
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a and b differ and neither is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFOrdNotEqual")]
+pub fun ordered_not_equal_f16_4(a: f16x4, b: f16x4) u32x4;
+
+# Whether two values are equal or either is NaN, per lane.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a equals b or either is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFUnordEqual")]
+pub fun unordered_equal_f16_4(a: f16x4, b: f16x4) u32x4;
+
+# Whether one value is less than another or either is NaN, per lane.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is less than b or either is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFUnordLessThan")]
+pub fun unordered_less_than_f16_4(a: f16x4, b: f16x4) u32x4;
+
+# Whether one value is less than or equal to another or either is NaN, per lane.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is less than or equal to b or either is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFUnordLessThanEqual")]
+pub fun unordered_less_equal_f16_4(a: f16x4, b: f16x4) u32x4;
+
+# Whether one value is greater than another or either is NaN, per lane.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than b or either is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFUnordGreaterThan")]
+pub fun unordered_greater_than_f16_4(a: f16x4, b: f16x4) u32x4;
+
+# Whether one value is greater than or equal to another or either is NaN, per lane.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than or equal to b or either is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFUnordGreaterThanEqual")]
+pub fun unordered_greater_equal_f16_4(a: f16x4, b: f16x4) u32x4;
+
+# Whether a value is NaN, per lane.
+#
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# x:   The values, one per lane.
+# ret: 1 where x is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpIsNan")]
+pub fun is_nan_f16_4(x: f16x4) u32x4;
+
+# Whether a value is an infinity, per lane.
+#
+# Needs the target's `Float16` where it names an `env`.
+# ---
+# x:   The values, one per lane.
+# ret: 1 where x is an infinity, else 0 in each lane
+#[intrinsic("spirv", "core", "OpIsInf")]
+pub fun is_inf_f16_4(x: f16x4) u32x4;
+
+# Whether one value is greater than another.
+#
+# Ordered, as the operator is: 0 where either operand is NaN.
+# ---
+# a:   The left operand.
+# b:   The right operand.
+# ret: 1 where a is greater than b, else 0
+#[intrinsic("spirv", "core", "OpFOrdGreaterThan")]
+pub fun greater_than_f32(a: f32, b: f32) u32;
+
+# Whether one value is greater than or equal to another.
+#
+# Ordered, as the operator is: 0 where either operand is NaN.
+# ---
+# a:   The left operand.
+# b:   The right operand.
+# ret: 1 where a is greater than or equal to b, else 0
+#[intrinsic("spirv", "core", "OpFOrdGreaterThanEqual")]
+pub fun greater_equal_f32(a: f32, b: f32) u32;
+
+# Whether two values differ and neither is NaN.
+#
+# Ordered: 0 where either operand is NaN, where `!=` gives 1.
+# ---
+# a:   The left operand.
+# b:   The right operand.
+# ret: 1 where a and b differ and neither is NaN, else 0
+#[intrinsic("spirv", "core", "OpFOrdNotEqual")]
+pub fun ordered_not_equal_f32(a: f32, b: f32) u32;
+
+# Whether two values are equal or either is NaN.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# ---
+# a:   The left operand.
+# b:   The right operand.
+# ret: 1 where a equals b or either is NaN, else 0
+#[intrinsic("spirv", "core", "OpFUnordEqual")]
+pub fun unordered_equal_f32(a: f32, b: f32) u32;
+
+# Whether one value is less than another or either is NaN.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# ---
+# a:   The left operand.
+# b:   The right operand.
+# ret: 1 where a is less than b or either is NaN, else 0
+#[intrinsic("spirv", "core", "OpFUnordLessThan")]
+pub fun unordered_less_than_f32(a: f32, b: f32) u32;
+
+# Whether one value is less than or equal to another or either is NaN.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# ---
+# a:   The left operand.
+# b:   The right operand.
+# ret: 1 where a is less than or equal to b or either is NaN, else 0
+#[intrinsic("spirv", "core", "OpFUnordLessThanEqual")]
+pub fun unordered_less_equal_f32(a: f32, b: f32) u32;
+
+# Whether one value is greater than another or either is NaN.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# ---
+# a:   The left operand.
+# b:   The right operand.
+# ret: 1 where a is greater than b or either is NaN, else 0
+#[intrinsic("spirv", "core", "OpFUnordGreaterThan")]
+pub fun unordered_greater_than_f32(a: f32, b: f32) u32;
+
+# Whether one value is greater than or equal to another or either is NaN.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# ---
+# a:   The left operand.
+# b:   The right operand.
+# ret: 1 where a is greater than or equal to b or either is NaN, else 0
+#[intrinsic("spirv", "core", "OpFUnordGreaterThanEqual")]
+pub fun unordered_greater_equal_f32(a: f32, b: f32) u32;
+
+# Whether a value is NaN.
+# ---
+# x:   The value.
+# ret: 1 where x is NaN, else 0
+#[intrinsic("spirv", "core", "OpIsNan")]
+pub fun is_nan_f32(x: f32) u32;
+
+# Whether a value is an infinity.
+# ---
+# x:   The value.
+# ret: 1 where x is an infinity, else 0
+#[intrinsic("spirv", "core", "OpIsInf")]
+pub fun is_inf_f32(x: f32) u32;
+
+# Whether one value is greater than another, per lane.
+#
+# Ordered, as the operator is: 0 where either operand is NaN.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than b, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFOrdGreaterThan")]
+pub fun greater_than_f32_2(a: f32x2, b: f32x2) u32x2;
+
+# Whether one value is greater than or equal to another, per lane.
+#
+# Ordered, as the operator is: 0 where either operand is NaN.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than or equal to b, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFOrdGreaterThanEqual")]
+pub fun greater_equal_f32_2(a: f32x2, b: f32x2) u32x2;
+
+# Whether two values differ and neither is NaN, per lane.
+#
+# Ordered: 0 where either operand is NaN, where `!=` gives 1.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a and b differ and neither is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFOrdNotEqual")]
+pub fun ordered_not_equal_f32_2(a: f32x2, b: f32x2) u32x2;
+
+# Whether two values are equal or either is NaN, per lane.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a equals b or either is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFUnordEqual")]
+pub fun unordered_equal_f32_2(a: f32x2, b: f32x2) u32x2;
+
+# Whether one value is less than another or either is NaN, per lane.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is less than b or either is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFUnordLessThan")]
+pub fun unordered_less_than_f32_2(a: f32x2, b: f32x2) u32x2;
+
+# Whether one value is less than or equal to another or either is NaN, per lane.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is less than or equal to b or either is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFUnordLessThanEqual")]
+pub fun unordered_less_equal_f32_2(a: f32x2, b: f32x2) u32x2;
+
+# Whether one value is greater than another or either is NaN, per lane.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than b or either is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFUnordGreaterThan")]
+pub fun unordered_greater_than_f32_2(a: f32x2, b: f32x2) u32x2;
+
+# Whether one value is greater than or equal to another or either is NaN, per lane.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than or equal to b or either is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFUnordGreaterThanEqual")]
+pub fun unordered_greater_equal_f32_2(a: f32x2, b: f32x2) u32x2;
+
+# Whether a value is NaN, per lane.
+# ---
+# x:   The values, one per lane.
+# ret: 1 where x is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpIsNan")]
+pub fun is_nan_f32_2(x: f32x2) u32x2;
+
+# Whether a value is an infinity, per lane.
+# ---
+# x:   The values, one per lane.
+# ret: 1 where x is an infinity, else 0 in each lane
+#[intrinsic("spirv", "core", "OpIsInf")]
+pub fun is_inf_f32_2(x: f32x2) u32x2;
+
+# Whether one value is greater than another, per lane.
+#
+# Ordered, as the operator is: 0 where either operand is NaN.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than b, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFOrdGreaterThan")]
+pub fun greater_than_f32_3(a: f32x3, b: f32x3) u32x3;
+
+# Whether one value is greater than or equal to another, per lane.
+#
+# Ordered, as the operator is: 0 where either operand is NaN.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than or equal to b, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFOrdGreaterThanEqual")]
+pub fun greater_equal_f32_3(a: f32x3, b: f32x3) u32x3;
+
+# Whether two values differ and neither is NaN, per lane.
+#
+# Ordered: 0 where either operand is NaN, where `!=` gives 1.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a and b differ and neither is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFOrdNotEqual")]
+pub fun ordered_not_equal_f32_3(a: f32x3, b: f32x3) u32x3;
+
+# Whether two values are equal or either is NaN, per lane.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a equals b or either is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFUnordEqual")]
+pub fun unordered_equal_f32_3(a: f32x3, b: f32x3) u32x3;
+
+# Whether one value is less than another or either is NaN, per lane.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is less than b or either is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFUnordLessThan")]
+pub fun unordered_less_than_f32_3(a: f32x3, b: f32x3) u32x3;
+
+# Whether one value is less than or equal to another or either is NaN, per lane.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is less than or equal to b or either is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFUnordLessThanEqual")]
+pub fun unordered_less_equal_f32_3(a: f32x3, b: f32x3) u32x3;
+
+# Whether one value is greater than another or either is NaN, per lane.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than b or either is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFUnordGreaterThan")]
+pub fun unordered_greater_than_f32_3(a: f32x3, b: f32x3) u32x3;
+
+# Whether one value is greater than or equal to another or either is NaN, per lane.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than or equal to b or either is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFUnordGreaterThanEqual")]
+pub fun unordered_greater_equal_f32_3(a: f32x3, b: f32x3) u32x3;
+
+# Whether a value is NaN, per lane.
+# ---
+# x:   The values, one per lane.
+# ret: 1 where x is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpIsNan")]
+pub fun is_nan_f32_3(x: f32x3) u32x3;
+
+# Whether a value is an infinity, per lane.
+# ---
+# x:   The values, one per lane.
+# ret: 1 where x is an infinity, else 0 in each lane
+#[intrinsic("spirv", "core", "OpIsInf")]
+pub fun is_inf_f32_3(x: f32x3) u32x3;
+
+# Whether one value is greater than another, per lane.
+#
+# Ordered, as the operator is: 0 where either operand is NaN.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than b, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFOrdGreaterThan")]
+pub fun greater_than_f32_4(a: f32x4, b: f32x4) u32x4;
+
+# Whether one value is greater than or equal to another, per lane.
+#
+# Ordered, as the operator is: 0 where either operand is NaN.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than or equal to b, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFOrdGreaterThanEqual")]
+pub fun greater_equal_f32_4(a: f32x4, b: f32x4) u32x4;
+
+# Whether two values differ and neither is NaN, per lane.
+#
+# Ordered: 0 where either operand is NaN, where `!=` gives 1.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a and b differ and neither is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFOrdNotEqual")]
+pub fun ordered_not_equal_f32_4(a: f32x4, b: f32x4) u32x4;
+
+# Whether two values are equal or either is NaN, per lane.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a equals b or either is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFUnordEqual")]
+pub fun unordered_equal_f32_4(a: f32x4, b: f32x4) u32x4;
+
+# Whether one value is less than another or either is NaN, per lane.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is less than b or either is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFUnordLessThan")]
+pub fun unordered_less_than_f32_4(a: f32x4, b: f32x4) u32x4;
+
+# Whether one value is less than or equal to another or either is NaN, per lane.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is less than or equal to b or either is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFUnordLessThanEqual")]
+pub fun unordered_less_equal_f32_4(a: f32x4, b: f32x4) u32x4;
+
+# Whether one value is greater than another or either is NaN, per lane.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than b or either is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFUnordGreaterThan")]
+pub fun unordered_greater_than_f32_4(a: f32x4, b: f32x4) u32x4;
+
+# Whether one value is greater than or equal to another or either is NaN, per lane.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than or equal to b or either is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFUnordGreaterThanEqual")]
+pub fun unordered_greater_equal_f32_4(a: f32x4, b: f32x4) u32x4;
+
+# Whether a value is NaN, per lane.
+# ---
+# x:   The values, one per lane.
+# ret: 1 where x is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpIsNan")]
+pub fun is_nan_f32_4(x: f32x4) u32x4;
+
+# Whether a value is an infinity, per lane.
+# ---
+# x:   The values, one per lane.
+# ret: 1 where x is an infinity, else 0 in each lane
+#[intrinsic("spirv", "core", "OpIsInf")]
+pub fun is_inf_f32_4(x: f32x4) u32x4;
+
+# Whether one value is greater than another.
+#
+# Ordered, as the operator is: 0 where either operand is NaN.
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# a:   The left operand.
+# b:   The right operand.
+# ret: 1 where a is greater than b, else 0
+#[intrinsic("spirv", "core", "OpFOrdGreaterThan")]
+pub fun greater_than_f64(a: f64, b: f64) u32;
+
+# Whether one value is greater than or equal to another.
+#
+# Ordered, as the operator is: 0 where either operand is NaN.
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# a:   The left operand.
+# b:   The right operand.
+# ret: 1 where a is greater than or equal to b, else 0
+#[intrinsic("spirv", "core", "OpFOrdGreaterThanEqual")]
+pub fun greater_equal_f64(a: f64, b: f64) u32;
+
+# Whether two values differ and neither is NaN.
+#
+# Ordered: 0 where either operand is NaN, where `!=` gives 1.
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# a:   The left operand.
+# b:   The right operand.
+# ret: 1 where a and b differ and neither is NaN, else 0
+#[intrinsic("spirv", "core", "OpFOrdNotEqual")]
+pub fun ordered_not_equal_f64(a: f64, b: f64) u32;
+
+# Whether two values are equal or either is NaN.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# a:   The left operand.
+# b:   The right operand.
+# ret: 1 where a equals b or either is NaN, else 0
+#[intrinsic("spirv", "core", "OpFUnordEqual")]
+pub fun unordered_equal_f64(a: f64, b: f64) u32;
+
+# Whether one value is less than another or either is NaN.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# a:   The left operand.
+# b:   The right operand.
+# ret: 1 where a is less than b or either is NaN, else 0
+#[intrinsic("spirv", "core", "OpFUnordLessThan")]
+pub fun unordered_less_than_f64(a: f64, b: f64) u32;
+
+# Whether one value is less than or equal to another or either is NaN.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# a:   The left operand.
+# b:   The right operand.
+# ret: 1 where a is less than or equal to b or either is NaN, else 0
+#[intrinsic("spirv", "core", "OpFUnordLessThanEqual")]
+pub fun unordered_less_equal_f64(a: f64, b: f64) u32;
+
+# Whether one value is greater than another or either is NaN.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# a:   The left operand.
+# b:   The right operand.
+# ret: 1 where a is greater than b or either is NaN, else 0
+#[intrinsic("spirv", "core", "OpFUnordGreaterThan")]
+pub fun unordered_greater_than_f64(a: f64, b: f64) u32;
+
+# Whether one value is greater than or equal to another or either is NaN.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# a:   The left operand.
+# b:   The right operand.
+# ret: 1 where a is greater than or equal to b or either is NaN, else 0
+#[intrinsic("spirv", "core", "OpFUnordGreaterThanEqual")]
+pub fun unordered_greater_equal_f64(a: f64, b: f64) u32;
+
+# Whether a value is NaN.
+#
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# x:   The value.
+# ret: 1 where x is NaN, else 0
+#[intrinsic("spirv", "core", "OpIsNan")]
+pub fun is_nan_f64(x: f64) u32;
+
+# Whether a value is an infinity.
+#
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# x:   The value.
+# ret: 1 where x is an infinity, else 0
+#[intrinsic("spirv", "core", "OpIsInf")]
+pub fun is_inf_f64(x: f64) u32;
+
+# Whether one value is greater than another, per lane.
+#
+# Ordered, as the operator is: 0 where either operand is NaN.
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than b, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFOrdGreaterThan")]
+pub fun greater_than_f64_2(a: f64x2, b: f64x2) u32x2;
+
+# Whether one value is greater than or equal to another, per lane.
+#
+# Ordered, as the operator is: 0 where either operand is NaN.
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than or equal to b, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFOrdGreaterThanEqual")]
+pub fun greater_equal_f64_2(a: f64x2, b: f64x2) u32x2;
+
+# Whether two values differ and neither is NaN, per lane.
+#
+# Ordered: 0 where either operand is NaN, where `!=` gives 1.
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a and b differ and neither is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFOrdNotEqual")]
+pub fun ordered_not_equal_f64_2(a: f64x2, b: f64x2) u32x2;
+
+# Whether two values are equal or either is NaN, per lane.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a equals b or either is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFUnordEqual")]
+pub fun unordered_equal_f64_2(a: f64x2, b: f64x2) u32x2;
+
+# Whether one value is less than another or either is NaN, per lane.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is less than b or either is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFUnordLessThan")]
+pub fun unordered_less_than_f64_2(a: f64x2, b: f64x2) u32x2;
+
+# Whether one value is less than or equal to another or either is NaN, per lane.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is less than or equal to b or either is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFUnordLessThanEqual")]
+pub fun unordered_less_equal_f64_2(a: f64x2, b: f64x2) u32x2;
+
+# Whether one value is greater than another or either is NaN, per lane.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than b or either is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFUnordGreaterThan")]
+pub fun unordered_greater_than_f64_2(a: f64x2, b: f64x2) u32x2;
+
+# Whether one value is greater than or equal to another or either is NaN, per lane.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than or equal to b or either is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFUnordGreaterThanEqual")]
+pub fun unordered_greater_equal_f64_2(a: f64x2, b: f64x2) u32x2;
+
+# Whether a value is NaN, per lane.
+#
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# x:   The values, one per lane.
+# ret: 1 where x is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpIsNan")]
+pub fun is_nan_f64_2(x: f64x2) u32x2;
+
+# Whether a value is an infinity, per lane.
+#
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# x:   The values, one per lane.
+# ret: 1 where x is an infinity, else 0 in each lane
+#[intrinsic("spirv", "core", "OpIsInf")]
+pub fun is_inf_f64_2(x: f64x2) u32x2;
+
+# Whether one value is greater than another, per lane.
+#
+# Ordered, as the operator is: 0 where either operand is NaN.
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than b, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFOrdGreaterThan")]
+pub fun greater_than_f64_3(a: f64x3, b: f64x3) u32x3;
+
+# Whether one value is greater than or equal to another, per lane.
+#
+# Ordered, as the operator is: 0 where either operand is NaN.
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than or equal to b, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFOrdGreaterThanEqual")]
+pub fun greater_equal_f64_3(a: f64x3, b: f64x3) u32x3;
+
+# Whether two values differ and neither is NaN, per lane.
+#
+# Ordered: 0 where either operand is NaN, where `!=` gives 1.
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a and b differ and neither is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFOrdNotEqual")]
+pub fun ordered_not_equal_f64_3(a: f64x3, b: f64x3) u32x3;
+
+# Whether two values are equal or either is NaN, per lane.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a equals b or either is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFUnordEqual")]
+pub fun unordered_equal_f64_3(a: f64x3, b: f64x3) u32x3;
+
+# Whether one value is less than another or either is NaN, per lane.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is less than b or either is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFUnordLessThan")]
+pub fun unordered_less_than_f64_3(a: f64x3, b: f64x3) u32x3;
+
+# Whether one value is less than or equal to another or either is NaN, per lane.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is less than or equal to b or either is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFUnordLessThanEqual")]
+pub fun unordered_less_equal_f64_3(a: f64x3, b: f64x3) u32x3;
+
+# Whether one value is greater than another or either is NaN, per lane.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than b or either is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFUnordGreaterThan")]
+pub fun unordered_greater_than_f64_3(a: f64x3, b: f64x3) u32x3;
+
+# Whether one value is greater than or equal to another or either is NaN, per lane.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than or equal to b or either is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFUnordGreaterThanEqual")]
+pub fun unordered_greater_equal_f64_3(a: f64x3, b: f64x3) u32x3;
+
+# Whether a value is NaN, per lane.
+#
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# x:   The values, one per lane.
+# ret: 1 where x is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpIsNan")]
+pub fun is_nan_f64_3(x: f64x3) u32x3;
+
+# Whether a value is an infinity, per lane.
+#
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# x:   The values, one per lane.
+# ret: 1 where x is an infinity, else 0 in each lane
+#[intrinsic("spirv", "core", "OpIsInf")]
+pub fun is_inf_f64_3(x: f64x3) u32x3;
+
+# Whether one value is greater than another, per lane.
+#
+# Ordered, as the operator is: 0 where either operand is NaN.
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than b, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFOrdGreaterThan")]
+pub fun greater_than_f64_4(a: f64x4, b: f64x4) u32x4;
+
+# Whether one value is greater than or equal to another, per lane.
+#
+# Ordered, as the operator is: 0 where either operand is NaN.
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than or equal to b, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFOrdGreaterThanEqual")]
+pub fun greater_equal_f64_4(a: f64x4, b: f64x4) u32x4;
+
+# Whether two values differ and neither is NaN, per lane.
+#
+# Ordered: 0 where either operand is NaN, where `!=` gives 1.
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a and b differ and neither is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFOrdNotEqual")]
+pub fun ordered_not_equal_f64_4(a: f64x4, b: f64x4) u32x4;
+
+# Whether two values are equal or either is NaN, per lane.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a equals b or either is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFUnordEqual")]
+pub fun unordered_equal_f64_4(a: f64x4, b: f64x4) u32x4;
+
+# Whether one value is less than another or either is NaN, per lane.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is less than b or either is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFUnordLessThan")]
+pub fun unordered_less_than_f64_4(a: f64x4, b: f64x4) u32x4;
+
+# Whether one value is less than or equal to another or either is NaN, per lane.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is less than or equal to b or either is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFUnordLessThanEqual")]
+pub fun unordered_less_equal_f64_4(a: f64x4, b: f64x4) u32x4;
+
+# Whether one value is greater than another or either is NaN, per lane.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than b or either is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFUnordGreaterThan")]
+pub fun unordered_greater_than_f64_4(a: f64x4, b: f64x4) u32x4;
+
+# Whether one value is greater than or equal to another or either is NaN, per lane.
+#
+# Unordered: 1 where either operand is NaN, which of the operators only `!=` gives.
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# a:   The left operands, one per lane.
+# b:   The right operands, one per lane.
+# ret: 1 where a is greater than or equal to b or either is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpFUnordGreaterThanEqual")]
+pub fun unordered_greater_equal_f64_4(a: f64x4, b: f64x4) u32x4;
+
+# Whether a value is NaN, per lane.
+#
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# x:   The values, one per lane.
+# ret: 1 where x is NaN, else 0 in each lane
+#[intrinsic("spirv", "core", "OpIsNan")]
+pub fun is_nan_f64_4(x: f64x4) u32x4;
+
+# Whether a value is an infinity, per lane.
+#
+# Needs the target's `Float64` where it names an `env`.
+# ---
+# x:   The values, one per lane.
+# ret: 1 where x is an infinity, else 0 in each lane
+#[intrinsic("spirv", "core", "OpIsInf")]
+pub fun is_inf_f64_4(x: f64x4) u32x4;
