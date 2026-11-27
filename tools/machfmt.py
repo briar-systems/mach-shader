@@ -10,14 +10,15 @@ MIN_MACH = (7, 0, 0)
 
 
 def require_mach(tool, mach):
+    # `--version` prints the version alone, where the layout of `mach info` moves between releases
     try:
-        info = subprocess.run([mach, "info"], capture_output=True, text=True).stdout
+        version = subprocess.run([mach, "--version"], capture_output=True, text=True).stdout
     except OSError as err:
         sys.exit(f"{tool}: cannot run the mach compiler '{mach}': {err}")
-    found = re.match(r"mach (\d+)\.(\d+)\.(\d+)", info)
+    found = re.match(r"(\d+)\.(\d+)\.(\d+)", version)
     want = ".".join(map(str, MIN_MACH))
     if not found:
-        sys.exit(f"{tool}: could not read the version of '{mach}' from `mach info`; mach {want} or newer is required")
+        sys.exit(f"{tool}: could not read the version of '{mach}' from `mach --version`; mach {want} or newer is required")
     have = tuple(int(n) for n in found.groups())
     if have < MIN_MACH:
         sys.exit(f"{tool}: '{mach}' is mach {'.'.join(map(str, have))}, but mach {want} or newer is required; "
